@@ -42,6 +42,8 @@ import { loadStories, saveStory, removeStory } from "@/lib/storage";
 import { sampleStory } from "@/lib/sample";
 import { buildGame, download, filename } from "@/lib/export";
 import Player from "./player";
+import AIDraftReview from "./ai-draft-review";
+import ChatGPTConnection from "./chatgpt-connection";
 import { Lighthouse } from "./illustration";
 
 type Modal =
@@ -115,7 +117,13 @@ export default function Studio() {
   const [storageError, setStorageError] = useState("");
   const [saving, setSaving] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [aiProvider, setAiProvider] = useState("api");
+  const [chatGPTLocal, setChatGPTLocal] = useState(false);
+  const [aiModel, setAiModel] = useState("");
   const [aiReady, setAiReady] = useState(false);
+  const [aiChecking, setAiChecking] = useState(true);
+  const [language, setLanguage] = useState("auto");
+  const [repaired, setRepaired] = useState(false);
   const [premise, setPremise] = useState("");
   const [tone, setTone] = useState("Mysterious");
   const [accessCode, setAccessCode] = useState("");
@@ -138,8 +146,9 @@ export default function Studio() {
       .finally(() => setReady(true));
     fetch("/api/generate")
       .then((r) => r.json())
-      .then((d) => setAiReady(d.available === true))
-      .catch(() => setAiReady(false));
+      .then((d) => { setAiReady(d.available === true); setAiProvider(d.provider || "api"); setChatGPTLocal(d.local === true); if (new URLSearchParams(window.location.search).has("chatgpt")) { setModal("ai"); window.history.replaceState({}, "", "/"); } })
+      .catch(() => setAiReady(false))
+      .finally(() => setAiChecking(false));
     return () => generationAbort.current?.abort();
   }, []);
   useEffect(() => {
@@ -339,6 +348,7 @@ export default function Studio() {
     setModal(null);
   };
   const generate = async () => {
+    if (generationAbort.current) return;
     setGenerating(true);
     setAiError("");
     setGenerated(null);
@@ -351,27 +361,75 @@ export default function Studio() {
           "Content-Type": "application/json",
           "X-Workshop-Code": accessCode,
         },
-        body: JSON.stringify({ premise, tone }),
-        signal: controller.signal,
+        body: JSON.stringify({ premise, tone, language, ...(aiProvider === "chatgpt" && aiModel ? { model: aiModel } : {}) }),
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(170_000),
+        ]),
       });
       const data = await res.json();
       if (!res.ok)
         throw new Error(data.error || "Generation failed. Please try again.");
-      setGenerated(storySchema.parse(data.story));
+      if (controller.signal.aborted || generationAbort.current !== controller)
+        return;
+      const parsedDraft = storySchema.safeParse(data.story);
+      if (!parsedDraft.success)
+        throw new Error(
+          "The writing service returned an unreadable draft. Please try again.",
+        );
+      const draft = parsedDraft.data;
+      if (validateStory(draft).length)
+        throw new Error(
+          "The draft did not pass the story checks. Please try again.",
+        );
+      setRepaired(data.repaired === true);
+      setGenerated(draft);
     } catch (e) {
-      if (!controller.signal.aborted) setAiError((e as Error).message);
+      if (!controller.signal.aborted && generationAbort.current === controller)
+        setAiError(
+          e instanceof Error && e.name === "TimeoutError"
+            ? "The writing session timed out. Try a shorter idea."
+            : e instanceof Error && e.name === "SyntaxError"
+              ? "The writing service returned an unreadable response. Please try again."
+              : e instanceof Error && e.name === "TypeError"
+                ? "Could not reach the writing service. Check your connection and try again."
+                : (e as Error).message,
+        );
     } finally {
-      setGenerating(false);
+      if (generationAbort.current === controller) {
+        generationAbort.current = null;
+        setGenerating(false);
+      }
     }
   };
+  const cancelGeneration = () => {
+    generationAbort.current?.abort();
+    generationAbort.current = null;
+    setGenerating(false);
+  };
   const closeModal = () => {
-    if (generating) generationAbort.current?.abort();
+    cancelGeneration();
     setModal(null);
     setGenerated(null);
     setAiError("");
     setAccessCode("");
   };
+  const checkAIConnection = async () => {
+    setAiChecking(true);
+    try {
+      const res = await fetch("/api/generate", { cache: "no-store" });
+      const data = await res.json();
+      setAiReady(res.ok && data.available === true);
+      setAiProvider(data.provider || "api");
+      setChatGPTLocal(data.local === true);
+    } catch {
+      setAiReady(false);
+    } finally {
+      setAiChecking(false);
+    }
+  };
   const openAI = () => {
+    void checkAIConnection();
     setGenerated(null);
     setAiError("");
     setModal("ai");
@@ -1168,10 +1226,24 @@ export default function Studio() {
           <p className="modal-description">
             Describe a world. Get a short branching draft to make your own.
           </p>
-          {!aiReady ? (
+          {aiProvider === "chatgpt" && chatGPTLocal && !generated && (
+            <ChatGPTConnection code={accessCode} onCode={setAccessCode} onReady={setAiReady} model={aiModel} onModel={setAiModel} disabled={generating} />
+          )}
+          {aiProvider === "chatgpt" && !chatGPTLocal && <p className="form-error">ChatGPT plan testing is available only on this computer at http://127.0.0.1:3100. Hosted deployments require separate approval.</p>}
+          {aiChecking ? (
+            <p className="quiet" role="status">
+              Checking the co-writer connection…
+            </p>
+          ) : !aiReady ? (
             <div className="ai-unavailable">
               <Sparkles size={28} />
-              <h3>The co-writer is not connected yet.</h3>
+              <h3>{aiProvider === "chatgpt" ? "Connect ChatGPT to start writing." : "The co-writer is not connected yet."}</h3>
+              <button
+                className="button"
+                onClick={() => void checkAIConnection()}
+              >
+                Check connection again
+              </button>
               <p>
                 Your workspace is ready for manual writing. AI drafting becomes
                 available when the studio owner connects a provider.
@@ -1184,35 +1256,18 @@ export default function Studio() {
               </button>
             </div>
           ) : generated ? (
-            <div className="generation-review">
-              <span className="tag">DRAFT READY · REVIEW BEFORE SAVING</span>
-              <h3>{generated.title}</h3>
-              <p>{generated.description}</p>
-              <div className="review-stats">
-                {generated.passages.length} passages ·{" "}
-                {generated.passages.filter((p) => p.ending).length} endings
-              </div>
-              <details>
-                <summary>Read the opening</summary>
-                <p className="narrative">
-                  {
-                    generated.passages.find((p) => p.id === generated.startId)
-                      ?.text
-                  }
-                </p>
-              </details>
-              <div className="dialog-actions">
-                <button className="button" onClick={() => setGenerated(null)}>
-                  Discard draft
-                </button>
-                <button
-                  className="button primary"
-                  onClick={() => create(copyStory(generated))}
-                >
-                  Keep & edit <ArrowRight size={16} />
-                </button>
-              </div>
-            </div>
+            <AIDraftReview
+              key={generated.id}
+              story={generated}
+              repaired={repaired}
+              onDiscard={() => setGenerated(null)}
+              onKeep={() => {
+                if (create(copyStory(generated))) {
+                  setGenerated(null);
+                  setAccessCode("");
+                }
+              }}
+            />
           ) : (
             <form
               onSubmit={(e) => {
@@ -1253,6 +1308,20 @@ export default function Studio() {
                   </select>
                 </label>
                 <label className="field-label">
+                  Story language
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    disabled={generating}
+                  >
+                    <option value="auto">Match my idea</option>
+                    <option value="en">English</option>
+                    <option value="zh">简体中文</option>
+                  </select>
+                </label>
+              </div>
+              {aiProvider !== "chatgpt" && <div className="ai-access-field">
+                <label className="field-label">
                   Workshop access code
                   <input
                     type="password"
@@ -1263,10 +1332,10 @@ export default function Studio() {
                     autoComplete="off"
                   />
                 </label>
-              </div>
+              </div>}
               <p className="quiet">
-                Creates a new story with 8–12 passages. Your existing work stays
-                intact.
+                Creates 8–12 passages and 2–3 endings. Preview the complete game
+                before saving it as a new story.
               </p>
               {aiError && (
                 <p className="form-error" role="alert">
@@ -1275,13 +1344,13 @@ export default function Studio() {
               )}
               <button
                 className="button primary full"
-                disabled={generating}
+                disabled={generating || (aiProvider === "chatgpt" && !accessCode)}
                 type="submit"
               >
                 {generating ? (
                   <>
                     <LoaderCircle className="spin" size={17} /> Writing your
-                    first draft…
+                    draft and checking its paths…
                   </>
                 ) : (
                   <>
@@ -1289,6 +1358,26 @@ export default function Studio() {
                   </>
                 )}
               </button>
+              {generating && (
+                <div className="generation-status" role="status">
+                  <p className="quiet">
+                    This may take a couple of minutes. Broken paths get one
+                    repair attempt.
+                  </p>
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={() => {
+                      cancelGeneration();
+                      setAiError(
+                        "Generation cancelled. Your existing stories are unchanged.",
+                      );
+                    }}
+                  >
+                    Cancel generation
+                  </button>
+                </div>
+              )}
             </form>
           )}
         </Dialog>

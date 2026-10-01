@@ -2218,3 +2218,74 @@ svg {
 .player h2 {
   scroll-margin-top: 85px;
 }
+
+/* Review a generated game before adding it to the local library. */
+.ai-access-field {
+  margin-top: 18px;
+}
+.draft-preview-tools {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+.draft-preview-tools .field-label {
+  flex: 1;
+  min-width: 0;
+}
+.draft-preview-tools select {
+  text-overflow: ellipsis;
+}
+.draft-preview-tools > button {
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+.generation-review .review-stats {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #536346;
+}
+.draft-player {
+  border: 1px solid #dfe1d4;
+  border-radius: 12px;
+  margin-top: 18px;
+  overflow: hidden;
+}
+.draft-player .player {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  border: 0;
+}
+.draft-review-footer {
+  border-top: 1px solid #dfe1d4;
+  margin-top: 22px;
+  padding-top: 12px;
+}
+.generation-status {
+  text-align: center;
+  margin-top: 15px;
+}
+@media (max-width: 520px) {
+  .draft-preview-tools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .generation-review .review-stats {
+    flex-wrap: wrap;
+  }
+}
+
+.chatgpt-connection { border: 1px solid var(--border, #d9dfd4); background: #f5f7f1; border-radius: 14px; padding: 20px; margin: 20px 0; }
+.chatgpt-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.chatgpt-heading a { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #355d42; }
+.chatgpt-connection .quiet { margin: 12px 0; }
+.chatgpt-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.chatgpt-signin { background: #171717; color: white; border-color: #171717; }
+.chatgpt-signin:hover { background: #333; color: white; }
+.chatgpt-account { overflow-wrap: anywhere; font-size: 14px; }
+.chatgpt-welcome { padding: 16px; margin-top: 16px; border-radius: 10px; background: white; font-size: 14px; }
+.chatgpt-model { margin-top: 16px; }
+.chatgpt-model .button { margin-top: 8px; }
+@media (max-width: 520px) { .chatgpt-connection { padding: 14px; } .chatgpt-actions .button { width: 100%; justify-content: center; } }

@@ -1,6 +1,6 @@
 # Project Requirements and Decisions
 
-Last updated: 2026-09-28
+Last updated: 2026-10-01
 
 This document records confirmed requirements from project discussions. Proposals and open questions are listed separately and must not be treated as approved scope. Update this document as further decisions are confirmed.
 
@@ -86,6 +86,10 @@ Still open:
 - Repository ownership, Vercel project/domain, and launch timing.
 - Whether a later release needs cloud accounts, hosted story links, or cross-device saves.
 
+## AI Generation Design Discussion
+
+The user requested a design for automatic game generation using the OpenAI API. [AI_GAME_DESIGN.md](AI_GAME_DESIGN.md) records the proposed workflow, the existing foundation, and future additions. On 2026-10-01 the user authorized starting the initial generation workflow implementation. Language selection, complete draft preview, bounded repair, and cancellation are implemented. Live ChatGPT plan generation was verified on 2026-10-01; the separately billed API-key path has only mocked verification. Targeted rewriting and image generation remain future work.
+
 ## Reference Games — For Evaluation Only
 
 - [Choice of Robots](https://www.choiceofgames.com/robots/): text and choice-driven branching.
@@ -102,6 +106,7 @@ These examples were discussed as possible references; none has been selected as 
 | 2026-09-24 | The current scope is limited to choice-based interaction. | User instruction to record the scope in a Markdown document. |
 | 2026-09-28 | Do not use Blender at this stage; prioritize an MVP. | User instruction in the project discussion. |
 | 2026-09-28 | Create a new project folder and begin implementation; use Next.js, pnpm, and Vercel as deployment target. | User approval to start. |
+| 2026-10-01 | Implement the initial AI generation workflow using a server-side OpenAI connection. | User instruction to begin after reviewing the design. |
 
 ## Existing Project Materials
 
@@ -111,3 +116,16 @@ These examples were discussed as possible references; none has been selected as 
 - spending-spree v AS1.html (parent workspace reference; not included in this repository)
 
 The meeting documents contain earlier proposals and an unfilled decision checklist. Where they conflict with the confirmed decisions above, use this document's confirmed scope. Prototype interfaces are evidence of concepts, not proof of completed production features.
+
+
+## Decision: local ChatGPT plan integration (2026-10-01)
+
+- The user requested testing with existing ChatGPT/Codex subscription usage before buying API credit.
+- Add official Sign in with ChatGPT for the local studio, with optional ChatGPT plan permission for eligible Plus/Pro accounts.
+- Retain API-key generation as a separate explicit mode; never switch billing paths automatically.
+- Require the workshop code, local loopback origin, verified OAuth identity, and granted plan-use scope before inference.
+- Show active account, model discovery, plan-use notice, Manage usage, account switching, and sign-out.
+- Tokens stay in protected local server storage; stories remain browser-local. ChatGPT identity is not a cloud Dextro account.
+- The user must disable credit spillover in ChatGPT usage settings to guarantee subscription-only spending.
+- Local integration does not establish permission to operate a remotely hosted or paid Vercel application with plan usage.
+- ChatGPT login, plan-use consent, and live model discovery were verified in Chrome on 2026-10-01. Live GPT-6-Astra generation of an 8-passage, 3-ending Chinese adventure was also verified; see VERIFICATION.md.
