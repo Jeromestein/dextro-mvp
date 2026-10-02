@@ -1,0 +1,75 @@
+# Dextro Workspace Architecture
+
+## Product direction
+
+The primary experience is building a choice-based game. Opening Dextro should
+lead directly to creation, with a clear path into editing, playing, and export.
+Account details support that workflow and belong in Settings.
+
+## Routes
+
+| Route | Responsibility |
+| --- | --- |
+| `/` | Redirect to `/builder`. |
+| `/builder` | AI brief or blank-game creation; full-page draft review. |
+| `/builder/[storyId]` | Passage outline, text/choice editor, live preview, validation, export. |
+| `/library` | Saved games, search, imports, and deletion. |
+| `/play/[storyId]` | Focused game playback. The bundled sample uses `sample-last-light`. |
+| `/settings` | Provider connection, ChatGPT accounts, model selection, usage links, workshop access. |
+
+The editor and player wait for local storage before resolving a game. An unknown
+ID shows recovery guidance instead of silently creating a replacement. URLs are
+local workspace addresses, not public links: the game must exist in that browser
+at that origin. Playable HTML remains the portable delivery format.
+
+Creation and draft review do not use dialogs. Dialogs remain appropriate for
+small actions such as confirming deletion or reviewing validation issues.
+
+## Component boundaries
+
+- The App Router defines destinations and page metadata.
+- `WorkspaceShell` owns shared navigation and page-wide storage alerts.
+- `WorkspaceProvider` owns browser-local games, the save queue, connection
+  readiness, and transient creation state. It stays mounted during internal
+  navigation, so opening Settings does not clear the creation brief or review.
+- `GameBuilder` owns the creation form, cancellable generation, and draft review.
+- `ConnectionSettings` hosts the existing provider/account controls.
+- `Studio` adapts the existing library/editor/player to route-specific views.
+- The shared story schema, graph validation, player, and export engine remain
+  independent of navigation and of the generation provider.
+
+## State and persistence
+
+| State | Lifetime |
+| --- | --- |
+| Accepted games | Existing IndexedDB store; no migration or ID changes. |
+| Pending saves | Shared serialized queue; survives internal route changes. |
+| Idea, mood, language, unsaved generated draft | Workspace memory; survives internal navigation, cleared by a full reload. |
+| API-mode workshop code and selected model | Workspace memory only; cleared after a full reload. Local ChatGPT mode does not require a workshop code. |
+| Selected passage and playback position | Current editor/player instance. |
+| Provider tokens | Existing protected server-side storage; never browser state. |
+
+A generated draft becomes a new saved game only after **Keep & edit**. A tab
+close/reload warns about an unsaved generated draft or pending/failed writes.
+Leaving the builder cancels an active generation; the UI states this explicitly.
+No new persistence is added for secrets. Opening Settings does not change the
+configured provider or billing path.
+
+Local ChatGPT sign-in supports `localhost` and `127.0.0.1`. The provider callback
+remains IPv4 loopback; localhost attempts return to the initiating localhost
+origin before browser-session verification and code exchange. Cookies and game
+storage remain separate for these two origins; no silent migration is performed.
+
+## MVP boundaries and next steps
+
+This change keeps Next.js, pnpm, Vercel configuration, existing JSON backups,
+and standalone exports. It adds no database, account system, public publishing,
+or storage migration. Local ChatGPT testing and hosted API generation retain
+their existing environment restrictions.
+
+The next useful authoring improvement is a visual branch map inside the editor.
+Cloud storage and public game links should be separate projects with explicit
+ownership, authorization, and persistence design, rather than being implied by
+the new route structure. As editor capabilities grow, the outline, passage form,
+and export controls can be extracted from `Studio` without changing the story
+model or URLs.

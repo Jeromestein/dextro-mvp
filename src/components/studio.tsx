@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useWorkspace } from "./workspace-provider";
 import {
   ArrowLeft,
-  ArrowRight,
   ArrowUpRight,
-  BookOpen,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -14,22 +15,18 @@ import {
   Flag,
   GitBranch,
   ImagePlus,
-  Library,
   LoaderCircle,
   Plus,
   Search,
-  Sparkles,
   Trash2,
   Upload,
   X,
   AlertCircle,
   Play,
   Copy,
-  CircleHelp,
   PenLine,
 } from "lucide-react";
 import {
-  newStory,
   newPassage,
   uid,
   copyStory,
@@ -38,17 +35,12 @@ import {
   type Story,
   type Passage,
 } from "@/lib/story";
-import { loadStories, saveStory, removeStory } from "@/lib/storage";
 import { sampleStory } from "@/lib/sample";
 import { buildGame, download, filename } from "@/lib/export";
 import Player from "./player";
-import AIDraftReview from "./ai-draft-review";
-import ChatGPTConnection from "./chatgpt-connection";
 import { Lighthouse } from "./illustration";
 
 type Modal =
-  | "new"
-  | "ai"
   | "checks"
   | "help"
   | "delete-story"
@@ -103,115 +95,51 @@ function Dialog({
     </dialog>
   );
 }
-export default function Studio() {
-  const [stories, setStories] = useState<Story[]>([]);
-  const [ready, setReady] = useState(false);
-  const [view, setView] = useState<"home" | "editor" | "play">("home");
-  const [active, setActive] = useState<Story | null>(null);
-  const [selected, setSelected] = useState("");
-  const [previewStart, setPreviewStart] = useState("");
+type View = "home" | "editor" | "play";
+export default function Studio({ view, storyId }: { view: View; storyId?: string }) {
+  const { ready, stories } = useWorkspace();
+  const story = storyId === "sample-last-light" && view === "play" ? sampleStory() : stories.find((s) => s.id === storyId);
+  if (!ready) return <main className="route-message"><LoaderCircle className="spin" /> Opening your workspace…</main>;
+  if (view !== "home" && !story) return <main className="route-message"><h1>Game not found in this browser.</h1><p>Import its JSON backup in My Games, or start a new game.</p><Link href="/library" className="button">My Games</Link></main>;
+  return <StudioContent key={`${view}-${storyId || "library"}`} view={view} initialStory={story || null} />;
+}
+function StudioContent({ view, initialStory }: { view: View; initialStory: Story | null }) {
+  const router = useRouter();
+  const { stories, ready, storageError, saving, persistStory, deleteSavedStory } = useWorkspace();
+  const [active, setActive] = useState<Story | null>(initialStory);
+  const opening = initialStory?.passages.some((passage) => passage.id === initialStory.startId)
+    ? initialStory.startId : initialStory?.passages[0]?.id || "";
+  const [selected, setSelected] = useState(opening);
+  const [previewStart, setPreviewStart] = useState(opening);
   const [previewKey, setPreviewKey] = useState(0);
   const [modal, setModal] = useState<Modal>(null);
   const [search, setSearch] = useState("");
   const [notice, setNotice] = useState("");
-  const [storageError, setStorageError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [aiProvider, setAiProvider] = useState("api");
-  const [chatGPTLocal, setChatGPTLocal] = useState(false);
-  const [aiModel, setAiModel] = useState("");
-  const [aiReady, setAiReady] = useState(false);
-  const [aiChecking, setAiChecking] = useState(true);
-  const [language, setLanguage] = useState("auto");
-  const [repaired, setRepaired] = useState(false);
-  const [premise, setPremise] = useState("");
-  const [tone, setTone] = useState("Mysterious");
-  const [accessCode, setAccessCode] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [aiError, setAiError] = useState("");
-  const [generated, setGenerated] = useState<Story | null>(null);
-  const saveQueue = useRef(Promise.resolve());
-  const writes = useRef(0);
   const importRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
-  const generationAbort = useRef<AbortController | null>(null);
-  const activeRef = useRef<Story | null>(null);
+  const activeRef = useRef<Story | null>(initialStory);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [view]);
-  useEffect(() => {
-    loadStories()
-      .then(setStories)
-      .catch((e) => setStorageError(e.message))
-      .finally(() => setReady(true));
-    fetch("/api/generate")
-      .then((r) => r.json())
-      .then((d) => { setAiReady(d.available === true); setAiProvider(d.provider || "api"); setChatGPTLocal(d.local === true); if (new URLSearchParams(window.location.search).has("chatgpt")) { setModal("ai"); window.history.replaceState({}, "", "/"); } })
-      .catch(() => setAiReady(false))
-      .finally(() => setAiChecking(false));
-    return () => generationAbort.current?.abort();
-  }, []);
   useEffect(() => {
     if (!notice) return;
     const t = setTimeout(() => setNotice(""), 5000);
     return () => clearTimeout(t);
   }, [notice]);
-  useEffect(() => {
-    const guard = (e: BeforeUnloadEvent) => {
-      if (writes.current > 0 || storageError) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", guard);
-    return () => window.removeEventListener("beforeunload", guard);
-  }, [storageError]);
   const persist = (story: Story) => {
-    const stamped = { ...story, updatedAt: new Date().toISOString() };
-    if (new TextEncoder().encode(JSON.stringify(stamped)).length > 24_000_000) {
-      setNotice(
-        "This story is too large to save safely. Remove an image or shorten the text.",
-      );
-      return false;
-    }
-    activeRef.current = stamped;
-    setActive(stamped);
-    setStories((prev) => [stamped, ...prev.filter((s) => s.id !== stamped.id)]);
-    writes.current++;
-    setSaving(true);
-    saveQueue.current = saveQueue.current
-      .then(() => saveStory(stamped))
-      .then(() => setStorageError(""))
-      .catch((e) => setStorageError(e.message))
-      .finally(() => {
-        writes.current--;
-        if (!writes.current) setSaving(false);
-      });
-    return true;
-  };
-  const edit = (story: Story) => {
-    const opening = story.passages.some((p) => p.id === story.startId)
-      ? story.startId
-      : story.passages[0].id;
+    if (!persistStory(story)) return false;
     activeRef.current = story;
     setActive(story);
-    setSelected(opening);
-    setPreviewStart(opening);
-    setPreviewKey((k) => k + 1);
-    setView("editor");
+    return true;
   };
+  const edit = (story: Story) => router.push(`/builder/${encodeURIComponent(story.id)}`);
   const create = (story: Story) => {
     if (!persist(story)) return false;
     edit(story);
     setModal(null);
     return true;
   };
-  const play = (story: Story) => {
-    activeRef.current = story;
-    setActive(story);
-    setPreviewKey((k) => k + 1);
-    setView("play");
-  };
+  const play = (story: Story) => router.push(`/play/${encodeURIComponent(story.id)}`);
   const selectPassage = (id: string) => {
     setSelected(id);
     setPreviewStart(id);
@@ -320,11 +248,9 @@ export default function Studio() {
     if (!active) return;
     const id = active.id;
     try {
-      await saveQueue.current;
-      await removeStory(id);
-      setStories((prev) => prev.filter((s) => s.id !== id));
+      await deleteSavedStory(id);
       setActive(null);
-      setView("home");
+      router.push("/library");
       setModal(null);
       setNotice("Story deleted from this browser.");
     } catch (e) {
@@ -347,98 +273,12 @@ export default function Studio() {
     selectPassage(startId);
     setModal(null);
   };
-  const generate = async () => {
-    if (generationAbort.current) return;
-    setGenerating(true);
-    setAiError("");
-    setGenerated(null);
-    const controller = new AbortController();
-    generationAbort.current = controller;
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Workshop-Code": accessCode,
-        },
-        body: JSON.stringify({ premise, tone, language, ...(aiProvider === "chatgpt" && aiModel ? { model: aiModel } : {}) }),
-        signal: AbortSignal.any([
-          controller.signal,
-          AbortSignal.timeout(170_000),
-        ]),
-      });
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.error || "Generation failed. Please try again.");
-      if (controller.signal.aborted || generationAbort.current !== controller)
-        return;
-      const parsedDraft = storySchema.safeParse(data.story);
-      if (!parsedDraft.success)
-        throw new Error(
-          "The writing service returned an unreadable draft. Please try again.",
-        );
-      const draft = parsedDraft.data;
-      if (validateStory(draft).length)
-        throw new Error(
-          "The draft did not pass the story checks. Please try again.",
-        );
-      setRepaired(data.repaired === true);
-      setGenerated(draft);
-    } catch (e) {
-      if (!controller.signal.aborted && generationAbort.current === controller)
-        setAiError(
-          e instanceof Error && e.name === "TimeoutError"
-            ? "The writing session timed out. Try a shorter idea."
-            : e instanceof Error && e.name === "SyntaxError"
-              ? "The writing service returned an unreadable response. Please try again."
-              : e instanceof Error && e.name === "TypeError"
-                ? "Could not reach the writing service. Check your connection and try again."
-                : (e as Error).message,
-        );
-    } finally {
-      if (generationAbort.current === controller) {
-        generationAbort.current = null;
-        setGenerating(false);
-      }
-    }
-  };
-  const cancelGeneration = () => {
-    generationAbort.current?.abort();
-    generationAbort.current = null;
-    setGenerating(false);
-  };
-  const closeModal = () => {
-    cancelGeneration();
-    setModal(null);
-    setGenerated(null);
-    setAiError("");
-    setAccessCode("");
-  };
-  const checkAIConnection = async () => {
-    setAiChecking(true);
-    try {
-      const res = await fetch("/api/generate", { cache: "no-store" });
-      const data = await res.json();
-      setAiReady(res.ok && data.available === true);
-      setAiProvider(data.provider || "api");
-      setChatGPTLocal(data.local === true);
-    } catch {
-      setAiReady(false);
-    } finally {
-      setAiChecking(false);
-    }
-  };
-  const openAI = () => {
-    void checkAIConnection();
-    setGenerated(null);
-    setAiError("");
-    setModal("ai");
-  };
+  const closeModal = () => setModal(null);
   const filtered = stories.filter((s) =>
     `${s.title} ${s.description}`.toLowerCase().includes(search.toLowerCase()),
   );
   return (
-    <div className={`studio-shell ${view !== "home" ? "workspace-shell" : ""}`}>
+    <div className="studio-content">
       <input
         ref={importRef}
         type="file"
@@ -446,77 +286,7 @@ export default function Studio() {
         hidden
         onChange={(e) => void importStory(e.target.files?.[0])}
       />
-      <aside className="sidebar">
-        <button
-          className="brand"
-          onClick={() => setView("home")}
-          aria-label="Dextro home"
-        >
-          dextro<span>✳</span>
-        </button>
-        <div className="studio-label">YOUR STORY STUDIO</div>
-        <nav>
-          <button
-            className={view === "home" ? "nav-link active" : "nav-link"}
-            onClick={() => setView("home")}
-          >
-            <Library size={18} /> My stories{" "}
-            <span className="nav-count">{stories.length}</span>
-          </button>
-          <button
-            className="nav-link"
-            onClick={() => {
-              setNewTitle("");
-              setModal("new");
-            }}
-          >
-            <PenLine size={18} /> New story
-          </button>
-          <button className="nav-link" onClick={openAI}>
-            <Sparkles size={18} /> AI co-writer{" "}
-            <span className="mini-badge">BETA</span>
-          </button>
-        </nav>
-        <div className="sidebar-note">
-          <GitBranch size={24} />
-          <p>
-            Small choices.
-            <br />
-            Endless possibilities.
-          </p>
-          <span>
-            Give your imagination
-            <br />
-            somewhere to go.
-          </span>
-        </div>
-        <div className="sidebar-bottom">
-          <button className="nav-link" onClick={() => setModal("help")}>
-            <CircleHelp size={18} /> Studio guide
-          </button>
-          <div className="local-status">
-            <span /> Local workspace <small>Saved in this browser</small>
-          </div>
-        </div>
-      </aside>
-      <div className="main-shell">
-        <header className="topbar">
-          <div className="breadcrumb">
-            <span>Workspace</span>
-            <span>/</span>
-            <strong>
-              {view === "home"
-                ? "My stories"
-                : view === "editor"
-                  ? "Story editor"
-                  : "Play your story"}
-            </strong>
-          </div>
-          <div className="topbar-right">
-            <span className="edition">EARLY EDITION · 01</span>
-            <div className="avatar">Y</div>
-          </div>
-        </header>
+      <div className="studio-main">
         {storageError && (
           <div className="storage-warning" role="alert">
             <AlertCircle size={17} />
@@ -525,77 +295,16 @@ export default function Studio() {
           </div>
         )}
         {view === "home" && (
-          <main className="library-page">
-            <section className="hero">
-              <div className="hero-copy">
-                <div className="eyebrow">
-                  <span /> A LITTLE IMAGINATION GOES A LONG WAY
-                </div>
-                <h1>
-                  Every choice
-                  <br />
-                  opens a <em>world.</em>
-                </h1>
-                <p>
-                  Write a story that takes a different turn.
-                  <br />
-                  Build the paths. Let your readers choose.
-                </p>
-                <div className="hero-actions">
-                  <button
-                    className="button primary"
-                    disabled={!ready}
-                    onClick={() => {
-                      setNewTitle("");
-                      setModal("new");
-                    }}
-                  >
-                    <Plus size={18} /> Create a story
-                  </button>
-                  <button
-                    className="text-button"
-                    onClick={() => play(sampleStory())}
-                  >
-                    Try a story <ArrowUpRight size={18} />
-                  </button>
-                </div>
-              </div>
-              <div className="hero-art" aria-hidden="true">
-                <div className="art-orbit" />
-                <div className="art-stars">✳</div>
-                <div className="story-slip slip-back">
-                  <span>02 / THE CHOICE</span>
-                  <p>
-                    Which way
-                    <br />
-                    will you go?
-                  </p>
-                  <div className="slip-rule" />
-                  <div className="slip-rule short" />
-                </div>
-                <div className="story-slip slip-front">
-                  <div className="slip-caption">
-                    <BookOpen size={15} /> A NEW BEGINNING
-                  </div>
-                  <Lighthouse />
-                  <h3>The story is yours.</h3>
-                  <div className="slip-choice">
-                    Follow the light <ArrowRight size={14} />
-                  </div>
-                </div>
-                <div className="art-sticker">
-                  <GitBranch size={18} /> One story. Many paths.
-                </div>
-              </div>
-            </section>
+          <main className="library-page product-page">
+            <div className="page-heading"><div><span className="kicker">YOUR WORKSPACE</span><h1>My Games<span className="title-dot">.</span></h1><p>Keep writing. Explore a different ending. Make it yours.</p></div><Link href="/builder" className="button primary"><Plus size={17} /> New game</Link></div>
             <section className="library-section">
               <div className="section-heading">
                 <div>
                   <div className="eyebrow muted">
-                    MAKE SOMETHING WORTH EXPLORING
+                    SAVED IN THIS BROWSER
                   </div>
                   <h2>
-                    Your stories <span>{stories.length}</span>
+                    Games <span>{stories.length}</span>
                   </h2>
                 </div>
                 <div className="library-tools">
@@ -725,10 +434,7 @@ export default function Studio() {
                   {!search && (
                     <button
                       className="new-story-card"
-                      onClick={() => {
-                        setNewTitle("");
-                        setModal("new");
-                      }}
+                      onClick={() => router.push("/builder")}
                     >
                       <span className="new-plus">
                         <Plus size={28} />
@@ -767,7 +473,7 @@ export default function Studio() {
                 <button
                   className="icon-button"
                   aria-label="Back to stories"
-                  onClick={() => setView("home")}
+                  onClick={() => router.push("/library")}
                 >
                   <ArrowLeft size={20} />
                 </button>
@@ -1146,7 +852,7 @@ export default function Studio() {
         {view === "play" && active && (
           <main className="play-page">
             <div className="play-heading">
-              <button className="text-button" onClick={() => setView("home")}>
+              <button className="text-button" onClick={() => router.push("/library")}>
                 <ArrowLeft size={16} /> My stories
               </button>
               <span>{active.title}</span>
@@ -1180,208 +886,6 @@ export default function Studio() {
           </button>
         </div>
       )}
-      {modal === "new" && (
-        <Dialog title="Every story starts somewhere." onClose={closeModal}>
-          <p className="modal-description">
-            Give your world a name. You can change it any time.
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              create(newStory(newTitle.trim() || "Untitled story"));
-            }}
-          >
-            <label className="field-label">
-              Story title
-              <input
-                autoFocus
-                placeholder="The rain at midnight…"
-                value={newTitle}
-                maxLength={200}
-                onChange={(e) => setNewTitle(e.target.value)}
-              />
-            </label>
-            <button className="button primary full" type="submit">
-              <Plus size={17} /> Create story
-            </button>
-          </form>
-          <div className="modal-or">or start with a little help</div>
-          <button className="button full" onClick={openAI}>
-            <Sparkles size={16} /> Draft with AI
-          </button>
-          <button
-            className="text-button full"
-            onClick={() => create(copyStory(sampleStory()))}
-          >
-            Use The Last Light as a starting point <ArrowRight size={15} />
-          </button>
-        </Dialog>
-      )}
-      {modal === "ai" && (
-        <Dialog
-          title="A little spark for your story."
-          onClose={closeModal}
-          wide
-        >
-          <p className="modal-description">
-            Describe a world. Get a short branching draft to make your own.
-          </p>
-          {aiProvider === "chatgpt" && chatGPTLocal && !generated && (
-            <ChatGPTConnection code={accessCode} onCode={setAccessCode} onReady={setAiReady} model={aiModel} onModel={setAiModel} disabled={generating} />
-          )}
-          {aiProvider === "chatgpt" && !chatGPTLocal && <p className="form-error">ChatGPT plan testing is available only on this computer at http://127.0.0.1:3100. Hosted deployments require separate approval.</p>}
-          {aiChecking ? (
-            <p className="quiet" role="status">
-              Checking the co-writer connection…
-            </p>
-          ) : !aiReady ? (
-            <div className="ai-unavailable">
-              <Sparkles size={28} />
-              <h3>{aiProvider === "chatgpt" ? "Connect ChatGPT to start writing." : "The co-writer is not connected yet."}</h3>
-              <button
-                className="button"
-                onClick={() => void checkAIConnection()}
-              >
-                Check connection again
-              </button>
-              <p>
-                Your workspace is ready for manual writing. AI drafting becomes
-                available when the studio owner connects a provider.
-              </p>
-              <button
-                className="button primary"
-                onClick={() => create(copyStory(sampleStory()))}
-              >
-                Start with the sample <ArrowRight size={16} />
-              </button>
-            </div>
-          ) : generated ? (
-            <AIDraftReview
-              key={generated.id}
-              story={generated}
-              repaired={repaired}
-              onDiscard={() => setGenerated(null)}
-              onKeep={() => {
-                if (create(copyStory(generated))) {
-                  setGenerated(null);
-                  setAccessCode("");
-                }
-              }}
-            />
-          ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void generate();
-              }}
-            >
-              <label className="field-label">
-                Your story idea
-                <textarea
-                  autoFocus
-                  required
-                  minLength={15}
-                  maxLength={1500}
-                  value={premise}
-                  placeholder="A traveler arrives at an inn where every guest remembers a different version of yesterday…"
-                  onChange={(e) => setPremise(e.target.value)}
-                  disabled={generating}
-                />
-              </label>
-              <div className="form-row">
-                <label className="field-label">
-                  Mood
-                  <select
-                    value={tone}
-                    onChange={(e) => setTone(e.target.value)}
-                    disabled={generating}
-                  >
-                    {[
-                      "Mysterious",
-                      "Hopeful",
-                      "Adventurous",
-                      "Whimsical",
-                      "Suspenseful",
-                    ].map((t) => (
-                      <option key={t}>{t}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="field-label">
-                  Story language
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    disabled={generating}
-                  >
-                    <option value="auto">Match my idea</option>
-                    <option value="en">English</option>
-                    <option value="zh">简体中文</option>
-                  </select>
-                </label>
-              </div>
-              {aiProvider !== "chatgpt" && <div className="ai-access-field">
-                <label className="field-label">
-                  Workshop access code
-                  <input
-                    type="password"
-                    required
-                    value={accessCode}
-                    onChange={(e) => setAccessCode(e.target.value)}
-                    disabled={generating}
-                    autoComplete="off"
-                  />
-                </label>
-              </div>}
-              <p className="quiet">
-                Creates 8–12 passages and 2–3 endings. Preview the complete game
-                before saving it as a new story.
-              </p>
-              {aiError && (
-                <p className="form-error" role="alert">
-                  {aiError}
-                </p>
-              )}
-              <button
-                className="button primary full"
-                disabled={generating || (aiProvider === "chatgpt" && !accessCode)}
-                type="submit"
-              >
-                {generating ? (
-                  <>
-                    <LoaderCircle className="spin" size={17} /> Writing your
-                    draft and checking its paths…
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={17} /> Generate a draft
-                  </>
-                )}
-              </button>
-              {generating && (
-                <div className="generation-status" role="status">
-                  <p className="quiet">
-                    This may take a couple of minutes. Broken paths get one
-                    repair attempt.
-                  </p>
-                  <button
-                    type="button"
-                    className="button"
-                    onClick={() => {
-                      cancelGeneration();
-                      setAiError(
-                        "Generation cancelled. Your existing stories are unchanged.",
-                      );
-                    }}
-                  >
-                    Cancel generation
-                  </button>
-                </div>
-              )}
-            </form>
-          )}
-        </Dialog>
-      )}
       {modal === "checks" && active && (
         <Dialog
           title="A quick check before the adventure."
@@ -1405,7 +909,7 @@ export default function Studio() {
                   onClick={() => {
                     if (issue.passageId) {
                       selectPassage(issue.passageId);
-                      setView("editor");
+                      if (active && view !== "editor") edit(active);
                       setModal(null);
                     }
                   }}

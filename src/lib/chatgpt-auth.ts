@@ -18,7 +18,7 @@ const directory = () => process.env.DEXTRO_CHATGPT_DIR || path.join(process.cwd(
 type Tokens = { access: string; refresh?: string; id?: string; expires: number; scopes: string[] };
 type Profile = { clientId: string; subject?: string; email?: string; tokens?: Tokens; welcomed?: boolean };
 type Session = { expires: number; profileId?: string };
-type Pending = { state: string; nonce: string; verifier: string; redirect: string; expires: number; session: string; profileId?: string };
+type Pending = { state: string; nonce: string; verifier: string; redirect: string; browserOrigin?: string; expires: number; session: string; profileId?: string };
 type Store = { host: string; profiles: Record<string, Profile>; sessions: Record<string, Session>; pending: Record<string, Pending> };
 
 // A filesystem lock also serializes rotating refresh tokens across Next workers.
@@ -100,9 +100,13 @@ export async function startSignIn(request: Request, profileId?: string) {
     }
     const profile = profileId ? store.profiles[profileId] : undefined;
     if (profileId && !profile) throw new ServiceError("Choose a saved account or add a new one.", 400);
+    const browserOrigin = requestOrigin(request);
+    // OpenAI requires an IPv4 loopback redirect, even for a localhost workspace.
+    const callback = new URL("/api/chatgpt/callback", browserOrigin);
+    callback.hostname = "127.0.0.1";
     const pending: Pending = {
       state: random(), nonce: random(), verifier: random(),
-      redirect: `${requestOrigin(request)}/api/chatgpt/callback`,
+      redirect: callback.toString(), browserOrigin,
       expires: Date.now() + 10 * 60_000, session: key, profileId,
     };
     // Only one outstanding attempt per browser; repeated clicks invalidate the old one.
@@ -149,6 +153,28 @@ export async function verifyIdentity(idToken: string, clientId: string, nonce: s
   if (payload.nonce !== nonce || !payload.sub) throw new ServiceError("ChatGPT identity could not be verified. Start sign-in again.", 401);
   return { subject: payload.sub, email: typeof payload.email === "string" ? payload.email : undefined };
 }
+// The localhost cookie cannot accompany the provider's 127.0.0.1 callback.
+// Relay only the pending attempt's callback to its fixed, same-port localhost
+// origin. No session is created and no code is exchanged until that origin
+// verifies the initiating browser's HttpOnly cookie in finishSignIn.
+export async function signInReturnURL(request: Request) {
+  return withStore((store) => {
+    const url = new URL(request.url);
+    const pending = store.pending[url.searchParams.get("state") || ""];
+    if (!pending?.browserOrigin || `${requestOrigin(request)}${url.pathname}` !== pending.redirect) return;
+    const target = new URL(pending.browserOrigin);
+    const callback = new URL(pending.redirect);
+    if (callback.hostname !== "127.0.0.1" || target.protocol !== "http:" || target.hostname !== "localhost" || target.port !== callback.port || target.username || target.password) return;
+    target.pathname = "/api/chatgpt/callback";
+    // Forward only OAuth response parameters; arbitrary return URLs are ignored.
+    for (const key of ["state", "code", "client_id", "error"]) {
+      const value = url.searchParams.get(key);
+      if (value !== null) target.searchParams.set(key, value);
+    }
+    return target.toString();
+  });
+}
+
 export async function finishSignIn(request: Request) {
   return withStore(async (store) => {
     const url = new URL(request.url);
@@ -156,7 +182,8 @@ export async function finishSignIn(request: Request) {
     const pending = store.pending[state];
     if (!pending || pending.session !== sessionKey(request)) throw new ServiceError("Sign-in expired or could not be verified. Start again.", 401);
     delete store.pending[state];
-    if (`${requestOrigin(request)}${url.pathname}` !== pending.redirect || !store.sessions[pending.session]) throw new ServiceError("Sign-in could not be verified. Start again.", 401);
+    const completionURL = pending.browserOrigin ? `${pending.browserOrigin}/api/chatgpt/callback` : pending.redirect;
+    if (`${requestOrigin(request)}${url.pathname}` !== completionURL || !store.sessions[pending.session]) throw new ServiceError("Sign-in could not be verified. Start again.", 401);
     if (url.searchParams.has("error")) throw new ServiceError("ChatGPT sign-in was cancelled or permission was declined. You can try again.", 400);
     const suppliedId = url.searchParams.get("client_id");
     const clientId = pending.profileId || suppliedId;

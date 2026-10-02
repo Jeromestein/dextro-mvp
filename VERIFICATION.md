@@ -97,3 +97,50 @@ No real OpenAI request was made: the local key and workshop code are not configu
 - This verifies actual subscription-authorized inference, not merely mocked API behavior. The first failed display attempt may also have consumed subscription usage. The app never switched to API-key billing.
 - Live token refresh and remote revocation remain untested to preserve the user's working session. No deployment, commit, push, or `pnpm build` was performed.
 - Reloaded Chrome and confirmed the generated story remained in the local library (1 story), then reopened it in Play view. The working game tab was left open for the user. Screenshots: `output/playwright/chatgpt-live-ending.png` and `output/playwright/chatgpt-live-game.png`.
+
+## 2026-10-02 — Local subscription integration restored
+
+- Reverted the uncommitted removal to the implementation in `8dcbcd1` and restored its dependency using the frozen lockfile. Local configuration selects `AI_PROVIDER=chatgpt`; existing API and workshop settings were preserved.
+- All 32 tests, TypeScript, ESLint, and `git diff --check` passed. Tests use mocked provider responses; no new live generation was initiated.
+- Local `/api/chatgpt` responds successfully with `configured: true`, an empty profile list, and `available: false`. The credential directory was deleted during removal, so the user must sign in again. No provider credential was recovered from Git.
+- Codex in-app browser verified the restored ChatGPT connection panel, Manage usage link, sign-in button, and connection check on desktop and at 390 × 844, with no horizontal overflow. Screenshots: `output/playwright/chatgpt-restored-desktop.png` and `output/playwright/chatgpt-restored-mobile.png`.
+- Started `WATCHPACK_POLLING=true pnpm dev --webpack --hostname 127.0.0.1 --port 3100` because no server was listening. Left it running at `http://127.0.0.1:3100/` for the user to sign in.
+- No production build, commit, push, or deployment was performed. Prior live generation evidence remains historical until fresh authorization completes.
+
+## 2026-10-02 — Dedicated Game Builder workspace
+
+- TypeScript and ESLint passed; all 32 existing tests passed. `git diff --check` passed. No production build was run.
+- Codex in-app browser verified the default `/builder` destination, separate Settings, the library with all three existing local games, and an existing game editor. Existing user stories were opened read-only.
+- Desktop layouts were inspected at 1280 × 900; builder, settings, and editor were inspected at 390 × 844 with no document horizontal overflow. Mobile passage navigation scrolls within its own outline strip.
+- Isolated Playwright CLI browser checks passed for: root redirect; full-page creation and review without an open dialog; account details absent from the builder; premise and language retained across Settings navigation; workshop code reaching the generation request; keeping a draft; editing and reloading an accepted game; following a player choice; browser back navigation; opening the library; creating a blank game; and missing-game recovery.
+- The isolated test also confirmed that workshop access clears after a full page load, while a selected model remains correctly displayed after internal navigation back to Settings.
+- Generation, account status, and model catalog responses were intercepted with explicit test fixtures. No real model request, new login, usage charge, or provider eligibility check was made. The isolated test browser was closed after verification.
+- One automated navigation check initially raced the router after browser Back; waiting for the player controls before navigating resolved the check. Repeated runs also required a scoped selector for identically named test games. These were test synchronization/fixture issues.
+- Local screenshots: `output/playwright/workspace-builder-desktop.png`, `workspace-builder-mobile.png`, `workspace-settings-mobile.png`, `workspace-editor-desktop.png`, and `workspace-editor-mobile.png`. All screenshots and temporary browser scripts remain ignored by Git.
+- The existing local dev server remains running at `http://127.0.0.1:3100/`. No commit, push, or Vercel deployment was performed.
+
+## 2026-10-02 — Direct local ChatGPT sign-in
+
+- Removed manual workshop-code entry from local ChatGPT account controls and generation. The environment secret is not read into the client, automatically filled, or persisted in browser storage. API-key mode still requires it.
+- `pnpm typecheck`, `pnpm lint`, all 33 tests, and `git diff --check` passed. The ChatGPT test suite runs without `AI_ACCESS_CODE` or an `X-Workshop-Code` request header.
+- Tests verify code-free sign-in initiation, model discovery, authenticated generation, and rejection of unauthenticated generation, hosted/production mode, wrong hosts, missing Origin, null Origin, other local ports, and remote origins. Existing OAuth, browser-session, plan-permission, and API-mode checks remain covered. Provider responses are mocked.
+- Codex in-app browser verified `/settings` on desktop and at 390 × 844: no workshop-code field, enabled **Continue with ChatGPT**, and no horizontal overflow. Reloading keeps direct sign-in available. Screenshots: `output/playwright/chatgpt-no-code-desktop.png` and `chatgpt-no-code-mobile.png`.
+- Used the already-running local server; hot reload picked up the endpoint/UI changes. No environment values were changed, server restarted, real sign-in completed, or live inference requested. No production build, commit, push, or deployment was performed.
+
+## 2026-10-02 — Localhost ChatGPT support
+
+- Verified the current [OpenAI sign-in documentation](https://developers.openai.com/siwc/token-sharing-open-source/sign-in): the provider redirect must remain HTTP IPv4 loopback, not localhost.
+- Both localhost and IPv4 origins now support local connection/status/generation checks. A localhost-initiated OAuth attempt stores its browser origin and uses the registered IPv4 callback, which relays only OAuth response parameters back to the fixed same-port localhost origin. Browser cookie/state verification and token exchange occur there. The provider exchange retains the exact original IPv4 redirect URI. No provider tokens are placed in the relay URL.
+- TypeScript, ESLint, all 34 tests, and `git diff --check` passed. Tests cover mocked successful localhost completion, host-only cookie rotation, unchanged exchange redirect URI, wrong-browser rejection, expired/replayed state rejection, disallowed return destinations, and exact hostname/port/origin checks. Existing IPv4 flows remain covered.
+- Codex in-app browser verified `http://localhost:3100/settings`: ChatGPT controls are available without a workshop-code field. Desktop and 390 × 844 layouts passed, with no horizontal overflow. Check connection works. Screenshots: `output/playwright/localhost-settings-desktop.png` and `localhost-settings-mobile.png`.
+- An isolated Playwright CLI browser used real local routes/cookies and intercepted only the OpenAI authorization navigation. A simulated access-denied callback at 127.0.0.1 successfully relayed to localhost, passed browser binding, displayed the cancellation message, and returned to localhost Settings. No real OpenAI authorization, token exchange, or model usage occurred. The browser was closed after verification.
+- No service was listening on port 3100, so started `WATCHPACK_POLLING=true pnpm dev --webpack --hostname 127.0.0.1 --port 3100`. It remains running and is accessible at `http://localhost:3100/`.
+- Existing credentials and browser games were not migrated or deleted. Hostnames still have separate game storage and browser cookies. Real successful authorization through the new localhost flow remains to be completed by the user. No production build, commit, push, or deployment was performed.
+
+## 2026-10-02 — Default Luna model and workspace commit
+
+- The user chose Luna as the default. Live account model discovery in the existing signed-in Chrome session confirmed `gpt-5.6-luna`; the account does not list `gpt-6-luna`. The shared default and API configuration example now use GPT-5.6 Luna.
+- Settings explicitly shows **GPT-5.6 Luna (default)**. Refreshing restores this default, loading the catalog preserves it, and a manual model choice still overrides it. The server verifies catalog visibility and returns a Settings-directed error when the requested/default model is unavailable, without silently choosing another model.
+- TypeScript, ESLint, all 35 tests, and `git diff --check` passed. Provider tests cover Luna behind another catalog entry, unavailable/hidden Luna without inference, and an explicit alternative model. Provider inference is mocked.
+- Codex in-app browser verified the signed-out Settings page on desktop and at 390 × 844. Its separate browser profile is not signed in, so the existing signed-in Chrome session was used for the model controls. Verified the default after reload and catalog loading, manual switching and return to default, and the desktop/mobile visual states with no mobile horizontal overflow. Screenshots: `output/playwright/luna-default.png` and `luna-settings-mobile.png`.
+- No new live inference, credential export, production build, push, or deployment was performed. The existing development server was reused without restart. Existing game/editor work in the user's original Chrome tab was not changed.

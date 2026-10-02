@@ -6,14 +6,15 @@ import path from "node:path";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { accountAction, chatGPTCredential, chatGPTStatus, finishSignIn, SESSION_COOKIE, startSignIn, verifyIdentity, watchChatGPTRequest, withStore } from "../src/lib/chatgpt-auth";
 import { readChatGPTStream, chatGPTModels } from "../src/lib/chatgpt-provider";
-import { isLocalChatGPT } from "../src/lib/workshop";
-import { POST as generate } from "../src/app/api/generate/route";
-import { POST as connection } from "../src/app/api/chatgpt/route";
+import { isLocalChatGPT, requestOrigin, sameOrigin } from "../src/lib/workshop";
+import { GET as generationStatus, POST as generate } from "../src/app/api/generate/route";
+import { GET as connectionStatus, POST as connection } from "../src/app/api/chatgpt/route";
+import { GET as callback } from "../src/app/api/chatgpt/callback/route";
 import { sampleStory } from "../src/lib/sample";
 
 const origin = "http://127.0.0.1:3100";
 const req = (cookie = "", pathname = "/api/chatgpt", body?: unknown) => new Request(`${origin}${pathname}`, {
-  headers: { host: "127.0.0.1:3100", origin, cookie: `${SESSION_COOKIE}=${cookie}`, "X-Workshop-Code": "test-code", "Content-Type": "application/json" },
+  headers: { host: "127.0.0.1:3100", origin, cookie: `${SESSION_COOKIE}=${cookie}`, "Content-Type": "application/json" },
   ...(body ? { method: "POST", body: JSON.stringify(body) } : {}),
 });
 const stream = (...events: unknown[]) => new Response(events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(""));
@@ -21,12 +22,13 @@ const completed = { type: "response.completed", response: { status: "completed",
 
 test("ChatGPT local authorization and generation", async (t) => {
   const directory = await mkdtemp(path.join(tmpdir(), "dextro-oauth-test-"));
-  const keys = ["DEXTRO_CHATGPT_DIR", "AI_PROVIDER", "AI_ACCESS_CODE", "VERCEL"];
+  const keys = ["DEXTRO_CHATGPT_DIR", "AI_PROVIDER", "AI_ACCESS_CODE", "VERCEL", "NODE_ENV"];
   const previous = keys.map((key) => process.env[key]);
   const originalFetch = global.fetch;
   process.env.DEXTRO_CHATGPT_DIR = directory;
   process.env.AI_PROVIDER = "chatgpt";
-  process.env.AI_ACCESS_CODE = "test-code";
+  delete process.env.AI_ACCESS_CODE;
+  Object.assign(process.env, { NODE_ENV: "test" });
   delete process.env.VERCEL;
   let cookie = "";
   let nonce = "";
@@ -50,15 +52,53 @@ test("ChatGPT local authorization and generation", async (t) => {
     return { url, callback: `/api/chatgpt/callback?state=${url.searchParams.get("state")}&code=test-code&client_id=${clientId}` };
   };
   try {
-    await t.test("loopback, hosted, workshop and origin guards reject without provider calls", async () => {
+    await t.test("code-free local actions still reject hosted, non-loopback, missing-origin and cross-origin requests", async () => {
       global.fetch = async () => { throw new Error("unexpected fetch"); };
       assert.equal(isLocalChatGPT(req()), true);
       assert.equal(isLocalChatGPT(new Request("http://localhost:3100/api/chatgpt", { headers: { host: "127.0.0.1:3100" } })), true);
       assert.equal(isLocalChatGPT(new Request("http://localhost:3100/api/chatgpt")), false);
+      const local = new Request("http://localhost:3100/api/chatgpt", { headers: { host: "localhost:3100", origin: "http://localhost:3100" } });
+      assert.equal(isLocalChatGPT(local), true);
+      assert.equal(requestOrigin(local), "http://localhost:3100");
+      assert.equal(sameOrigin(local), true);
       assert.equal(isLocalChatGPT(new Request(`${origin}/api/chatgpt`, { headers: { host: "evil.test" } })), false);
       process.env.VERCEL = "1"; assert.equal(isLocalChatGPT(req()), false); delete process.env.VERCEL;
       assert.equal((await generate(req("", "/api/generate", { premise: "A traveler enters a haunted village", tone: "Mysterious" }))).status, 401);
       assert.equal((await connection(new Request(`${origin}/api/chatgpt`, { method: "POST", headers: { host: "127.0.0.1:3100", origin: "https://evil.test", "X-Workshop-Code": "test-code" }, body: '{"action":"signin"}' }))).status, 403);
+      const cases: Record<string, string>[] = [
+        { host: "evil.test", origin },
+        { host: "127.0.0.1:3100" },
+        { host: "127.0.0.1:3100", origin: "null" },
+        { host: "127.0.0.1:3100", origin: "http://127.0.0.1:9999" },
+        { host: "127.0.0.1:3100", origin: "https://evil.test" },
+        { host: "localhost:3100", origin },
+        { host: "127.0.0.1:3100", origin: "http://localhost:3100" },
+        { host: "localhost:9999", origin: "http://localhost:9999" },
+        { host: "localhost.evil.test:3100", origin: "http://localhost.evil.test:3100" },
+      ];
+      for (const headers of cases) {
+        for (const [pathname, handler] of [["/api/chatgpt", connection], ["/api/generate", generate]] as const) {
+          assert.equal((await handler(new Request(`${origin}${pathname}`, { method: "POST", headers, body: '{}' }))).status, 403);
+        }
+      }
+      for (const environment of ["VERCEL", "NODE_ENV"]) {
+        process.env[environment] = environment === "VERCEL" ? "1" : "production";
+        assert.equal((await connection(req("", "/api/chatgpt", { action: "signin" }))).status, 403);
+        assert.equal((await generate(req("", "/api/generate", {}))).status, 403);
+        assert.equal((await connectionStatus(req())).status, 403);
+        delete process.env[environment];
+      }
+      Object.assign(process.env, { NODE_ENV: "test" });
+    });
+    await t.test("local sign-in starts without a configured or entered workshop code", async () => {
+      global.fetch = async () => { throw new Error("unexpected fetch"); };
+      assert.equal(process.env.AI_ACCESS_CODE, undefined);
+      assert.equal((await (await connectionStatus(req())).json()).configured, true);
+      assert.equal((await (await generationStatus(req())).json()).available, false);
+      const result = await connection(req("", "/api/chatgpt", { action: "signin" }));
+      assert.equal(result.status, 200);
+      assert.equal(new URL((await result.json()).url).origin, "https://auth.openai.com");
+      assert.match(result.headers.get("set-cookie") || "", /HttpOnly/i);
     });
     await t.test("state, browser binding, PKCE and fresh nonce precede any exchange", async () => {
       const first = await begin();
@@ -79,6 +119,7 @@ test("ChatGPT local authorization and generation", async (t) => {
       cookie = nextCookie;
       const status = await chatGPTStatus(req(cookie));
       assert.equal(status.available, true);
+      assert.equal((await (await generationStatus(req(cookie))).json()).available, true);
       assert.equal(status.needsWelcome, true);
       assert.equal(JSON.stringify(status).includes("private-"), false);
       assert.equal((await stat(path.join(directory, "accounts.json"))).mode & 0o777, 0o600);
@@ -123,21 +164,47 @@ test("ChatGPT local authorization and generation", async (t) => {
       const values = await Promise.all([chatGPTCredential(req(cookie)), chatGPTCredential(req(cookie))]);
       assert.equal(calls, 1); assert.equal(values[0].access, "rotated-access"); assert.deepEqual(values[0], values[1]);
     });
-    await t.test("plan requests use account catalog, SSE and array input without API-key fallback", async () => {
+    await t.test("plan requests default to Luna even when another model is listed first", async () => {
       let calls = 0;
       global.fetch = async (url, options) => {
         assert.equal((options?.headers as Record<string, string>).Authorization, "Bearer rotated-access");
-        if (String(url).endsWith("/models")) return Response.json({ models: [{ slug: "account-model", display_name: "Account model", visibility: "list" }] });
+        if (String(url).endsWith("/models")) return Response.json({ models: [
+          { slug: "account-model", display_name: "Account model", visibility: "list" },
+          { slug: "gpt-5.6-luna", display_name: "GPT-5.6 Luna", visibility: "list" },
+        ] });
         calls++;
         const body = JSON.parse(String(options?.body));
-        assert.equal(body.model, "account-model"); assert.equal(body.stream, true); assert.equal(body.store, false);
+        assert.equal(body.model, "gpt-5.6-luna"); assert.equal(body.stream, true); assert.equal(body.store, false);
         assert.equal(body.max_output_tokens, undefined); assert.ok(Array.isArray(body.input));
         assert.equal(body.text.format.strict, true);
         return stream({ type: "response.output_text.delta", delta: "partial" }, completed);
       };
       const response = await generate(req(cookie, "/api/generate", { premise: "A traveler enters a haunted village", tone: "Mysterious", language: "zh" }));
       assert.equal(response.status, 200); assert.equal((await response.json()).story.passages.length, 9); assert.equal(calls, 1);
+      const catalog = await connection(req(cookie, "/api/chatgpt", { action: "models" }));
+      assert.equal(catalog.status, 200);
+      assert.equal((await catalog.json()).models[0].id, "account-model");
       assert.equal((await chatGPTModels("rotated-access", AbortSignal.timeout(1000)))[0].id, "account-model");
+    });
+    await t.test("unavailable Luna does not silently switch models and explicit selection still works", async () => {
+      let calls = 0;
+      global.fetch = async (url, options) => {
+        if (String(url).endsWith("/models")) return Response.json({ models: [
+          { slug: "account-model", display_name: "Account model", visibility: "list" },
+          { slug: "gpt-5.6-luna", display_name: "GPT-5.6 Luna", visibility: "hide" },
+        ] });
+        calls++;
+        assert.equal(JSON.parse(String(options?.body)).model, "account-model");
+        return stream(completed);
+      };
+      const brief = { premise: "A traveler enters a haunted village", tone: "Mysterious", language: "zh" };
+      const unavailable = await generate(req(cookie, "/api/generate", brief));
+      assert.equal(unavailable.status, 400);
+      assert.match((await unavailable.json()).error, /GPT-5.6 Luna.*Settings/);
+      assert.equal((await generate(req(cookie, "/api/generate", { ...brief, model: "unknown-model" }))).status, 400);
+      assert.equal(calls, 0);
+      assert.equal((await generate(req(cookie, "/api/generate", { ...brief, model: "account-model" }))).status, 200);
+      assert.equal(calls, 1);
     });
     await t.test("model catalogs allow large metadata but return only visible model labels", async () => {
       global.fetch = async () => Response.json({ models: [
@@ -207,6 +274,55 @@ test("ChatGPT local authorization and generation", async (t) => {
       cookie = await finishSignIn(req(cookie, started.callback));
       assert.equal((await chatGPTStatus(req(cookie))).available, false);
       await assert.rejects(chatGPTCredential(req(cookie)), /not enabled/);
+    });
+    await t.test("localhost callback relays from IPv4 and completes only in the initiating browser", async () => {
+      clientId = "oaiapp_localhost";
+      const localRequest = (token = "", pathname = "/api/chatgpt", body?: unknown) => new Request(`http://localhost:3100${pathname}`, {
+        headers: { host: "localhost:3100", origin: "http://localhost:3100", cookie: `${SESSION_COOKIE}=${token}`, "Content-Type": "application/json" },
+        ...(body ? { method: "POST", body: JSON.stringify(body) } : {}),
+      });
+      global.fetch = async () => { throw new Error("unexpected provider call"); };
+      const started = await connection(localRequest("", "/api/chatgpt", { action: "signin" }));
+      assert.equal(started.status, 200);
+      const browserCookie = started.headers.get("set-cookie")!.split(";")[0].split("=")[1];
+      const authorize = new URL((await started.json()).url);
+      nonce = authorize.searchParams.get("nonce")!;
+      assert.equal(authorize.searchParams.get("redirect_uri"), `${origin}/api/chatgpt/callback`);
+      const providerReturn = `/api/chatgpt/callback?state=${authorize.searchParams.get("state")}&code=local-code&client_id=${clientId}&returnTo=https://evil.test`;
+      const relay = await callback(req("", providerReturn));
+      assert.equal(relay.status, 303);
+      assert.equal(relay.headers.get("set-cookie"), null);
+      assert.equal(relay.headers.get("cache-control"), "no-store");
+      assert.equal(relay.headers.get("referrer-policy"), "no-referrer");
+      const destination = new URL(relay.headers.get("location")!);
+      assert.equal(destination.origin, "http://localhost:3100");
+      assert.equal(destination.pathname, "/api/chatgpt/callback");
+      assert.equal(destination.searchParams.has("returnTo"), false);
+      const pathname = `${destination.pathname}${destination.search}`;
+      await assert.rejects(finishSignIn(localRequest("wrong-browser", pathname)), /verified/);
+      assert.equal((await chatGPTStatus(localRequest(browserCookie))).available, false);
+      global.fetch = async (url, options) => {
+        if (!String(url).endsWith("jwks.json")) {
+          const form = new URLSearchParams(String(options?.body));
+          assert.equal(form.get("redirect_uri"), `${origin}/api/chatgpt/callback`);
+          assert.equal(form.get("code"), "local-code");
+        }
+        return mockAuth(url, options);
+      };
+      const completed = await callback(localRequest(browserCookie, pathname));
+      assert.match(await completed.text(), /Connection complete/);
+      const newCookie = completed.headers.get("set-cookie")!;
+      assert.match(newCookie, /HttpOnly/i);
+      assert.doesNotMatch(newCookie, /Domain=/i);
+      const token = newCookie.split(";")[0].split("=")[1];
+      assert.equal((await (await generationStatus(localRequest(token, "/api/generate"))).json()).available, true);
+      await assert.rejects(finishSignIn(localRequest(browserCookie, pathname)), /verified/);
+      assert.equal((await callback(req("", providerReturn))).headers.get("location"), null);
+      global.fetch = async () => { throw new Error("unexpected provider call"); };
+      const next = await startSignIn(localRequest(token));
+      const expiredState = new URL(next.url).searchParams.get("state")!;
+      await withStore((store) => { store.pending[expiredState].expires = 0; });
+      assert.equal((await callback(req("", `/api/chatgpt/callback?state=${expiredState}&code=expired`))).headers.get("location"), null);
     });
   } finally {
     global.fetch = originalFetch;

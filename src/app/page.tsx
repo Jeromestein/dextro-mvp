@@ -1,4 +1,2 @@
-import Studio from "@/components/studio";
-export default function Page() {
-  return <Studio />;
-}
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/builder"); }

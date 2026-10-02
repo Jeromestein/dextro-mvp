@@ -129,3 +129,39 @@ The meeting documents contain earlier proposals and an unfilled decision checkli
 - The user must disable credit spillover in ChatGPT usage settings to guarantee subscription-only spending.
 - Local integration does not establish permission to operate a remotely hosted or paid Vercel application with plan usage.
 - ChatGPT login, plan-use consent, and live model discovery were verified in Chrome on 2026-10-01. Live GPT-6-Astra generation of an 8-passage, 3-ending Chinese adventure was also verified; see VERIFICATION.md.
+
+## Decision: retain local subscription testing (2026-10-02)
+
+- The user reversed the removal request and asked to restore Sign in with ChatGPT for local testing.
+- Restore the implementation from commit `8dcbcd1`; keep the local provider separate from API-key billing and hosted deployment.
+- Existing eligible subscription allowance can fund local tests. This consumes shared plan usage; users must disable credit spillover if they want no additional credit charges.
+- The previously deleted local credentials cannot be restored from Git. A fresh sign-in is required.
+
+## Decision: make Game Builder the primary workspace (2026-10-02)
+
+- The user requested a substantial interface cleanup and a clearer site architecture.
+- Open directly into a dedicated Game Builder page. Creation and generated-draft review must not be modal dialogs.
+- Move ChatGPT account information, model selection, usage links, and workshop access into a separate Settings page. Keep local subscription testing available.
+- Give game editing, the saved-game library, and playing their own routes with normal browser navigation.
+- Preserve existing browser-local stories and editor/export capabilities. Do not introduce cloud accounts or storage migration as part of this redesign.
+- Use a compact navigation bar, a focused creation form, and responsive editor layouts. See [WORKSPACE_ARCHITECTURE.md](WORKSPACE_ARCHITECTURE.md).
+
+## Decision: remove manual access-code entry for local ChatGPT (2026-10-02)
+
+- The user requested removing the repeated step of copying `AI_ACCESS_CODE` from `.env.local`.
+- Local ChatGPT mode offers direct **Continue with ChatGPT** sign-in and does not require this code for account actions or generation.
+- Preserve strict IPv4 loopback, development-only, same-origin, OAuth/session, and plan-permission checks. Never expose the environment code to the browser or store it there automatically.
+- API-key mode retains the workshop access code, including hosted deployments.
+
+## Decision: support localhost for local ChatGPT (2026-10-02)
+
+- The user prefers `localhost`; support it alongside `127.0.0.1` for sign-in, settings, and generation.
+- OpenAI's authorization redirect must remain IPv4 loopback. Relay localhost attempts back to their initiating browser origin before verifying state/cookie and completing the exchange; retain the same registered redirect URI in that exchange.
+- Preserve strict same-origin and port checks, development-only access, one-time state, PKCE, session rotation, and host-only cookies.
+- Existing games are not migrated between localhost and IPv4 origins; JSON export/import remains available.
+
+## Default model — 2026-10-02
+
+- Default local ChatGPT game generation to GPT-5.6 Luna (`gpt-5.6-luna`).
+- Keep manual model selection in Settings. Loading the catalog must preserve the current choice.
+- Verify account availability before inference; prompt for another selection if Luna is unavailable.

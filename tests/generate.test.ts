@@ -48,6 +48,8 @@ test("AI generation pipeline", async (t) => {
         assert.equal((await POST(request())).status, 503);
         process.env.OPENAI_API_KEY = "fake-test-key";
         assert.equal((await POST(request(brief, "wrong"))).status, 401);
+        assert.equal((await POST(request(brief, ""))).status, 401);
+        assert.equal((await POST(request(brief, "", { headers: { host: "127.0.0.1:3100", origin: "http://127.0.0.1:3100", "Content-Type": "application/json" } }))).status, 401);
         assert.equal(
           (await POST(request({ ...brief, premise: "short" }))).status,
           400,

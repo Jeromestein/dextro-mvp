@@ -3,6 +3,7 @@ import { chatGPTCredential, chatGPTStatus, watchChatGPTRequest } from "@/lib/cha
 import { chatGPTModels, readChatGPTStream, requireProviderOK } from "@/lib/chatgpt-provider";
 import { isLocalChatGPT, requestOrigin, sameOrigin, usesChatGPT, validWorkshopCode, workshopConfigured } from "@/lib/workshop";
 import { ServiceError as GenerationError, readBounded } from "@/lib/server-errors";
+import { DEFAULT_CHATGPT_MODEL } from "@/lib/ai-models";
 import { z } from "zod";
 import {
   checkDraft,
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
     const local = isLocalChatGPT(request);
     try {
       const status = local ? await chatGPTStatus(request) : undefined;
-      return json({ provider: "chatgpt", local, available: Boolean(status?.available && workshopConfigured()) });
+      return json({ provider: "chatgpt", local, available: Boolean(status?.available) });
     } catch { return json({ provider: "chatgpt", local, available: false }); }
   }
   return json({ available: configured() });
@@ -107,8 +108,8 @@ async function askProvider(input: string, signal: AbortSignal, provider: { acces
 export async function POST(request: Request) {
   const plan = usesChatGPT();
   if (plan && (!isLocalChatGPT(request) || !sameOrigin(request)))
-    return json({ error: "Use ChatGPT generation from the local studio at 127.0.0.1." }, 403);
-  if (!(plan ? workshopConfigured() : configured()))
+    return json({ error: "Use ChatGPT generation from the local studio at localhost or 127.0.0.1." }, 403);
+  if (!plan && !configured())
     return json(
       {
         error:
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
       },
       503,
     );
-  if (!validWorkshopCode(request))
+  if (!plan && !validWorkshopCode(request))
     return json({ error: "That workshop access code is not correct." }, 401);
   const origin = request.headers.get("origin");
   if (origin && origin !== requestOrigin(request))
@@ -147,8 +148,10 @@ export async function POST(request: Request) {
       connection = await watchChatGPTRequest(request, selectedAccount);
       signal = AbortSignal.any([signal, connection.signal]);
       const models = await chatGPTModels(credential.access, signal);
-      const model = input.model || models[0]?.id;
-      if (!model || !models.some((m) => m.id === model)) return json({ error: "Choose an available model for this ChatGPT account." }, 400);
+      const model = input.model || DEFAULT_CHATGPT_MODEL.id;
+      if (!models.some((m) => m.id === model)) return json({ error: input.model
+        ? "The selected model is unavailable for this ChatGPT account. Choose another model in Settings."
+        : `${DEFAULT_CHATGPT_MODEL.name} is unavailable for this ChatGPT account. Choose another model in Settings.` }, 400);
       provider = { access: credential.access, model, plan: true };
     }
     const brief = {

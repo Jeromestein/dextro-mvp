@@ -10,24 +10,25 @@ export function validWorkshopCode(request: Request) {
 
 export const usesChatGPT = () => process.env.AI_PROVIDER === "chatgpt";
 
-// Next normalizes loopback URLs to localhost internally. Validate the actual Host
-// independently and retain 127.0.0.1 in the OAuth callback and Origin checks.
-export function requestOrigin(request: Request) {
+// Next may normalize the internal URL to localhost. Match the actual Host to
+// an exact loopback hostname and the request port; never trust forwarded hosts.
+function loopbackOrigin(request: Request) {
   const url = new URL(request.url);
   const host = request.headers.get("host");
-  const expected = `127.0.0.1${url.port ? `:${url.port}` : ""}`;
-  if (url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname) && host === expected)
-    return `http://${expected}`;
-  return url.origin;
+  const allowed = ["127.0.0.1", "localhost"].map((name) => `${name}${url.port ? `:${url.port}` : ""}`);
+  return url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname) && host && allowed.includes(host)
+    ? `http://${host}` : null;
+}
+export function requestOrigin(request: Request) {
+  return loopbackOrigin(request) || new URL(request.url).origin;
 }
 
+// Local ChatGPT actions do not need a workshop code. Every POST must also pass
+// sameOrigin, and generation still requires the browser's authorized session.
 // This integration is a single local runtime, never a hosted credential proxy.
 export function isLocalChatGPT(request: Request) {
-  const url = new URL(request.url);
-  const expected = `127.0.0.1${url.port ? `:${url.port}` : ""}`;
   return usesChatGPT() && !process.env.VERCEL && process.env.NODE_ENV !== "production" &&
-    url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname) &&
-    request.headers.get("host") === expected;
+    Boolean(loopbackOrigin(request));
 }
 
 export function sameOrigin(request: Request) {
