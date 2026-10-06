@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import "./workspace.css";
+import "@/app/globals.css";
+import "@/modules/workspace/styles.css";
 import "@xyflow/react/dist/style.css";
-import "./story-editor.css";
+import "@/modules/editor/styles.css";
 export const metadata: Metadata = {
   title: "Dextro — Every choice opens a world",
   description:

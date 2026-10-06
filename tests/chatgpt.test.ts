@@ -4,13 +4,13 @@ import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
-import { accountAction, chatGPTCredential, chatGPTStatus, finishSignIn, SESSION_COOKIE, startSignIn, verifyIdentity, watchChatGPTRequest, withStore } from "../src/lib/chatgpt-auth";
-import { readChatGPTStream, chatGPTModels } from "../src/lib/chatgpt-provider";
-import { isLocalChatGPT, requestOrigin, sameOrigin } from "../src/lib/workshop";
-import { GET as generationStatus, POST as generate } from "../src/app/api/generate/route";
-import { GET as connectionStatus, POST as connection } from "../src/app/api/chatgpt/route";
-import { GET as callback } from "../src/app/api/chatgpt/callback/route";
-import { sampleStory } from "../src/lib/sample";
+import { accountAction, chatGPTCredential, chatGPTStatus, finishSignIn, SESSION_COOKIE, startSignIn, verifyIdentity, watchChatGPTRequest, withStore } from "../src/server/auth/chatgpt";
+import { readChatGPTStream, chatGPTModels } from "../src/server/providers/chatgpt";
+import { isLocalChatGPT, requestOrigin, sameOrigin } from "../src/server/auth/workshop";
+import { GET as generationStatus, POST as generate } from "@/app/api/generate/route";
+import { GET as connectionStatus, POST as connection } from "@/app/api/chatgpt/route";
+import { GET as callback } from "@/app/api/chatgpt/callback/route";
+import { sampleStory } from "../src/modules/story/sample";
 
 const origin = "http://127.0.0.1:3100";
 const req = (cookie = "", pathname = "/api/chatgpt", body?: unknown) => new Request(`${origin}${pathname}`, {

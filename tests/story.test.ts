@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sampleStory } from "../src/lib/sample";
-import { storySchema, validateStory, newStory } from "../src/lib/story";
-import { buildGame } from "../src/lib/export";
+import { sampleStory } from "../src/modules/story/sample";
+import { storySchema, validateStory, newStory } from "../src/modules/story/model";
+import { buildGame } from "../src/modules/export/standalone";
 
 test("the complete sample has reachable passages and three playable endings", () => {
   const story = storySchema.parse(sampleStory());

@@ -1,5 +1,5 @@
-import { WorkspaceProvider } from "@/components/workspace-provider";
-import WorkspaceShell from "@/components/workspace-shell";
+import { WorkspaceProviders } from "@/modules/workspace/providers";
+import WorkspaceShell from "@/modules/workspace/shell";
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
-  return <WorkspaceProvider><WorkspaceShell>{children}</WorkspaceShell></WorkspaceProvider>;
+  return <WorkspaceProviders><WorkspaceShell>{children}</WorkspaceShell></WorkspaceProviders>;
 }

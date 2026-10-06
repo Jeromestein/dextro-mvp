@@ -1,10 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sampleStory } from "../src/lib/sample";
-import { storySchema, validateStory, newPassage, copyStory } from "../src/lib/story";
-import { buildGame } from "../src/lib/export";
-import { appendPassage, autoLayout, changePassage, connectChoice, createHistory, editorReducer,
-  layoutSignature, NODE_WIDTH, nodeHeight, outlineFor, positionsFor, removePassage, setPositions, type OutlineItem } from "../src/lib/editor";
+import { sampleStory } from "../src/modules/story/sample";
+import { storySchema, validateStory, newPassage, copyStory } from "../src/modules/story/model";
+import { buildGame } from "../src/modules/export/standalone";
+import { appendPassage, changePassage, connectChoice, removePassage } from "../src/modules/editor/session/operations";
+import { createHistory, editorReducer } from "../src/modules/editor/session/history";
+import { autoLayout, layoutSignature, NODE_WIDTH, nodeHeight, positionsFor, setPositions } from "../src/modules/editor/graph/layout";
+import { outlineFor, type OutlineItem } from "../src/modules/editor/outline/model";
 
 test("old backups remain compatible; layout roundtrips without leaking into playable HTML", () => {
   const old = sampleStory();

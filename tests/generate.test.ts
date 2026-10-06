@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { GET, POST } from "../src/app/api/generate/route";
-import { sampleStory } from "../src/lib/sample";
-import { buildGame } from "../src/lib/export";
+import { GET, POST } from "@/app/api/generate/route";
+import { sampleStory } from "../src/modules/story/sample";
+import { buildGame } from "../src/modules/export/standalone";
 
 const brief = {
   premise: "A lighthouse keeper must find a missing letter.",

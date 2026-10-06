@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { accountAction, chatGPTCredential, chatGPTStatus, SESSION_COOKIE, startSignIn } from "@/lib/chatgpt-auth";
-import { chatGPTModels } from "@/lib/chatgpt-provider";
-import { isLocalChatGPT, sameOrigin } from "@/lib/workshop";
-import { ServiceError, readBounded } from "@/lib/server-errors";
+import { accountAction, chatGPTCredential, chatGPTStatus, SESSION_COOKIE, startSignIn } from "@/server/auth/chatgpt";
+import { chatGPTModels } from "@/server/providers/chatgpt";
+import { isLocalChatGPT, sameOrigin } from "@/server/auth/workshop";
+import { ServiceError, readBounded } from "@/server/errors";
 
 export const runtime = "nodejs";
 const json = (data: unknown, status = 200) => NextResponse.json(data, { status, headers: { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" } });

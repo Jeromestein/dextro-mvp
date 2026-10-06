@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { finishSignIn, SESSION_COOKIE, signInReturnURL } from "@/lib/chatgpt-auth";
-import { isLocalChatGPT } from "@/lib/workshop";
-import { ServiceError } from "@/lib/server-errors";
+import { finishSignIn, SESSION_COOKIE, signInReturnURL } from "@/server/auth/chatgpt";
+import { isLocalChatGPT } from "@/server/auth/workshop";
+import { ServiceError } from "@/server/errors";
 
 export const runtime = "nodejs";
 export async function GET(request: Request) {
