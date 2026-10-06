@@ -21,6 +21,20 @@ export const passageSchema = z.object({
   image: imageSchema,
   choices: z.array(choiceSchema).max(8),
 });
+export const GRAPH_COORDINATE_LIMIT = 100000;
+export const editorLayoutSchema = z.object({
+  positions: z.array(z.object({
+    id: z.string().min(1).max(100),
+    x: z.number().finite().min(-GRAPH_COORDINATE_LIMIT).max(GRAPH_COORDINATE_LIMIT),
+    y: z.number().finite().min(-GRAPH_COORDINATE_LIMIT).max(GRAPH_COORDINATE_LIMIT),
+  })).max(150).refine((items) => new Set(items.map((p) => p.id)).size === items.length,
+    "Layout passage IDs must be unique."),
+  viewport: z.object({
+    x: z.number().finite().min(-GRAPH_COORDINATE_LIMIT * 10).max(GRAPH_COORDINATE_LIMIT * 10),
+    y: z.number().finite().min(-GRAPH_COORDINATE_LIMIT * 10).max(GRAPH_COORDINATE_LIMIT * 10),
+    zoom: z.number().finite().min(0.2).max(2),
+  }).optional(),
+});
 export const storySchema = z
   .object({
     version: z.literal(1),
@@ -31,6 +45,7 @@ export const storySchema = z
     updatedAt: z.string().max(50),
     startId: z.string().max(100),
     passages: z.array(passageSchema).min(1).max(150),
+    editor: editorLayoutSchema.optional(),
   })
   .superRefine((story, ctx) => {
     if (new Set(story.passages.map((p) => p.id)).size !== story.passages.length)

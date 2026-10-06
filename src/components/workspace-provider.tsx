@@ -44,7 +44,7 @@ function useWorkspaceState() {
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
   }, [storageError, draft]);
-  const persistStory = (story: Story) => {
+  const persistStory = useCallback((story: Story) => {
     const stamped = { ...story, updatedAt: new Date().toISOString() };
     if (new TextEncoder().encode(JSON.stringify(stamped)).length > 24_000_000) {
       setStorageError("This story is too large to save. Remove an image or shorten the text.");
@@ -58,7 +58,7 @@ function useWorkspaceState() {
       .catch((error) => setStorageError(error.message))
       .finally(() => { writes.current--; if (!writes.current) setSaving(false); });
     return true;
-  };
+  }, []);
   const deleteSavedStory = async (id: string) => {
     await saveQueue.current;
     await removeStory(id);

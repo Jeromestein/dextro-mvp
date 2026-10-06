@@ -22,6 +22,8 @@ Open http://localhost:3000. Run the development server from your own terminal fo
 - A separate Settings page for ChatGPT accounts, model selection, usage links, and workshop access.
 - A complete original sample, **The Last Light**, with nine passages and three endings. Playing the sample does not change it; editing creates a personal copy.
 - Passage editing, choice labels, destinations, branch convergence, opening selection, and multiple endings.
+- Synchronized Graph and Outline views: drag passages, pan and zoom, connect individual choices, and arrange branches automatically. Mobile opens in Outline.
+- Session undo/redo for content, connections, deletion, and layout; saved node positions and viewport are included in editable backups.
 - Live preview from a selected passage or the opening, plus a mobile-friendly player and restart controls.
 - Browser-local IndexedDB persistence with a save indicator and explicit storage failure messages.
 - Optional embedded PNG, JPEG, or WebP scene images (up to 2 MB per uploaded image).
@@ -34,7 +36,7 @@ Open http://localhost:3000. Run the development server from your own terminal fo
 | Page | Purpose |
 | --- | --- |
 | `/builder` | Default destination: generate a draft or start a blank game. |
-| `/builder/[storyId]` | Edit passages, choices, and endings; preview and export. |
+| `/builder/[storyId]` | Graph/Outline authoring, passage editing, live preview, validation, and export. |
 | `/library` | Find, import, and manage saved games. |
 | `/play/[storyId]` | Play one game in a focused reading view. |
 | `/settings` | Connect ChatGPT or the configured API provider; select a model and manage access. |
@@ -107,7 +109,11 @@ Core tests cover all sample endings, broken destinations, loops with and without
 - `src/components/workspace-shell.tsx`: persistent workspace navigation.
 - `src/components/game-builder.tsx`: full-page creation and draft review.
 - `src/components/connection-settings.tsx`: isolated AI/account configuration.
-- `src/components/studio.tsx`: existing library, passage editor, player integration, and small confirmation dialogs.
+- `src/components/studio.tsx`: library and player integration; loads the story editor on demand.
+- `src/components/story-editor.tsx`: shared editing state, undo/redo, passage form, preview, and export.
+- `src/components/story-graph.tsx`: React Flow canvas with one source handle per choice.
+- `src/components/story-outline.tsx`: collapsible story traversal with references for shared branches and loops.
+- `src/lib/editor.ts`: immutable story operations, bounded history, and lazy-loaded ELK layout.
 - `src/components/ai-draft-review.tsx`: full unsaved-draft preview, passage selection, and keep/discard actions.
 - `src/lib/ai-story.ts`: shared generation input/schema and draft validation.
 - `src/components/player.tsx`: shared editor preview and player.

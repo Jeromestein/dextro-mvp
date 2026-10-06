@@ -33,6 +33,12 @@ Spending Spree is not the target game type or required gameplay template. The ea
 
 ## Initial MVP Implementation Baseline
 
+The original list-only editor baseline below is superseded by the confirmed
+2026-10-06 authoring update: provide both Graph and Outline, with passage dragging,
+canvas pan/zoom, and choice connections. The implementation also includes automatic
+layout, session undo/redo, a shared passage inspector/preview, and browser-local
+layout persistence. Cloud collaboration and publishing remain outside this scope.
+
 ### Outcome
 
 An author can create a short choice-based text adventure, edit its branches, play it from beginning to ending, and export a playable version for another person. Include one complete sample story to demonstrate the full workflow.

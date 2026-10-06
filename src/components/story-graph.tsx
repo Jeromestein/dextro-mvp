@@ -1,0 +1,146 @@
+"use client";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ReactFlow, ReactFlowProvider, Background, Controls, Handle, Position, MarkerType, Panel,
+  useReactFlow, useUpdateNodeInternals, type Node, type NodeProps, type NodeChange, type Edge,
+  type OnConnectEnd, type Viewport as FlowViewport } from "@xyflow/react";
+import { AlertCircle, ArrowUpRight, Flag, Link2, Plus, Unlink, X, Focus } from "lucide-react";
+import { GRAPH_COORDINATE_LIMIT, type Issue, type Passage, type Story } from "@/lib/story";
+import { NODE_WIDTH, positionsFor, type Point, type Positions, type ChoiceRef, type Viewport } from "@/lib/editor";
+
+type PassageNode = Node<{
+  passage: Passage; opening: boolean; issues: Issue[]; connecting: boolean;
+  onSelect: (id: string) => void; onChoice: (id: string) => void; onConnect: (ref: ChoiceRef) => void;
+}, "passage">;
+const PassageCard = memo(function PassageCard({ id, data, selected }: NodeProps<PassageNode>) {
+  const { passage: p } = data;
+  const updateHandles = useUpdateNodeInternals();
+  const handles = p.choices.map((c) => c.id).join("|");
+  useEffect(() => { updateHandles(id); }, [id, handles, p.ending, updateHandles]);
+  return <div className={`map-node ${selected ? "selected" : ""} ${p.ending ? "ending" : ""} ${data.connecting ? "connect-target" : ""}`}>
+    <Handle type="target" position={Position.Left} id="in" aria-label={`Connect to ${p.title || "Untitled passage"}`} />
+    <div className="map-node-heading">
+      <span className="map-node-type">{data.opening ? <><span className="opening-dot" /> Opening</> : p.ending ? <><Flag size={12} /> Ending</> : "Passage"}</span>
+      <button className="map-node-title nodrag" onClick={() => data.onSelect(id)} title={p.title || "Untitled passage"}>{p.title || "Untitled passage"}</button>
+      {data.issues.length > 0 && <button className={`map-node-problem nodrag ${data.issues.some((i) => i.level === "error") ? "error" : ""}`} onClick={() => data.onSelect(id)} aria-label={`${data.issues.length} issues in ${p.title}`} title={data.issues.map((i) => i.message).join("\n")}><AlertCircle size={14} /></button>}
+    </div>
+    {!p.ending && p.choices.map((c, i) => <div className={`map-choice ${!c.target ? "unconnected" : ""}`} key={c.id}>
+      <span className="map-choice-number">{i + 1}</span><span className="map-choice-label" title={c.text || "Untitled choice"}>{c.text || "Untitled choice"}</span>
+      <button className="map-connect-button nodrag" aria-label={`Choose destination for ${c.text || `choice ${i + 1}`}`} title="Click to choose a destination" onClick={(e) => { e.stopPropagation(); data.onConnect({ passageId: id, choiceId: c.id }); }}><ArrowUpRight size={13} /></button>
+      <Handle type="source" position={Position.Right} id={c.id} aria-label={`Drag to connect ${c.text || `choice ${i + 1}`}`} />
+    </div>)}
+    {p.ending ? <div className="map-ending-caption">A place to end the journey.</div> : <button className="map-add-choice nodrag" disabled={p.choices.length >= 8} onClick={(e) => { e.stopPropagation(); data.onChoice(id); }}><Plus size={12} /> Add choice</button>}
+  </div>;
+});
+const nodeTypes = { passage: PassageCard };
+type Props = {
+  story: Story; selected: string; issues: Issue[]; focusToken: number; layoutToken: number;
+  onSelect: (id: string) => void; onMove: (positions: Positions) => void; onViewport: (v: Viewport) => void;
+  onConnect: (ref: ChoiceRef, target: string) => void; onAddChoice: (id: string) => void;
+  onCreateAt: (position: Point, from?: ChoiceRef) => void; onDelete: (id: string) => void;
+};
+function Graph(props: Props) {
+  const { story, selected, issues, onSelect, onMove, onConnect, onAddChoice } = props;
+  const flow = useReactFlow<PassageNode>();
+  const [dragPositions, setDragPositions] = useState<Record<string, Point>>({});
+  const [measurements, setMeasurements] = useState<Record<string, { width: number; height: number }>>({});
+  const [pending, setPending] = useState<ChoiceRef | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<ChoiceRef | null>(null);
+  const reconnecting = useRef(false);
+  const graphRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+  const latest = useRef(props);
+  useEffect(() => { latest.current = props; });
+  const select = useCallback((id: string) => {
+    if (pending) { onConnect(pending, id); setPending(null); }
+    setSelectedEdge(null); onSelect(id);
+  }, [pending, onConnect, onSelect]);
+  const positions = useMemo(() => new Map(positionsFor(story).map((p) => [p.id, p])), [story]);
+  const nodes: PassageNode[] = useMemo(() => story.passages.map((p) => ({
+    id: p.id, type: "passage", position: dragPositions[p.id] || positions.get(p.id)!, width: NODE_WIDTH,
+    measured: measurements[p.id],
+    selected: p.id === selected, dragHandle: ".map-node-heading", ariaLabel: `${p.title || "Untitled passage"}, ${p.ending ? "ending" : "passage"}`,
+    data: { passage: p, opening: story.startId === p.id, issues: issues.filter((i) => i.passageId === p.id),
+      connecting: !!pending, onSelect: select, onChoice: onAddChoice, onConnect: setPending },
+  })), [story, dragPositions, measurements, positions, selected, issues, pending, select, onAddChoice]);
+  const edges: Edge[] = useMemo(() => story.passages.flatMap((p) => p.ending ? [] : p.choices.flatMap((c) => {
+    if (!story.passages.some((p) => p.id === c.target)) return [];
+    const active = p.id === selected || c.target === selected;
+    return [{ id: JSON.stringify([p.id, c.id]), source: p.id, sourceHandle: c.id, target: c.target, targetHandle: "in",
+      reconnectable: "target" as const, type: "default", selected: selectedEdge?.passageId === p.id && selectedEdge.choiceId === c.id,
+      ariaLabel: `${c.text || "Untitled choice"} from ${p.title} to ${story.passages.find((p) => p.id === c.target)?.title}`,
+      markerEnd: { type: MarkerType.ArrowClosed, color: active ? "#52785d" : "#b0bdb0" },
+      style: { stroke: active ? "#52785d" : "#b0bdb0", strokeWidth: active ? 2 : 1.5 } }];
+  })), [story, selected, selectedEdge]);
+
+  const onNodesChange = useCallback((changes: NodeChange<PassageNode>[]) => {
+    const dimensions = changes.filter((c) => c.type === "dimensions" && c.dimensions);
+    if (dimensions.length) setMeasurements((old) => {
+      const next = { ...old };
+      dimensions.forEach((c) => { if (c.type === "dimensions" && c.dimensions) next[c.id] = c.dimensions; });
+      return next;
+    });
+    const moves = changes.filter((c) => c.type === "position" && c.position);
+    if (moves.length) {
+      const next: Record<string, Point> = {};
+      moves.forEach((c) => { if (c.type === "position" && c.position) next[c.id] = c.position; });
+      if (dragging.current) setDragPositions((old) => ({ ...old, ...next }));
+      else onMove(Object.entries(next).map(([id, p]) => ({ id, ...p })));
+    }
+  }, [onMove]);
+  const fit = useCallback(() => { void flow.fitView({ padding: .18, minZoom: .2, maxZoom: 1, duration: 250 }); }, [flow]);
+  useEffect(() => {
+    if (!props.layoutToken) return;
+    const frame = requestAnimationFrame(() => { void flow.fitView({ padding: .18, minZoom: .2, maxZoom: .9, duration: 250 }); });
+    return () => cancelAnimationFrame(frame);
+  }, [props.layoutToken, flow]);
+  useEffect(() => {
+    if (!props.focusToken) return;
+    const current = latest.current;
+    const position = positionsFor(current.story).find((p) => p.id === current.selected);
+    if (position) {
+      const zoom = Math.max(.85, flow.getZoom());
+      const width = graphRef.current?.clientWidth || 800;
+      const offset = width < 500 ? 0 : width / (4 * zoom);
+      void flow.setCenter(position.x + NODE_WIDTH / 2 + offset, position.y + 100, { zoom, duration: 200 });
+    }
+  }, [props.focusToken, flow]);
+  const onConnectEnd: OnConnectEnd = (event, state) => {
+    if (reconnecting.current || state.isValid || state.toNode || state.fromHandle?.type !== "source" || !state.fromNode || !state.fromHandle.id) return;
+    const target = event.target;
+    if (!(target instanceof Element) || !target.closest(".react-flow__pane")) return;
+    const point = "changedTouches" in event ? event.changedTouches[0] : event;
+    props.onCreateAt(flow.screenToFlowPosition({ x: point.clientX, y: point.clientY }), { passageId: state.fromNode.id, choiceId: state.fromHandle.id });
+  };
+  const edgeChoice = selectedEdge && story.passages.find((p) => p.id === selectedEdge.passageId)?.choices.find((c) => c.id === selectedEdge.choiceId);
+  return <div className="story-graph" ref={graphRef} aria-label="Story graph" onKeyDown={(e) => {
+    if ((e.target as HTMLElement).closest("input,textarea,select,[contenteditable=true]")) return;
+    if (e.key === "Escape") { setPending(null); setSelectedEdge(null); }
+    if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); if (selectedEdge) { onConnect(selectedEdge, ""); setSelectedEdge(null); } else props.onDelete(selected); }
+  }}>
+    <ReactFlow<PassageNode> nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange}
+      onNodeClick={(_, n) => select(n.id)} onEdgeClick={(_, e) => { setPending(null); setSelectedEdge({ passageId: e.source, choiceId: e.sourceHandle! }); onSelect(e.source); }}
+      onPaneClick={() => { setPending(null); setSelectedEdge(null); }}
+      onNodeDragStart={() => { dragging.current = true; }}
+      onNodeDragStop={(_, n, moved) => { onMove((moved.length ? moved : [n]).map((n) => ({ id: n.id, ...n.position }))); dragging.current = false; setDragPositions({}); }}
+      onConnect={(c) => { if (c.sourceHandle) { onConnect({ passageId: c.source, choiceId: c.sourceHandle }, c.target); setPending(null); } }}
+      onConnectEnd={onConnectEnd} onReconnectStart={() => { reconnecting.current = true; }}
+      onReconnect={(edge, connection) => { if (edge.sourceHandle) onConnect({ passageId: edge.source, choiceId: edge.sourceHandle }, connection.target); }}
+      onReconnectEnd={() => { reconnecting.current = false; }}
+      isValidConnection={(c) => !!c.sourceHandle && !!c.target && !!story.passages.find((p) => p.id === c.source && !p.ending)?.choices.some((v) => v.id === c.sourceHandle)}
+      onMoveEnd={(_, v: FlowViewport) => props.onViewport(v)}
+      defaultViewport={story.editor?.viewport} fitView={!story.editor?.viewport} fitViewOptions={{ padding: .2, minZoom: .2, maxZoom: .9 }}
+      minZoom={.2} maxZoom={2} deleteKeyCode={null} selectionKeyCode={null} multiSelectionKeyCode={null}
+      nodeExtent={[[-GRAPH_COORDINATE_LIMIT, -GRAPH_COORDINATE_LIMIT], [GRAPH_COORDINATE_LIMIT, GRAPH_COORDINATE_LIMIT]]}
+      snapToGrid snapGrid={[10, 10]} panOnScroll zoomOnDoubleClick={false} elevateEdgesOnSelect
+      onNodeDoubleClick={(_, n) => onSelect(n.id)}>
+      <Background color="#d6ded2" gap={22} size={1} />
+      <Controls showInteractive={false} fitViewOptions={{ padding: .18, minZoom: .2, maxZoom: 1 }} />
+      <Panel position="top-left"><div className="graph-caption"><span className="graph-caption-dot" /> YOUR STORY MAP <small>{story.passages.length} passages · {story.passages.filter((p) => p.ending).length} endings</small></div></Panel>
+      <Panel position="top-right"><button className="graph-fit" onClick={fit}><Focus size={14} /> Fit story</button></Panel>
+      <Panel position="bottom-center"><div className="graph-hint" role="status">
+        {pending ? <><Link2 size={14} /><span>Select a destination for “{story.passages.find((p) => p.id === pending.passageId)?.choices.find((c) => c.id === pending.choiceId)?.text || "Untitled choice"}”.</span><button aria-label="Cancel connection" onClick={() => setPending(null)}><X size={15} /></button></> : selectedEdge && edgeChoice ? <><Link2 size={14} /><span>{edgeChoice.text || "Untitled choice"}</span><button onClick={() => { onConnect(selectedEdge, ""); setSelectedEdge(null); }}><Unlink size={14} /> Disconnect</button></> : <span>Drag a heading to arrange · Connect from a choice · Scroll to pan</span>}
+      </div></Panel>
+    </ReactFlow>
+  </div>;
+}
+export default function StoryGraph(props: Props) { return <ReactFlowProvider><Graph {...props} /></ReactFlowProvider>; }
