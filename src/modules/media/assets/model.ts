@@ -9,7 +9,11 @@ const metadata = {
   id: z.string().min(1).max(100),
   name: z.string().min(1).max(200),
   credit: z.string().max(1000),
-  source: z.enum(["upload", "legacy"]),
+  source: z.enum(["upload", "legacy", "generated", "catalog"]),
+  provenance: z.discriminatedUnion("provider", [
+    z.object({ provider: z.literal("openai"), model: z.string().max(100), prompt: z.string().max(8000), createdAt: z.string().max(50) }),
+    z.object({ provider: z.enum(["kenney", "freesound"]), catalogId: z.string().max(100), sourceUrl: z.string().url().max(500), author: z.string().max(100), license: z.literal("CC0-1.0"), licenseUrl: z.literal("https://creativecommons.org/publicdomain/zero/1.0/"), verifiedAt: z.string().max(50) }),
+  ]).optional(),
 };
 export const assetSchema = z.discriminatedUnion("kind", [
   z.object({ ...metadata, kind: z.literal("image"), data: imageSchema.refine(Boolean, "An image file is required.") }),

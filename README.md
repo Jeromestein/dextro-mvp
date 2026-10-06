@@ -29,8 +29,10 @@ separate providers for the saved-game library, AI connection, and unsaved draft.
 Stories now use version 2 with shared image and audio assets. Version 1 stories
 and backups remain readable; files move into a separate IndexedDB media store
 only after a successful save. Existing routes and authentication are unchanged.
-Automatic images, curated music matching, and unified media generation remain
-future work in [Graph media design](doc/GRAPH_MEDIA_DESIGN.md).
+OpenAI scene images and a bundled Freesound CC0 music catalog now integrate with
+Graph/Media and story creation. Image calls require separately billed API access;
+configuration and mocked verification do not establish live provider access.
+See [Graph media design](doc/GRAPH_MEDIA_DESIGN.md) for remaining target features.
 
 ## Run locally
 
@@ -41,7 +43,7 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3000. Run the development server from your own terminal for ongoing work. In restricted environments that cannot create native file watchers, use `WATCHPACK_POLLING=true pnpm dev`.
+Open http://localhost:3100. Run the development server from your own terminal for ongoing work. In restricted environments that cannot create native file watchers, use `WATCHPACK_POLLING=true pnpm dev`.
 
 ## What works
 
@@ -61,6 +63,10 @@ Open http://localhost:3000. Run the development server from your own terminal fo
 - Validation for missing content, broken links, unreachable passages, invalid endings, and paths that cannot reach an ending. Broken playable exports are blocked; disconnected passages are warnings.
 - Editable `.dextro.json` backups and standalone HTML games with used images, audio, and credits embedded once per asset. The exported game runs without Next.js or an internet connection.
 - Optional AI draft generation through a server-only endpoint, with English, Simplified Chinese, or automatic language selection. Play the complete draft and inspect every ending before saving it as a new story.
+
+- Six bundled CC0 music tracks with preview, per-passage assignment, source records, and offline export; three Kenney jingles are reserved for later one-shot playback.
+- Optional story media planning: up to four shared scenes, mood-based music matching, incremental draft media, and a read-only Graph in draft review.
+- OpenAI scene previews with Apply/Discard, Storybook/Cinematic styles, cancellation, and independent image readiness in Settings. Missing-media recovery preserves existing assignments and skips stale scene plans.
 
 ## Workspace navigation
 
@@ -117,6 +123,7 @@ src/
 └── shared/ui/                 # Generic dialog and original artwork
 
 public/media/demo/             # Placeholder image and four chime samples
+public/media/library/          # CC0 music, reserved effects, source/license records
 doc/                           # Requirements, design, setup, verification
 └── archive/                   # Historical requirements and meeting materials
 ```

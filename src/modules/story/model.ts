@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { imageSchema } from "@/modules/media/images/schema";
+import { mediaPlanSchema } from "@/modules/media/generation/plan";
 import { assetSchema, emptyMedia, passageMediaSchema, type MediaAsset } from "@/modules/media/assets/model";
 
 export const choiceSchema = z.object({
@@ -42,6 +43,7 @@ const commonStorySchema = z
     passages: z.array(passageSchema).min(1).max(150),
     assets: z.array(assetSchema).max(300),
     editor: editorLayoutSchema.optional(),
+    mediaPlan: mediaPlanSchema.optional(),
   });
 export const currentStorySchema = commonStorySchema.superRefine((story, ctx) => {
     if (new Set(story.passages.map((p) => p.id)).size !== story.passages.length)

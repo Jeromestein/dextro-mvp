@@ -113,6 +113,20 @@ These examples were discussed as possible references; none has been selected as 
 | 2026-09-28 | Do not use Blender at this stage; prioritize an MVP. | User instruction in the project discussion. |
 | 2026-09-28 | Create a new project folder and begin implementation; use Next.js, pnpm, and Vercel as deployment target. | User approval to start. |
 | 2026-10-01 | Implement the initial AI generation workflow using a server-side OpenAI connection. | User instruction to begin after reviewing the design. |
+| 2026-10-06 | Use the OpenAI API for scene images and Kenney/Freesound CC0 assets for audio. | User selection following media-source research. |
+
+## Decision: image and audio sources (2026-10-06)
+
+- Use the OpenAI API for scene-image generation. This is a separately billed
+  image integration and does not change the existing text-provider selection.
+- Source the curated audio library from Kenney and Freesound, accepting CC0 assets
+  only. Record each asset's source and license before bundling or exporting it.
+- Integrate generated images and matched audio into the existing Graph/Media
+  workflow. Keep common scenes and tracks reusable across passages.
+- The initial OpenAI adapter and six-track CC0 catalog are implemented with
+  local mocked verification. Live image access and playback support for separate
+  ambience/effects remain pending.
+  See [Graph media design](GRAPH_MEDIA_DESIGN.md) for implementation boundaries.
 
 ## Existing Project Materials
 

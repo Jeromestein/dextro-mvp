@@ -12,7 +12,7 @@ import { NODE_WIDTH, positionsFor } from "./layout";
 import type { Point, Positions, ChoiceRef, Viewport } from "../session/types";
 
 type PassageNode = Node<{
-  image: string; music: string; showThumbnails: boolean; playing: boolean;
+  readOnly: boolean; image: string; music: string; showThumbnails: boolean; playing: boolean;
   passage: Passage; opening: boolean; issues: Issue[]; connecting: boolean;
   onMedia: (id: string) => void;
   onSelect: (id: string) => void; onChoice: (id: string) => void; onConnect: (ref: ChoiceRef) => void;
@@ -33,14 +33,15 @@ const PassageCard = memo(function PassageCard({ id, data, selected }: NodeProps<
     <div className="map-music"><Music2 size={11} /><span>{data.music || "Silence"}</span>{data.playing && <b>Playing</b>}</div>
     {!p.ending && p.choices.map((c, i) => <div className={`map-choice ${!c.target ? "unconnected" : ""}`} key={c.id}>
       <span className="map-choice-number">{i + 1}</span><span className="map-choice-label" title={c.text || "Untitled choice"}>{c.text || "Untitled choice"}</span>
-      <button className="map-connect-button nodrag" aria-label={`Choose destination for ${c.text || `choice ${i + 1}`}`} title="Click to choose a destination" onClick={(e) => { e.stopPropagation(); data.onConnect({ passageId: id, choiceId: c.id }); }}><ArrowUpRight size={13} /></button>
+      <button disabled={data.readOnly} className="map-connect-button nodrag" aria-label={`Choose destination for ${c.text || `choice ${i + 1}`}`} title="Click to choose a destination" onClick={(e) => { e.stopPropagation(); data.onConnect({ passageId: id, choiceId: c.id }); }}><ArrowUpRight size={13} /></button>
       <Handle type="source" position={Position.Right} id={c.id} aria-label={`Drag to connect ${c.text || `choice ${i + 1}`}`} />
     </div>)}
-    {p.ending ? <div className="map-ending-caption">A place to end the journey.</div> : <button className="map-add-choice nodrag" disabled={p.choices.length >= 8} onClick={(e) => { e.stopPropagation(); data.onChoice(id); }}><Plus size={12} /> Add choice</button>}
+    {p.ending ? <div className="map-ending-caption">A place to end the journey.</div> : <button className="map-add-choice nodrag" disabled={data.readOnly || p.choices.length >= 8} onClick={(e) => { e.stopPropagation(); data.onChoice(id); }}><Plus size={12} /> Add choice</button>}
   </div>;
 });
 const nodeTypes = { passage: PassageCard };
 type Props = {
+  readOnly?: boolean;
   playback?: PlaybackProgress; onMedia: (id: string) => void;
   story: Story; selected: string; issues: Issue[]; focusToken: number; layoutToken: number;
   onSelect: (id: string) => void; onMove: (positions: Positions) => void; onViewport: (v: Viewport) => void;
@@ -49,6 +50,7 @@ type Props = {
 };
 function Graph(props: Props) {
   const { story, selected, issues, onSelect, onMove, onConnect, onAddChoice, onMedia, playback } = props;
+  const readOnly = props.readOnly === true;
   const playingId = playback?.current;
   const flow = useReactFlow<PassageNode>();
   const [showThumbnails, setShowThumbnails] = useState(true);
@@ -70,21 +72,21 @@ function Graph(props: Props) {
     id: p.id, type: "passage", position: dragPositions[p.id] || positions.get(p.id)!, width: NODE_WIDTH,
     measured: measurements[p.id],
     selected: p.id === selected, dragHandle: ".map-node-heading", ariaLabel: `${p.title || "Untitled passage"}, ${p.ending ? "ending" : "passage"}`,
-    data: { image: assignedAsset(story, p, "image")?.data || "", music: assignedAsset(story, p, "audio")?.name || "",
+    data: { readOnly, image: assignedAsset(story, p, "image")?.data || "", music: assignedAsset(story, p, "audio")?.name || "",
       showThumbnails, playing: playingId === p.id, onMedia, passage: p, opening: story.startId === p.id, issues: issues.filter((i) => i.passageId === p.id),
       connecting: !!pending, onSelect: select, onChoice: onAddChoice, onConnect: setPending },
-  })), [story, dragPositions, measurements, positions, selected, issues, pending, select, onAddChoice, onMedia, playingId, showThumbnails]);
+  })), [story, dragPositions, measurements, positions, selected, issues, pending, select, onAddChoice, onMedia, playingId, showThumbnails, readOnly]);
   const edges: Edge[] = useMemo(() => story.passages.flatMap((p) => p.ending ? [] : p.choices.flatMap((c) => {
     if (!story.passages.some((p) => p.id === c.target)) return [];
     const visited = playback?.path.some((step) => step.passageId === p.id && step.choiceId === c.id && step.target === c.target);
     const active = p.id === selected || c.target === selected;
     return [{ id: JSON.stringify([p.id, c.id]), source: p.id, sourceHandle: c.id, target: c.target, targetHandle: "in",
       animated: !!visited,
-      reconnectable: "target" as const, type: "default", selected: selectedEdge?.passageId === p.id && selectedEdge.choiceId === c.id,
+      reconnectable: readOnly ? false : "target" as const, type: "default", selected: selectedEdge?.passageId === p.id && selectedEdge.choiceId === c.id,
       ariaLabel: `${c.text || "Untitled choice"} from ${p.title} to ${story.passages.find((p) => p.id === c.target)?.title}`,
       markerEnd: { type: MarkerType.ArrowClosed, color: visited ? "#b97737" : active ? "#52785d" : "#b0bdb0" },
       style: { stroke: visited ? "#b97737" : active ? "#52785d" : "#b0bdb0", strokeWidth: visited ? 3 : active ? 2 : 1.5 } }];
-  })), [story, selected, selectedEdge, playback]);
+  })), [story, selected, selectedEdge, playback, readOnly]);
 
   const onNodesChange = useCallback((changes: NodeChange<PassageNode>[]) => {
     const dimensions = changes.filter((c) => c.type === "dimensions" && c.dimensions);
@@ -127,11 +129,12 @@ function Graph(props: Props) {
   };
   const edgeChoice = selectedEdge && story.passages.find((p) => p.id === selectedEdge.passageId)?.choices.find((c) => c.id === selectedEdge.choiceId);
   return <div className="story-graph" ref={graphRef} aria-label="Story graph" onKeyDown={(e) => {
+    if (readOnly) return;
     if ((e.target as HTMLElement).closest("input,textarea,select,[contenteditable=true]")) return;
     if (e.key === "Escape") { setPending(null); setSelectedEdge(null); }
     if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); if (selectedEdge) { onConnect(selectedEdge, ""); setSelectedEdge(null); } else props.onDelete(selected); }
   }}>
-    <ReactFlow<PassageNode> nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange}
+    <ReactFlow<PassageNode> nodesDraggable={!readOnly} nodesConnectable={!readOnly} edgesReconnectable={!readOnly} nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange}
       onNodeClick={(_, n) => select(n.id)} onEdgeClick={(_, e) => { setPending(null); setSelectedEdge({ passageId: e.source, choiceId: e.sourceHandle! }); onSelect(e.source); }}
       onPaneClick={() => { setPending(null); setSelectedEdge(null); }}
       onNodeDragStart={() => { dragging.current = true; }}
@@ -152,7 +155,7 @@ function Graph(props: Props) {
       <Panel position="top-left"><div className="graph-caption"><span className="graph-caption-dot" /> YOUR STORY MAP <small>{story.passages.length} passages · {story.passages.filter((p) => p.ending).length} endings</small></div></Panel>
       <Panel position="top-right"><div className="graph-view-tools"><button className="graph-fit" aria-pressed={showThumbnails} onClick={() => setShowThumbnails((show) => !show)}><ImagePlus size={14} />{showThumbnails ? "Hide images" : "Show images"}</button><button className="graph-fit" onClick={fit}><Focus size={14} /> Fit story</button></div></Panel>
       <Panel position="bottom-center"><div className="graph-hint" role="status">
-        {pending ? <><Link2 size={14} /><span>Select a destination for “{story.passages.find((p) => p.id === pending.passageId)?.choices.find((c) => c.id === pending.choiceId)?.text || "Untitled choice"}”.</span><button aria-label="Cancel connection" onClick={() => setPending(null)}><X size={15} /></button></> : selectedEdge && edgeChoice ? <><Link2 size={14} /><span>{edgeChoice.text || "Untitled choice"}</span><button onClick={() => { onConnect(selectedEdge, ""); setSelectedEdge(null); }}><Unlink size={14} /> Disconnect</button></> : <span>Drag a heading to arrange · Connect from a choice · Scroll to pan</span>}
+        {pending ? <><Link2 size={14} /><span>Select a destination for “{story.passages.find((p) => p.id === pending.passageId)?.choices.find((c) => c.id === pending.choiceId)?.text || "Untitled choice"}”.</span><button aria-label="Cancel connection" onClick={() => setPending(null)}><X size={15} /></button></> : !readOnly && selectedEdge && edgeChoice ? <><Link2 size={14} /><span>{edgeChoice.text || "Untitled choice"}</span><button onClick={() => { onConnect(selectedEdge, ""); setSelectedEdge(null); }}><Unlink size={14} /> Disconnect</button></> : <span>{readOnly ? "Select a passage to preview · Scroll to pan" : "Drag a heading to arrange · Connect from a choice · Scroll to pan"}</span>}
       </div></Panel>
     </ReactFlow>
   </div>;

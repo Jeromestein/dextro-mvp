@@ -18,6 +18,14 @@ export default function ConnectionSettings() {
             {w.provider !== "chatgpt" && <label className="field-label">Workshop access code<input type="password" autoComplete="off" value={w.accessCode} onChange={(e) => w.setAccessCode(e.target.value)} /></label>}
             <button className="button" onClick={() => void w.checkConnection()}><RefreshCw size={15} /> Check connection</button>
           </section>}
+        <section className="image-connection">
+          <h2>Scene images · OpenAI API</h2>
+          <p>{w.imagesReady ? "Image generation is configured. Each generated image uses separately billed OpenAI API usage." : "The studio owner needs to add OPENAI_API_KEY and AI_ACCESS_CODE to the server environment, then restart the server."}</p>
+          <p className="quiet">{w.imageModel || "OpenAI image model"} · Economy quality · One landscape image per request. Configuration does not confirm account access.</p>
+          {w.provider === "chatgpt" && <label className="field-label">Image workshop access code<input type="password" autoComplete="off" value={w.accessCode} onChange={(e) => w.setAccessCode(e.target.value)} /></label>}
+          <button className="button" disabled={w.checking} onClick={() => void w.checkConnection()}><RefreshCw size={15} /> Check image configuration</button>
+          <p>Music comes from the bundled CC0 library and needs no API key.</p>
+        </section>
         <div className="settings-foot"><p>{w.provider === "chatgpt" ? "Sign in to connect your ChatGPT plan, then return to the builder to create your game." : "Your workshop code stays in this tab’s memory. After a page reload, enter it again here."}</p><Link className="button primary" href="/builder">Return to builder <ArrowRight size={16} /></Link></div>
       </div>
     </div>

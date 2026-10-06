@@ -2293,8 +2293,8 @@ svg {
 .sound-controls { margin:12px 0 22px; padding:12px; border:1px solid #e0e6d8; border-radius:8px; background:#f4f7ee; }
 .sound-controls-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .sound-controls .button { font-size:11px; min-height:34px; padding:7px 10px; }
-.sound-controls label { display:flex; flex:1; align-items:center; gap:8px; color:#7a8b6c; font:10px Manrope,sans-serif; min-width:100px; }
-.sound-controls input { width:100%; min-width:55px; accent-color:#58784a; }
+.sound-controls label { white-space:nowrap; display:flex; flex:1; align-items:center; gap:8px; color:#7a8b6c; font:10px Manrope,sans-serif; min-width:100px; }
+.sound-controls input { flex:1; width:0; min-width:55px; accent-color:#58784a; }
 .sound-controls p { margin:8px 0 0; font:10px/1.6 Manrope,sans-serif; color:#839175; overflow-wrap:anywhere; }
 .media-credits { margin-top:28px; font:11px/1.7 Manrope,sans-serif; color:#89937c; overflow-wrap:anywhere; }
 .media-credits summary { cursor:pointer; }

@@ -190,3 +190,61 @@ No real OpenAI request was made: the local key and workshop code are not configu
 
 - Reusable files now live in `public/media/demo/`: a placeholder PNG and four original synthesized WAV samples (`warm-music-box`, `crystal-chime`, `bamboo-chime`, and `mystery-bells`). Each file is stereo, 44.1 kHz, 16-bit PCM with quiet endpoints and peaks below clipping; all are below the 6 MB upload limit. Public URLs were checked against the local file bytes.
 - Removed the earlier `test-tone.wav` sample and the two ignored verification exports that still embedded the original two-second tone. Browser-saved stories hold independent copies of uploaded audio and are not changed by deleting resource files. The ignored export-check script now uses the music-box sample.
+
+## 2026-10-06 — OpenAI scene images and CC0 catalog
+
+- `pnpm typecheck`, `pnpm lint`, and `pnpm test` passed (70 tests). No build ran.
+  New checks cover image authorization independent of ChatGPT text mode, same-origin
+  enforcement, malformed/oversized inputs and responses, duplicate request IDs,
+  two-request concurrency, sanitized upstream errors, cancellation, shared scenes,
+  stale scene plans, live-edit preservation, source hashes, and portable provenance.
+- Codex in-app browser, using the user's existing server on port 3100: created a
+  separate **CC0 media verification** story; loaded/listened to bundled piano,
+  applied music, undid/redid the assignment, selected another track, and checked
+  Graph labels and saved credit metadata. Clicking Play started the new music.
+  Desktop (1440 × 1000) and mobile (390 × 844) media/player layouts were inspected;
+  fixed wrapping of the mobile Volume label. Restored the browser viewport and
+  stopped audition/playback after verification.
+- Supplemental Playwright CLI with mocked text/image endpoints: generated a
+  complete draft with a media plan, matched actual local music files, populated
+  the draft Graph, kept the draft, applied a distinct image candidate, verified
+  undo/redo, rejected a cancelled late image response, reassigned music, exported
+  a backup, and reloaded saved media. Mobile overflow check passed. Image fixtures
+  were single-color test PNGs, not outputs from a live OpenAI request.
+- Standalone HTML was exported through the UI, opened with a temporary local
+  static server, and tested with subsequent network requests blocked: music
+  enabled, a choice reached the next passage, and credits displayed. The tool
+  blocks direct `file:` navigation, so this checks self-contained playback rather
+  than desktop file-opening behavior. The temporary server on port 33177 was
+  stopped; the user's application server was not restarted or stopped.
+- Six Freesound files have verified CC0 source records and decode successfully.
+  Three Kenney jingles retain the archive license and source records, and are
+  reserved for later one-shot support. Audio normalization/edge fades and a
+  successful playback check do not establish subjective music quality or perfectly
+  seamless musical loops; authors should audition tracks before applying them.
+- Screenshots and mock browser scripts are in ignored `output/playwright/`:
+  `media-draft-mocked.png`, `media-library-desktop.png`,
+  `media-library-mobile.png`, and `media-offline-verified.png`.
+- Live OpenAI image generation was not tested: `OPENAI_API_KEY` is absent locally,
+  and `/api/media/image` reports unavailable configuration. No paid image request
+  was made. Real model access, image quality, latency, and hosted deployment
+  behavior remain unverified. Enter the API key locally and restart the application
+  server before a live test; do not send the key through chat.
+
+## 2026-10-06 — Media defaults and simplified controls
+
+- Image requests now use `gpt-image-2.5-flare` by default with fixed `low`
+  quality and 1536 × 1024 output; no quality selector was added.
+- The user reported successful image generation after entering their API key
+  locally. This is user-reported confirmation, not an independently observed
+  provider/billing test; the earlier missing-key note describes the initial check.
+- Media options start collapsed. Image upload and AI creation share a row;
+  music upload and the CC0 library share a row. Opening one tool closes the other;
+  changing passages resets the controls. The image label explicitly says
+  "Create a scene image with AI".
+- Codex in-app browser verified desktop and 390 × 844 mobile layouts, image
+  expansion/collapse, and switching to the music library on the separate
+  **CC0 media verification** story. No paid generation was triggered.
+  Screenshot: ignored `output/playwright/media-panel-simplified-mobile.png`.
+- `pnpm dev` defaults to port 3100. TypeScript, ESLint, all 70 tests, and
+  `git diff --check` passed after the final UI changes. No production build ran.

@@ -8,6 +8,8 @@ import AIDraftReview from "./draft-review";
 import { useLibrary } from "@/modules/workspace/library-provider";
 import { useConnection } from "@/modules/connections/provider";
 import { useGenerationDraft } from "./draft-provider";
+import { enrichStoryMedia } from "@/modules/media/generation/enrich";
+import type { VisualStyle } from "@/modules/media/generation/plan";
 
 const ideas = [
   { label: "A missing memory", text: "You wake up on a train where every passenger remembers you, but you remember none of them. At the next station, someone must be left behind." },
@@ -23,6 +25,10 @@ export default function GameBuilder() {
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [music, setMusic] = useState(true);
+  const [images, setImages] = useState(false);
+  const [style, setStyle] = useState<VisualStyle>("storybook");
+  const [mediaStatus, setMediaStatus] = useState("");
   const controller = useRef<AbortController | null>(null);
   const canGenerate = connection.aiReady && (connection.provider === "chatgpt" ? connection.local : Boolean(connection.accessCode)) && !connection.checking;
   useEffect(() => () => { controller.current?.abort(); }, []);
@@ -32,17 +38,18 @@ export default function GameBuilder() {
     return () => window.removeEventListener("beforeunload", guard);
   }, []);
   const openEditor = (story: Story) => {
+    controller.current?.abort(); controller.current = null; setGenerating(false);
     if (library.persistStory(story)) { draftState.setDraft(null); router.push(`/builder/${encodeURIComponent(story.id)}`); }
   };
   const generate = async () => {
     if (controller.current || !canGenerate) return;
     const request = new AbortController();
     controller.current = request;
-    setGenerating(true); setError("");
+    setGenerating(true); setError(""); setMediaStatus("");
     try {
       const response = await fetch("/api/generate", {
         method: "POST", headers: { "Content-Type": "application/json", ...(connection.provider !== "chatgpt" ? { "X-Workshop-Code": connection.accessCode } : {}) },
-        body: JSON.stringify({ ...draftState.brief, ...(connection.provider === "chatgpt" && connection.model ? { model: connection.model } : {}) }),
+        body: JSON.stringify({ ...draftState.brief, includeMedia: music || images, ...(connection.provider === "chatgpt" && connection.model ? { model: connection.model } : {}) }),
         signal: AbortSignal.any([request.signal, AbortSignal.timeout(170_000)]),
       });
       const data = await response.json();
@@ -51,6 +58,13 @@ export default function GameBuilder() {
       const story = storySchema.parse(data.story);
       if (validateStory(story).length) throw new Error("The draft did not pass the story checks. Try again.");
       draftState.setDraft({ story, repaired: data.repaired === true });
+      if ((music || images) && story.mediaPlan) {
+        const warnings = await enrichStoryMedia(story, { music, images, style, accessCode: connection.accessCode, signal: request.signal,
+          onStatus: setMediaStatus,
+          onUpdate: (next) => { if (!request.signal.aborted) draftState.setDraft((current) => current?.story.id === story.id ? { ...current, story: next } : current); },
+        });
+        if (!request.signal.aborted) setError(warnings.join(" "));
+      } else if (data.mediaWarning) setError(data.mediaWarning);
     } catch (error) {
       if (!request.signal.aborted && controller.current === request)
         setError(error instanceof Error && error.name === "TimeoutError" ? "Generation timed out. Try a shorter idea." : error instanceof Error ? error.message : "Could not finish your game. Try again.");
@@ -58,12 +72,12 @@ export default function GameBuilder() {
       if (controller.current === request) { controller.current = null; setGenerating(false); }
     }
   };
-  const cancel = () => { controller.current?.abort(); controller.current = null; setGenerating(false); setError("Generation cancelled. Your idea is ready whenever you are."); };
+  const cancel = () => { controller.current?.abort(); controller.current = null; setGenerating(false); setError(draftState.draft ? "Remaining media cancelled. Completed text and media are kept for review." : "Generation cancelled. Your idea is ready whenever you are."); };
   return <main className="builder-page product-page">
     <div className="page-heading"><div><span className="kicker">CREATE / EXPLORE / PLAY</span><h1>Game Builder<span className="title-dot">.</span></h1><p>Your idea. A world of choices. A game worth playing.</p></div>
       <Link href="/library" className="button">My Games <ArrowUpRight size={16} /></Link></div>
     <ol className="builder-steps" aria-label="Creation steps"><li className={!draftState.draft ? "current" : "complete"}><span>{draftState.draft ? <Check size={13} /> : "01"}</span> Shape your idea</li><li className={draftState.draft ? "current" : ""}><span>02</span> Explore the draft</li><li><span>03</span> Edit & export</li></ol>
-    {draftState.draft ? <section className="builder-review"><AIDraftReview story={draftState.draft.story} repaired={draftState.draft.repaired} onDiscard={() => draftState.setDraft(null)} onKeep={() => openEditor(copyStory(draftState.draft!.story))} /></section> :
+    {draftState.draft ? <section className="builder-review">{(mediaStatus || generating || error) && <div className="media-batch" role="status"><p>{mediaStatus || "Story ready"}</p>{error && <p className="form-error">{error}</p>}{generating && <button className="button" onClick={cancel}>Stop remaining media</button>}<small>Keep & edit stops pending media and keeps everything ready so far.</small></div>}<AIDraftReview story={draftState.draft.story} repaired={draftState.draft.repaired} onDiscard={() => { controller.current?.abort(); controller.current = null; setGenerating(false); setMediaStatus(""); setError(""); draftState.setDraft(null); }} onKeep={() => openEditor(copyStory(draftState.draft!.story))} /></section> :
     <div className="builder-layout">
       <section className="creation-card">
         <div className="creation-tabs" aria-label="Creation method">
@@ -75,6 +89,12 @@ export default function GameBuilder() {
           <label className="idea-label"><span className="sr-only">Your game idea</span><textarea required minLength={15} maxLength={1500} value={draftState.brief.premise} disabled={generating} onChange={(event) => draftState.setBrief({ ...draftState.brief, premise: event.target.value })} placeholder="You arrive in a town where nobody is allowed to dream. Tonight, you fall asleep…" /><span className="character-count">{draftState.brief.premise.length} / 1,500</span></label>
           <div className="idea-prompts"><span>Need a spark?</span>{ideas.map((idea) => <button type="button" disabled={generating} key={idea.label} onClick={() => draftState.setBrief({ ...draftState.brief, premise: idea.text })}>{idea.label} <ArrowUpRight size={12} /></button>)}</div>
           <div className="creation-options"><label className="field-label">Mood<select value={draftState.brief.tone} disabled={generating} onChange={(event) => draftState.setBrief({ ...draftState.brief, tone: event.target.value })}>{["Mysterious", "Hopeful", "Adventurous", "Whimsical", "Suspenseful"].map((tone) => <option key={tone}>{tone}</option>)}</select></label><label className="field-label">Language<select value={draftState.brief.language} disabled={generating} onChange={(event) => draftState.setBrief({ ...draftState.brief, language: event.target.value })}><option value="auto">Match my idea</option><option value="en">English</option><option value="zh">简体中文</option></select></label></div>
+          <div className="creation-options">
+            <label className="field-label">Background music<select disabled={generating} value={music ? "auto" : "off"} onChange={(e) => setMusic(e.target.value === "auto")}><option value="auto">Auto · Free CC0 library</option><option value="off">Off</option></select></label>
+            <label className="field-label">Scene images<select disabled={generating || !connection.imagesReady || !connection.accessCode} value={images ? "on" : "off"} onChange={(e) => setImages(e.target.value === "on")}><option value="off">Off</option><option value="on">Generate · Up to 4 images</option></select></label>
+          </div>
+          {images && <label className="field-label">Visual style<select disabled={generating} value={style} onChange={(e) => setStyle(e.target.value as VisualStyle)}><option value="storybook">Storybook</option><option value="cinematic">Cinematic</option></select><small>Images use separately billed OpenAI API usage. Text is playable while images finish.</small></label>}
+          {!connection.imagesReady || !connection.accessCode ? <p className="generation-footnote">Scene images need the image API and workshop code in <Link href="/settings">Settings</Link>. Free music works without an image connection.</p> : null}
           <div className="builder-connection"><span className={canGenerate ? "status-dot ready" : "status-dot"} /><span>{connection.checking ? "Checking AI connection…" : canGenerate ? "AI is ready" : "Connect AI in Settings to generate"}</span><Link href="/settings" aria-label="AI connection settings"><Settings2 size={14} /> Settings</Link></div>
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="generate-actions"><button className="button primary generate-button" type="submit" disabled={!library.ready || !canGenerate || generating}>{generating ? <><LoaderCircle size={17} className="spin" /> Building your game…</> : <><Sparkles size={17} /> Generate game <ArrowRight size={17} /></>}</button>{generating && <button className="button" type="button" onClick={cancel}><X size={15} /> Cancel</button>}</div>

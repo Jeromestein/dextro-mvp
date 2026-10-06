@@ -24,6 +24,7 @@ export function buildGame(raw: Story): string {
   requireStorySize(story);
   // Layout belongs to the authoring workspace, not the standalone player.
   delete story.editor;
+  delete story.mediaPlan;
   if (validateStory(story).some((i) => i.level === "error"))
     throw new Error("Fix the story checks before exporting a playable game.");
   const data = JSON.stringify(story)

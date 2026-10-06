@@ -1,8 +1,10 @@
 import { z } from "zod";
+import { bindMediaPlan, mediaPlanSchema, validMediaPlan } from "@/modules/media/generation/plan";
 import { storySchema, validateStory, type Story } from "@/modules/story/model";
 
 export const generationInputSchema = z.object({
   model: z.string().max(100).optional(),
+  includeMedia: z.boolean().default(false),
   premise: z.string().trim().min(15).max(1500),
   tone: z.enum([
     "Mysterious",
@@ -43,6 +45,8 @@ const draftSchema = z.object({
 
 // Derive the provider schema and local validation from the same definition.
 export const generationJSONSchema = z.toJSONSchema(draftSchema);
+const providerPlanSchema = mediaPlanSchema.extend({ scenes: z.array(mediaPlanSchema.shape.scenes.element.omit({ revision: true })).max(4) });
+export const generationMediaJSONSchema = z.toJSONSchema(draftSchema.extend({ mediaPlan: providerPlanSchema }));
 export type DraftCheck =
   | { story: Story; errors: [] }
   | { story: null; errors: string[] };
@@ -59,13 +63,14 @@ export function checkDraft(raw: unknown): DraftCheck {
     ...parsed.data,
     version: 2,
     assets: [],
+    mediaPlan: validMediaPlan((raw as { mediaPlan?: unknown })?.mediaPlan, parsed.data.passages.map((p) => p.id)),
     id: crypto.randomUUID(),
     updatedAt: new Date().toISOString(),
     passages: parsed.data.passages.map((p) => ({ ...p, media: { imageId: "", audioId: "" } })),
   });
   if (!result.success)
     return { story: null, errors: result.error.issues.map((i) => i.message) };
-  const story = result.data;
+  const story = bindMediaPlan(result.data);
   const errors = validateStory(story).map((i) => i.message);
   const endings = story.passages.filter((p) => p.ending).length;
   if (endings < 2 || endings > 3) errors.push("Use 2–3 endings.");

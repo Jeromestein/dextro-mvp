@@ -192,7 +192,10 @@
 .media-scene { aspect-ratio:16/9; border-radius:8px; overflow:hidden; margin-bottom:16px; background:#f0f4e9; }
 .media-scene img { width:100%; height:100%; object-fit:cover; }
 .media-scene.empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; font-size:11px; color:#98a78a; border:1px dashed #d5dfca; }
-.media-upload { width:100%; font-size:11px; justify-content:center; }
+.media-source-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.media-source-actions .button { min-width:0; padding:10px 8px; font-size:11px; line-height:1.5; white-space:normal; justify-content:center; text-align:center; }
+.media-source-actions .button svg { flex-shrink:0; }
+.media-source-actions .button[aria-expanded="true"] { background:#edf3e6; border-color:#a7ba96; color:#426638; }
 .media-file-hint { display:block; color:#9aa48e; font-size:9px; text-align:center; margin-top:8px; }
 .media-shared { margin:16px 0; color:#849376; font-size:11px; line-height:1.7; }
 .media-shared summary { cursor:pointer; color:#637e50; }
@@ -202,3 +205,18 @@
 .media-library-summary button { display:block; color:#9b704d; text-decoration:underline; margin:8px 0; }
 .inspector-preview-actions { flex-wrap:wrap; }
 @media (prefers-reduced-motion:reduce) { .react-flow__edge-path { animation:none!important; } }
+
+.media-generation, .media-catalog { display: grid; gap: 12px; margin-top: 18px; padding: 16px; border: 1px solid var(--border, #dce2d3); border-radius: 12px; background: #f6f7f0; min-width: 0; }
+.media-generation h4, .media-catalog h4 { margin: 0; font-size: 14px; }
+.media-generation textarea { min-height: 115px; resize: vertical; }
+.media-generation p, .media-catalog p { margin: 0; }
+.media-catalog a { font-size: 12px; overflow-wrap: anywhere; }
+.media-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.media-candidate { display: grid; gap: 12px; }
+.media-candidate img { width: 100%; height: auto; border-radius: 8px; }
+.media-generation .form-error, .media-catalog .form-error { font-size: 13px; }
+.media-batch { padding: 16px; background: #f6f7f0; border: 1px solid #dce2d3; border-radius: 12px; display: grid; gap: 10px; margin-bottom: 20px; }
+.media-batch p { margin: 0; }
+.draft-graph { height: 420px; position: relative; border: 1px solid #dce2d3; border-radius: 12px; overflow: hidden; margin: 20px 0; }
+.image-connection { border-top: 1px solid #dce2d3; margin-top: 24px; padding-top: 24px; }
+@media (max-width: 760px) { .media-generation, .media-catalog { padding: 12px; } .draft-graph { height: 330px; } }

@@ -1,8 +1,12 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import type { Story } from "@/modules/story/model";
 import Player from "@/modules/player/player";
+
+const StoryGraph = dynamic(() => import("@/modules/editor/graph/story-graph"), { ssr: false });
+const noop = () => {};
 
 export default function AIDraftReview({
   story,
@@ -35,6 +39,7 @@ export default function AIDraftReview({
           We fixed a few connections before bringing you this draft.
         </p>
       )}
+      <div className="draft-graph"><StoryGraph readOnly story={story} selected={start} issues={[]} focusToken={0} layoutToken={0} onSelect={preview} onMedia={preview} onMove={noop} onViewport={noop} onConnect={noop} onAddChoice={noop} onCreateAt={noop} onDelete={noop} /></div>
       <div className="draft-preview-tools">
         <label className="field-label">
           Preview from passage

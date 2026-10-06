@@ -1,7 +1,40 @@
 # Graph-Based Scene Images and Background Music
 
 Date: 2026-10-06\
-Status: media foundation implemented; automatic generation and curated music remain proposed.
+Status: media foundation, initial OpenAI adapter, CC0 catalog, and coordinated creation implemented; live image access and later target features remain unverified.
+
+### Confirmed media sources — 2026-10-06
+
+The user selected **OpenAI API for scene images** and **Kenney + Freesound CC0
+assets for audio**. Provider/source selection is settled; the initial integration and starter
+catalog described below are implemented. These decisions supersede the broader
+provider candidates discussed earlier.
+
+- Generate images through a server-side OpenAI adapter using a separately billed
+  API key. Keep image readiness independent of the existing text-provider mode;
+  local ChatGPT text authorization does not enable paid image requests.
+- Curate Kenney short effects and Freesound music loops, ambience, and effects.
+  Accept only assets whose individual source/license records establish CC0.
+  Do not include CC BY, CC BY-NC, or unspecified-license downloads in this catalog.
+- Start with locally bundled, reviewed files rather than runtime Freesound search
+  or download requests. Freesound's API terms are separate from each file's license.
+- Do not add AI music generation or another stock provider to this increment.
+  A missing suitable track resolves to Silence rather than an unreviewed source.
+
+Catalog files live under `public/media/library/`, separate from the test
+chimes in `public/media/demo/`. Catalog metadata belongs to the Media module and
+records a stable ID, provider, source URL/ID, author, CC0 license URL, verification
+date, local file path, duration, audio role, theme/mood tags, and auditioned loop
+behavior. Preserve source/license evidence alongside the catalog. Export only
+the selected files and their provenance; do not copy the whole catalog into each
+story. Generated images use the existing story media storage, not the public
+catalog directory.
+
+The starter collection contains six Freesound tracks, with three Kenney jingles
+reserved for one-shot playback. Expansion toward 12–16 tracks follows listening review. Short effects and ambience can be collected in the
+same catalog, but must remain unavailable for automatic playback until dedicated
+one-shot triggers and layered ambience exist. The current player loops a single
+audio assignment; it cannot yet play a bell once over background music.
 
 ### Implemented foundation — 2026-10-06
 
@@ -11,10 +44,27 @@ Story/Media/Preview tabs, file upload/reuse/credits, undoable assignment, and
 independent playhead highlighting. User-uploaded audio supports explicit sound
 enable, mute/volume, same-track continuity, fades, Silence, and offline exports.
 
-The sections below retain the full target design. Automatic images, licensed
-curated tracks, theme matching, media planning, candidate review, generation jobs,
-and unified draft Graph review are not implemented. See [verification](VERIFICATION.md)
-for the checks actually completed; acceptance items below are target criteria.
+### Initial provider/catalog integration — 2026-10-06
+
+Implemented: a server-only OpenAI image endpoint with an independent workshop-code
+guard; a six-track Freesound CC0 catalog with local bytes and source/license
+records; per-passage image candidates and music audition/assignment in Media;
+optional structured scene grouping/music cues alongside generated stories;
+sequential image enrichment (up to four), deterministic music matching, and
+incremental read-only draft Graph review. Keep/Discard/navigation cancels pending
+work. Recovery fills missing assignments, preserves existing media, and checks
+scene content fingerprints; individual generation falls back to current text
+when a saved plan is stale. Assets and provenance survive persistence/backups.
+
+The draft Graph selects passages for preview; full draft editing/layout history,
+per-node pending/error badges, all-story planning for old stories, theme controls,
+reference-image conditioning, and linked-passage replacement review remain target
+work. Bulk recovery currently uses Storybook. Images are explicitly opt-in in the
+builder. Actual OpenAI access, quality, latency, and deployment behavior have not
+been verified. Tracks have source/license, decoding, and playback checks; final
+subjective listening/loop-quality review remains necessary. See
+[verification](VERIFICATION.md) for completed checks. The numbered sections below
+retain the broader target design; unchecked acceptance items are not completion claims.
 
 ## 1. Product direction
 
@@ -208,9 +258,9 @@ Use the shared art brief plus the scene-specific description for each request.
 Favor environments, distant figures, and silhouettes in the first increment.
 Do not promise identical character faces across generated images.
 
-Prefer an image provider that supports reference images. When that capability is
-verified, use the first accepted scene as a reference for later scenes. Shared
-prompts alone remain a best-effort consistency measure.
+Use the selected OpenAI image API. Verify the configured model's reference-image
+workflow and account access before using the first accepted scene as a reference
+for later scenes. Shared prompts alone remain a best-effort consistency measure.
 
 Reserve up to four image slots per initial batch, with at most two active image
 requests. Reference-image dependencies take precedence over parallel execution.
@@ -401,23 +451,22 @@ evidence that the proposed product features are implemented.
 
 ## 11. Dependencies and later work
 
-Before enabling automatic images, select and verify an image provider, its
-authentication, supported reference-image behavior, generation latency, output
-format, pricing, and allowed usage. Choose the actual curated tracks and validate
-their use in the app and exported games. These remain open implementation inputs.
+Before enabling automatic images, verify the selected OpenAI model, API-key
+authorization, reference-image behavior, generation latency, output format,
+pricing, and allowed usage. Keep the workshop-code guard on billable API requests.
+Do not change the text provider or silently route local subscription requests to
+API billing. `OPENAI_IMAGE_MODEL` now selects the image model (default
+`gpt-image-2.5-flare`). See [AI setup](AI_SETUP.md) for credentials and UI steps.
 
-AI music composition can be evaluated later using the same passage assignments
-and asset model. ElevenLabs Music is a candidate for that later evaluation; no
-integration, account access, pricing commitment, or commercial-use eligibility
-has been established for this project.
+Choose and audition the actual Kenney/Freesound CC0 files, normalize playback
+levels, check loop seams, and fit the existing asset/export size limits before
+inclusion. Reject harsh or distracting samples. The six-track starter catalog is bundled; live image generation and final
+subjective listening approval remain unverified.
 
-Resource references discussed on 2026-10-06:
+Selected-source references:
 
-- [Pixabay Content License](https://pixabay.com/service/license-summary/): a source
-  to evaluate against the actual bundling and export use case.
-- [Pixabay API documentation](https://pixabay.com/api/docs/): documents image and
-  video search; do not assume it supplies a music-search API.
-- [Freesound license guidance](https://freesound.org/help/faq/#licenses): relevant
-  if environmental sound is added later; licenses vary by asset.
-- [ElevenLabs music composition API](https://elevenlabs.io/docs/api-reference/music/compose):
-  a possible later route for generated instrumental music.
+- [OpenAI image generation](https://developers.openai.com/api/docs/guides/image-generation)
+- [Kenney asset licensing](https://kenney.nl/support)
+- [Freesound license guidance](https://freesound.org/help/faq/)
+- [Freesound API terms](https://freesound.org/help/tos_api/): API access conditions
+  are distinct from the CC0 status of a downloaded sound.

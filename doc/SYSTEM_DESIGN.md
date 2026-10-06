@@ -10,8 +10,8 @@ offline export. Graph and Outline are views of the same passages and choices.
 
 The media foundation adds version 2 shared image/audio assets, Graph media,
 passage assignments, explicit audio playback, and portable exports. It retains
-version 1 reads, existing routes, and authorization. Automatic images, licensed
-catalog matching, and unified generation remain later increments.
+version 1 reads, existing routes, and authorization. The initial OpenAI image adapter, bundled CC0 catalog, media planning, and draft
+enrichment are now implemented; live image access remains unverified.
 
 See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
 [workspace architecture](WORKSPACE_ARCHITECTURE.md) for routing and composition.
@@ -151,10 +151,27 @@ permission grant.
 1. Structural increment: module relocation, separate providers, extracted editor
    session/forms, unchanged data and behavior, consolidated documentation.
 2. Media foundation: shared assets, compatible persistence, Graph controls,
-   uploaded music, and portable playback. Curated licensed tracks are still pending.
+   uploaded music, and portable playback. The CC0 starter catalog is now bundled.
 3. Automatic media: verified image provider, shared planning, per-asset jobs and
    candidate review, and graph-linked generation.
 
 See [verification](VERIFICATION.md) for actual checks and their limits. Future
 design requirements and historical results do not establish newly completed
 provider, deployment, or media behavior.
+
+## Media providers and catalog — 2026-10-06
+
+- `src/server/media/image.ts` owns OpenAI credentials, workshop authorization,
+  request bounds, process-local concurrency/duplicate guards, and image validation.
+  `/api/media/image` exposes configuration status and generation independently of
+  text-provider mode.
+- `src/modules/media/generation/` owns validated scene/music plans, stale-plan
+  detection, client requests, per-passage candidates, and incremental enrichment.
+- `src/modules/media/catalog/` owns curated metadata, deterministic mood matching,
+  local file loading, and preview controls. `public/media/library/` owns distributable
+  audio files and source/license evidence. No runtime stock-provider API is used.
+- Generated/catalog assets extend version 2 with optional provenance. Existing
+  version 1/2 inputs remain readable; storage uses the existing metadata/Blob split.
+  Media plans remain in editable backups and are omitted from playable HTML.
+- The current audio engine still plays one looping track. Kenney one-shot assets
+  are reserved for a later playback increment; they are not music-matching candidates.

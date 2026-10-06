@@ -38,3 +38,22 @@ export function requireStorySize(story: Story) {
   if (storyByteSize(story) > STORY_BYTE_LIMIT)
     throw new Error("This story exceeds the 24 MB limit. Remove unused media or choose smaller files.");
 }
+
+// Merge only unchanged targets from an asynchronous batch, preserving live edits/layout.
+export function mergeMediaResults(current: Story, source: Story, result: Story): Story {
+  if (current.id !== source.id) return current;
+  let next = current;
+  for (const passage of result.passages) {
+    const before = source.passages.find((p) => p.id === passage.id);
+    const live = current.passages.find((p) => p.id === passage.id);
+    if (!before || !live || before.title !== live.title || before.text !== live.text || before.ending !== live.ending) continue;
+    for (const kind of ["image", "audio"] as const) {
+      const key = kind === "image" ? "imageId" : "audioId";
+      if (before.media[key] || live.media[key] || !passage.media[key]) continue;
+      const asset = result.assets.find((a) => a.id === passage.media[key] && a.kind === kind);
+      if (asset) next = addAndAssignAsset(next, live.id, asset);
+    }
+  }
+  requireStorySize(next);
+  return next;
+}

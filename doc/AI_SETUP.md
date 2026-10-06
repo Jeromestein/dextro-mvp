@@ -1,8 +1,58 @@
 # AI Provider Setup and Deployment
 
 Run commands from the `dextro-mvp` project root. This guide preserves the existing
-text-generation setup; image generation and audio are not configured by these steps.
+text-generation setup and documents the independent image and audio integrations.
 See [system design](SYSTEM_DESIGN.md) for implementation boundaries.
+
+## Scene images and the CC0 audio library
+
+Scene images use the OpenAI Images API independently of the text-provider mode.
+Set these server-side values in `.env.local` (or the deployment environment):
+
+- `OPENAI_API_KEY`: an API key with image-model access and API billing enabled.
+- `OPENAI_IMAGE_MODEL`: optional; defaults to `gpt-image-2.5-flare`.
+- `AI_ACCESS_CODE`: the same private workshop code used by API text generation.
+
+Keep `AI_PROVIDER=chatgpt` if text should continue using the local plan. Image
+requests always use the separate API key and workshop-code guard. Neither the
+ChatGPT session nor an image configuration check verifies image API eligibility.
+Never put the API key into the browser or a `NEXT_PUBLIC_` variable.
+
+After changing the environment, restart the development server from your terminal.
+Open **Settings**, choose **Check image configuration**, and enter the workshop
+code (the image-specific field is also available in ChatGPT text mode). The
+image model and configuration state are shown independently of text readiness.
+
+In **Game Builder**, background music defaults to Auto. Enable scene images
+explicitly to request up to four images with the story; choose Storybook or
+Cinematic. Text becomes available for review before media completes. Keeping or
+leaving the draft stops remaining requests and retains completed media.
+
+In the editor, select a Graph node and open **Media**. **Generate scene** produces
+one preview; **Apply image** commits it and **Discard** keeps the original. A
+story with a media plan also offers **Match missing music** and **Generate missing
+images**. Existing assignments are preserved; changed scene facts require a
+new per-passage preview. Single-image actions use the selected visual style;
+bulk recovery currently uses Storybook. Undo stops pending recovery work.
+
+Each image request asks for one economy-quality (`low`) 1536 × 1024 WebP at compression
+80. There are at most two active image requests per server process; the client
+batch runs sequentially. Requests have a 150-second server deadline and are not
+automatically retried. Duplicate request IDs are rejected for ten minutes in the
+local process, including uncertain failures. This is not a distributed quota or
+durable queue. Cancellation cannot reverse provider charges already started.
+
+**Free music library** offers six bundled Freesound CC0 tracks. Load a preview,
+listen, and choose **Use this music**. Source/credit metadata, bytes, and assignment
+are saved with the story and travel with backups and offline games. No Freesound
+API key or network search is required. Three Kenney CC0 jingles are reserved in
+`public/media/library/effects/`; one-shot playback is not implemented, so they are
+not automatically assigned as looping music. See the [library records](../public/media/library/README.md).
+
+The image request contract follows the [official OpenAI image API](https://developers.openai.com/api/reference/resources/images/methods/generate).
+Local mocked tests verify the request and UI flow; a live image call is still
+required to confirm credentials, account access, output quality, and hosting
+latency. See [verification](VERIFICATION.md).
 
 ## Local ChatGPT plan testing
 

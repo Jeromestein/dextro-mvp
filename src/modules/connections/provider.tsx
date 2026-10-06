@@ -9,8 +9,15 @@ function useConnectionState() {
   const [checking, setChecking] = useState(true);
   const [provider, setProvider] = useState("api");
   const [local, setLocal] = useState(false);
+  const [imagesReady, setImagesReady] = useState(false);
+  const [imageModel, setImageModel] = useState("");
   const checkConnection = useCallback(async () => {
     setChecking(true);
+    const images = fetch("/api/media/image", { cache: "no-store" }).then(async (response) => {
+      const data = await response.json();
+      setImagesReady(response.ok && data.available === true);
+      setImageModel(typeof data.model === "string" ? data.model : "");
+    }).catch(() => setImagesReady(false));
     try {
       const response = await fetch("/api/generate", { cache: "no-store" });
       const data = await response.json();
@@ -18,7 +25,7 @@ function useConnectionState() {
       setLocal(data.local === true);
       setAiReady(response.ok && data.available === true);
     } catch { setAiReady(false); }
-    finally { setChecking(false); }
+    finally { await images; setChecking(false); }
   }, []);
   useEffect(() => {
     const timer = setTimeout(() => void checkConnection(), 0);
@@ -26,7 +33,7 @@ function useConnectionState() {
     window.addEventListener("focus", refresh);
     return () => { clearTimeout(timer); window.removeEventListener("focus", refresh); };
   }, [checkConnection]);
-  return { accessCode, setAccessCode, model, setModel, aiReady, setAiReady, checking, provider, local, checkConnection };
+  return { accessCode, setAccessCode, model, setModel, aiReady, setAiReady, checking, provider, local, checkConnection, imagesReady, imageModel };
 }
 const ConnectionContext = createContext<ReturnType<typeof useConnectionState> | null>(null);
 export function ConnectionProvider({ children }: { children: ReactNode }) {
