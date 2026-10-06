@@ -4,20 +4,23 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, Check, CheckCircle2, ChevronDown, Download, Flag,
   GitBranch, ListTree, LoaderCircle, PanelRightClose, PanelRightOpen, PenLine,
-  Play, Plus, Redo2, Sparkles, Undo2, X, AlertCircle } from "lucide-react";
+  Play, Plus, Redo2, Sparkles, Undo2, X, AlertCircle, Images } from "lucide-react";
 import { newPassage, uid, validateStory, type Story, type Passage } from "@/modules/story/model";
 import { appendPassage, changePassage, connectChoice, removePassage } from "./session/operations";
 import { autoLayout, layoutSignature, setPositions } from "./graph/layout";
 import type { ChoiceRef, Point, Positions, Viewport } from "./session/types";
-import { buildGame, download, filename } from "@/modules/export/standalone";
+import { buildGame, buildBackup, download, filename } from "@/modules/export/standalone";
 import { useLibrary } from "@/modules/workspace/library-provider";
 import Dialog from "@/shared/ui/dialog";
 import Player from "@/modules/player/player";
 import StoryOutline from "@/modules/editor/outline/story-outline";
 
 import PassageForm from "./text/passage-form";
-import SceneImageField from "./media-panel/scene-image-field";
-import { readSceneImage } from "@/modules/media/images/read-image";
+import PassageMedia from "./media-panel/passage-media";
+import { readMediaFile } from "@/modules/media/assets/read-file";
+import { addAndAssignAsset, assignAsset, pruneAssets } from "@/modules/media/assets/operations";
+import type { MediaKind } from "@/modules/media/assets/model";
+import type { PlaybackProgress } from "@/modules/player/player";
 import { useEditorSession } from "./session/use-editor-session";
 
 const StoryGraph = dynamic(() => import("@/modules/editor/graph/story-graph"), {
@@ -30,13 +33,16 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const initialRef = useRef(initialStory);
   const [selection, setSelection] = useState(initialStory.startId);
   const [view, setView] = useState<"graph" | "outline">(() => typeof window !== "undefined" && window.matchMedia("(max-width:760px)").matches ? "outline" : "graph");
-  const [panel, setPanel] = useState<"edit" | "preview">("edit");
+  const [panel, setPanel] = useState<"edit" | "media" | "preview">("edit");
   const [panelOpen, setPanelOpen] = useState(true);
   const [modal, setModal] = useState<Modal>(null);
   const [notice, setNotice] = useState("");
   const [layoutBusy, setLayoutBusy] = useState(false);
   const [layoutToken, setLayoutToken] = useState(0);
   const [focusToken, setFocusToken] = useState(0);
+  const [mediaBusy, setMediaBusy] = useState(false);
+  const mediaJob = useRef(0);
+  const [playback, setPlayback] = useState<PlaybackProgress>({ current: "", path: [] });
   const [preview, setPreview] = useState({ from: initialStory.startId, key: 0 });
   const [pendingCreate, setPendingCreate] = useState<{ position: Point; from?: ChoiceRef } | null>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -50,7 +56,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const selectedIssues = issues.filter((i) => i.passageId === selected);
 
   const select = useCallback((id: string) => {
-    setSelection(id); setPanelOpen(true); setPreview((old) => ({ from: id, key: old.key + 1 }));
+    setSelection(id); setPanelOpen(true);
     send({ type: "break-group" });
   }, [send]);
   const focus = useCallback((id: string) => { select(id); setFocusToken((n) => n + 1); }, [select]);
@@ -104,22 +110,27 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
     return () => { clearTimeout(timer); cancelLayouts(); };
   }, [runLayout, cancelLayouts]);
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(""), 5500); return () => clearTimeout(timer); }, [notice]);
-  const undo = () => { send({ type: "undo" }); setNotice("Change undone."); };
-  const redo = () => { send({ type: "redo" }); setNotice("Change restored."); };
-  const exportJSON = () => download(`${filename(story)}.dextro.json`, JSON.stringify(story, null, 2), "application/json");
+  const undo = () => { mediaJob.current++; send({ type: "undo" }); setNotice("Change undone."); };
+  const redo = () => { mediaJob.current++; send({ type: "redo" }); setNotice("Change restored."); };
+  const exportJSON = () => { try { download(`${filename(story)}.dextro.json`, buildBackup(story), "application/json"); } catch (e) { setNotice((e as Error).message); } };
   const exportHTML = () => {
     if (errors.length) { setModal("checks"); return; }
     try { download(`${filename(story)}.html`, buildGame(story), "text/html"); setNotice("Playable game downloaded. It works offline."); }
     catch (e) { setNotice((e as Error).message); }
   };
-  const uploadImage = async (file?: File) => {
-    if (!file) return;
-    const id = selected;
+  useEffect(() => () => { mediaJob.current++; }, []);
+  const uploadMedia = async (file: File, kind: MediaKind) => {
+    const id = selected, source = historyRef.current.present.passages.find((p) => p.id === id);
+    const job = ++mediaJob.current;
+    setMediaBusy(true);
     try {
-      const data = await readSceneImage(file);
-      if (!historyRef.current.present.passages.some((p) => p.id === id)) throw new Error("This passage was removed. Choose a passage and upload again.");
-      commit((s) => changePassage(s, id, { image: data }));
-    } catch (e) { setNotice((e as Error).message); }
+      const asset = await readMediaFile(file, kind);
+      if (job !== mediaJob.current) return;
+      const current = historyRef.current.present.passages.find((p) => p.id === id);
+      if (!current || current !== source) throw new Error("This passage changed while reading the file. Upload it again to apply it.");
+      commit((s) => addAndAssignAsset(s, id, asset));
+    } catch (e) { if (job === mediaJob.current) setNotice((e as Error).message); }
+    finally { setMediaBusy(false); }
   };
   const incoming = story.passages.flatMap((p) => p.choices.filter((c) => c.target === selected));
   const closeModal = () => { setModal(null); setPendingCreate(null); };
@@ -142,20 +153,22 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
     </div>
     <div className={`workbench-body ${panelOpen ? "" : "panel-hidden"}`}>
       <section className="workbench-structure" aria-label="Story structure">
-        {view === "graph" ? <StoryGraph story={story} selected={selected} issues={issues} onSelect={select} onMove={move} onViewport={saveViewport}
+        {view === "graph" ? <StoryGraph story={story} selected={selected} issues={issues} onMedia={(id) => { select(id); setPanel("media"); }} playback={panel === "preview" && panelOpen ? playback : undefined} onSelect={select} onMove={move} onViewport={saveViewport}
           onConnect={link} onAddChoice={addChoice} onCreateAt={createAt} onDelete={requestDelete} focusToken={focusToken} layoutToken={layoutToken} /> :
-          <StoryOutline story={story} selected={selected} issues={issues} onSelect={(id) => { focus(id); if (window.matchMedia("(max-width:760px)").matches) requestAnimationFrame(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />}
+          <StoryOutline story={story} selected={selected} issues={issues} playbackId={panel === "preview" && panelOpen ? playback.current : undefined} onSelect={(id) => { focus(id); if (window.matchMedia("(max-width:760px)").matches) requestAnimationFrame(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />}
         <div className="workbench-structure-foot"><button onClick={() => setModal("details")}>Story details <ArrowUpRight size={12} /></button><span>{story.passages.length}/150 passages · {story.passages.filter((p) => p.ending).length} endings</span></div>
       </section>
       {panelOpen && <aside className="workbench-inspector" ref={panelRef} aria-label="Passage editor">
-        <div className="inspector-tabs" role="group" aria-label="Passage panel"><button aria-pressed={panel === "edit"} onClick={() => setPanel("edit")}><PenLine size={14} /> Edit passage</button><button aria-pressed={panel === "preview"} onClick={() => { setPanel("preview"); setPreview((p) => ({ from: selected, key: p.key + 1 })); }}><Play size={14} /> Preview</button></div>
-        {panel === "preview" ? <div className="inspector-preview"><div className="inspector-preview-actions"><button onClick={() => setPreview((p) => ({ from: selected, key: p.key + 1 }))}>From selected</button><button onClick={() => setPreview((p) => ({ from: story.startId, key: p.key + 1 }))}>From opening <ArrowUpRight size={12} /></button></div><Player key={`${preview.key}-${selected}`} story={story} startId={story.passages.some((p) => p.id === preview.from) ? preview.from : selected} compact /></div> : <div className="inspector-form">
+        <div className="inspector-tabs" role="group" aria-label="Passage panel"><button aria-pressed={panel === "edit"} onClick={() => setPanel("edit")}><PenLine size={14} /> Story</button><button aria-pressed={panel === "media"} onClick={() => setPanel("media")}><Images size={14} /> Media</button><button aria-pressed={panel === "preview"} onClick={() => setPanel("preview")}><Play size={14} /> Preview</button></div>
+        {panel === "preview" ? <div className="inspector-preview"><div className="inspector-preview-actions"><button onClick={() => setPreview((p) => ({ from: selected, key: p.key + 1 }))}>From selected</button><button onClick={() => setPreview((p) => ({ from: story.startId, key: p.key + 1 }))}>From opening <ArrowUpRight size={12} /></button><button disabled={!playback.current} onClick={() => focus(playback.current)}>Locate playing</button></div><Player key={preview.key} onProgress={setPlayback} story={story} startId={story.passages.some((p) => p.id === preview.from) ? preview.from : selected} compact /></div> : panel === "media" ? <PassageMedia story={story} passage={passage} busy={mediaBusy} onUpload={uploadMedia}
+          onAssign={(kind, id) => commit((s) => assignAsset(s, selected, kind, id))}
+          onCredit={(id, credit) => commit((s) => ({ ...s, assets: s.assets.map((a) => a.id === id ? { ...a, credit } : a) }), `credit:${id}`)}
+          onPrune={() => commit(pruneAssets)} /> : <div className="inspector-form">
           <PassageForm story={story} passage={passage} issues={selectedIssues} onChange={writePassage}
           onSetOpening={() => commit((s) => s.startId === selected ? s : ({ ...s, startId: selected }))}
           onLocate={() => { setView("graph"); setFocusToken((n) => n + 1); }} onDelete={() => requestDelete(selected)}
           onAddChoice={() => addChoice(selected)} onConnect={link} onAddPassage={addPassage} onOpenTarget={focus}
-          media={<SceneImageField image={passage.image} characters={passage.text.length} onUpload={uploadImage}
-            onRemove={() => writePassage({ image: "" })} />} />
+          media={<div className="inspector-image"><button onClick={() => setPanel("media")}><Images size={14} /> Scene image & music</button><span>{passage.text.length} characters</span></div>} />
         </div>}
       </aside>}
     </div>

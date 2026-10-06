@@ -10,7 +10,7 @@ const node = (
   title,
   text,
   ending,
-  image: "",
+  media: { imageId: "", audioId: "" },
   choices: choices.map(([text, target], i) => ({
     id: `${id}-${i}`,
     text,
@@ -19,7 +19,8 @@ const node = (
 });
 export function sampleStory(): Story {
   return {
-    version: 1,
+    version: 2,
+    assets: [],
     id: "sample-last-light",
     title: "The Last Light",
     genre: "Mystery",

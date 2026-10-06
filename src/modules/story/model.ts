@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { imageSchema } from "@/modules/media/images/schema";
+import { assetSchema, emptyMedia, passageMediaSchema, type MediaAsset } from "@/modules/media/assets/model";
 
 export const choiceSchema = z.object({
   id: z.string().min(1).max(100),
@@ -11,7 +12,7 @@ export const passageSchema = z.object({
   title: z.string().max(200),
   text: z.string().max(12000),
   ending: z.boolean(),
-  image: imageSchema,
+  media: passageMediaSchema,
   choices: z.array(choiceSchema).max(8),
 });
 export const GRAPH_COORDINATE_LIMIT = 100000;
@@ -28,9 +29,10 @@ export const editorLayoutSchema = z.object({
     zoom: z.number().finite().min(0.2).max(2),
   }).optional(),
 });
-export const storySchema = z
+const legacyPassageSchema = passageSchema.omit({ media: true }).extend({ image: imageSchema });
+const commonStorySchema = z
   .object({
-    version: z.literal(1),
+    version: z.literal(2),
     id: z.string().min(1).max(100),
     title: z.string().max(200),
     description: z.string().max(1000),
@@ -38,11 +40,20 @@ export const storySchema = z
     updatedAt: z.string().max(50),
     startId: z.string().max(100),
     passages: z.array(passageSchema).min(1).max(150),
+    assets: z.array(assetSchema).max(300),
     editor: editorLayoutSchema.optional(),
-  })
-  .superRefine((story, ctx) => {
+  });
+export const currentStorySchema = commonStorySchema.superRefine((story, ctx) => {
     if (new Set(story.passages.map((p) => p.id)).size !== story.passages.length)
       ctx.addIssue({ code: "custom", message: "Passage IDs must be unique." });
+    if (new Set(story.assets.map((a) => a.id)).size !== story.assets.length)
+      ctx.addIssue({ code: "custom", message: "Media asset IDs must be unique." });
+    for (const p of story.passages) {
+      for (const [kind, id] of [["image", p.media.imageId], ["audio", p.media.audioId]]) {
+        if (id && !story.assets.some((a) => a.id === id && a.kind === kind))
+          ctx.addIssue({ code: "custom", message: `${p.title}: missing or mismatched ${kind} asset.` });
+      }
+    }
     story.passages.forEach((p) => {
       if (new Set(p.choices.map((c) => c.id)).size !== p.choices.length)
         ctx.addIssue({
@@ -51,7 +62,25 @@ export const storySchema = z
         });
     });
   });
-export type Story = z.infer<typeof storySchema>;
+const legacyStorySchema = commonStorySchema.omit({ assets: true }).extend({
+  version: z.literal(1), passages: z.array(legacyPassageSchema).min(1).max(150),
+});
+// Reading never writes the migration back; the repository saves it atomically on an edit.
+export const storySchema = z.union([currentStorySchema, legacyStorySchema.transform((old) => {
+  const assets: MediaAsset[] = [];
+  const images = new Map<string, string>();
+  const passages = old.passages.map(({ image, ...passage }) => {
+    let imageId = images.get(image) || "";
+    if (image && !imageId) {
+      imageId = `legacy-image-${assets.length + 1}`;
+      images.set(image, imageId);
+      assets.push({ id: imageId, kind: "image", name: passage.title || "Scene image", data: image, source: "legacy", credit: "" });
+    }
+    return { ...passage, media: { imageId, audioId: "" } };
+  });
+  return { ...old, version: 2 as const, passages, assets };
+}).pipe(currentStorySchema)]);
+export type Story = z.infer<typeof currentStorySchema>;
 export type Passage = z.infer<typeof passageSchema>;
 export type Issue = {
   level: "error" | "warning";
@@ -65,7 +94,7 @@ export function newPassage(): Passage {
     title: "Untitled passage",
     text: "",
     ending: false,
-    image: "",
+    media: emptyMedia(),
     choices: [],
   };
 }
@@ -73,7 +102,8 @@ export function newStory(title = "Untitled story"): Story {
   const opening = newPassage();
   opening.title = "The beginning";
   return {
-    version: 1,
+    version: 2,
+    assets: [],
     id: uid(),
     title,
     description: "",

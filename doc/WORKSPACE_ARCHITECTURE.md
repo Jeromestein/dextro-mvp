@@ -2,7 +2,7 @@
 
 Updated: 2026-10-06. This document describes the implemented workspace after the
 module restructuring. See [system design](SYSTEM_DESIGN.md) for dependency rules
-and [Graph media design](GRAPH_MEDIA_DESIGN.md) for proposed media features.
+and [Graph media design](GRAPH_MEDIA_DESIGN.md) for current media scope and planned generation.
 
 ## Routes
 
@@ -10,7 +10,7 @@ and [Graph media design](GRAPH_MEDIA_DESIGN.md) for proposed media features.
 | --- | --- |
 | `/` | Redirect to `/builder`. |
 | `/builder` | AI brief or blank-game creation; full-page draft review. |
-| `/builder/[storyId]` | Graph/Outline authoring, text/image editing, preview, validation, export. |
+| `/builder/[storyId]` | Graph/Outline authoring, text/media editing, preview, validation, export. |
 | `/library` | Find, import, copy, and manage saved games. |
 | `/play/[storyId]` | Focused story playback; `sample-last-light` is the bundled sample. |
 | `/settings` | ChatGPT account/model selection or API workshop access. |
@@ -51,33 +51,36 @@ inspector, layout jobs, validation, preview, and export controls.
 - `outline/model.ts` derives finite traversal with convergence/loop references;
   `outline/story-outline.tsx` displays it.
 - `text/passage-form.tsx` edits narrative and choices through callbacks.
-- `media-panel/scene-image-field.tsx` supplies existing image controls, using the
-  reusable validation/reading in `modules/media/images/`.
+- `media-panel/passage-media.tsx` assigns shared files, uploads images/audio,
+  displays shared use, and edits credits through the same history. Reusable asset
+  operations and audio controls live in `modules/media/`.
 
 Every view receives the same current story. Edits share one history; viewport
 updates are saved without entering it. Asynchronous layout results apply only
 when graph structure and manual positions still match the submitted version.
 
 Mobile opens in Outline, with the passage panel below the structure. Graph is
-also available. The present UI retains Edit passage and Preview tabs; proposed
-Story/Media/Preview tabs and graph thumbnails are future work.
+also available. The inspector has Story, Media, and Preview tabs. Graph adds
+fixed-size thumbnails and music labels; hiding images keeps structural overview.
+File completion does not move manually positioned nodes.
 
 ## State and persistence
 
 | State | Lifetime |
 | --- | --- |
-| Accepted games | Existing IndexedDB `dextro-studio-v1` database and `stories` store. |
+| Accepted games | Existing IndexedDB `dextro-studio-v1` database; schema version 2 with `stories` metadata and `media` Blobs. |
 | Pending saves | Shared serialized queue across workspace navigation. |
 | Brief and unaccepted draft | Workspace memory; cleared on reload. |
 | Workshop code and model selection | Workspace memory; cleared on reload. |
 | Graph positions and viewport | Optional `editor` metadata and JSON backups. |
 | Selection and undo/redo | Mounted editor session. |
-| Playback position | Player instance; preview retains its existing restart-on-selection behavior. |
+| Playback position | Player instance, independent of editor selection; highlighted on Graph. |
 | Provider tokens | Protected local server storage, never story state. |
 
 Keep creates a new story. Storage and provider failures are explicit. The
-refactor retains version 1 backups and does not migrate games between origins,
-devices, profiles, or tabs.
+media reader accepts version 1 backups, while new writes use version 2. Saves
+atomically persist metadata and changed files. Games do not migrate between
+origins, devices, profiles, or tabs.
 
 ## Provider and delivery boundaries
 

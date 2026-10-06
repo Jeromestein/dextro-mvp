@@ -1,7 +1,20 @@
 # Graph-Based Scene Images and Background Music
 
 Date: 2026-10-06\
-Status: proposed first increment; design documentation only.
+Status: media foundation implemented; automatic generation and curated music remain proposed.
+
+### Implemented foundation — 2026-10-06
+
+The current increment delivers shared version 2 image/audio assets, a version 1
+reader, atomic separate media storage, Graph thumbnails and music labels,
+Story/Media/Preview tabs, file upload/reuse/credits, undoable assignment, and
+independent playhead highlighting. User-uploaded audio supports explicit sound
+enable, mute/volume, same-track continuity, fades, Silence, and offline exports.
+
+The sections below retain the full target design. Automatic images, licensed
+curated tracks, theme matching, media planning, candidate review, generation jobs,
+and unified draft Graph review are not implemented. See [verification](VERIFICATION.md)
+for the checks actually completed; acceptance items below are target criteria.
 
 ## 1. Product direction
 
@@ -16,8 +29,8 @@ feature. The controls, limits, and implementation choices below are the proposed
 design for that request. They are not a record of completed implementation or
 verified provider access.
 
-The module restructuring is implemented separately. See [system design](SYSTEM_DESIGN.md)
-for current code ownership and the boundary between this proposal and working features.
+The module structure and the manual media foundation are implemented. See [system design](SYSTEM_DESIGN.md)
+for current code ownership and storage/playback behavior.
 
 Related project documents:
 

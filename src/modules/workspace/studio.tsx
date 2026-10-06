@@ -26,8 +26,9 @@ import {
   storySchema,
   type Story,
 } from "@/modules/story/model";
+import { IMPORT_BYTE_LIMIT } from "@/modules/media/assets/model";
 import { sampleStory } from "@/modules/story/sample";
-import { download, filename } from "@/modules/export/standalone";
+import { buildBackup, download, filename } from "@/modules/export/standalone";
 import Player from "@/modules/player/player";
 import { Lighthouse } from "@/shared/ui/lighthouse";
 
@@ -76,7 +77,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
     if (active) {
       download(
         `${filename(active)}.dextro.json`,
-        JSON.stringify(active, null, 2),
+        buildBackup(active),
         "application/json",
       );
       setNotice("Editable backup downloaded.");
@@ -85,7 +86,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
   const importStory = async (file?: File) => {
     if (!file) return;
     try {
-      if (file.size > 25_000_000)
+      if (file.size > IMPORT_BYTE_LIMIT)
         throw new Error("Choose a story file smaller than 25 MB.");
       const parsed = storySchema.safeParse(JSON.parse(await file.text()));
       if (!parsed.success)

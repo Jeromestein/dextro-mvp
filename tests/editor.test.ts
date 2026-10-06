@@ -8,7 +8,7 @@ import { createHistory, editorReducer } from "../src/modules/editor/session/hist
 import { autoLayout, layoutSignature, NODE_WIDTH, nodeHeight, positionsFor, setPositions } from "../src/modules/editor/graph/layout";
 import { outlineFor, type OutlineItem } from "../src/modules/editor/outline/model";
 
-test("old backups remain compatible; layout roundtrips without leaking into playable HTML", () => {
+test("layout roundtrips through backups without leaking into playable HTML", () => {
   const old = sampleStory();
   assert.deepEqual(storySchema.parse(old), old);
   const story = setPositions(old, [{ id: "arrival", x: -120, y: 80 }]);

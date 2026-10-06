@@ -58,10 +58,11 @@ test("client entry points cannot reach server implementations through imports or
 
 test("story and media models stay independent of editor UI, persistence and providers", () => {
   for (const file of files) {
-    if (!/^modules\/(story|media)\//.test(relative(root, file))) continue;
+    if (!/^modules\/(story|media)\//.test(relative(root, file)) || file.endsWith(".tsx")) continue;
     for (const specifier of dependencies.get(file)!) {
       assert.ok(!/^(react|next)(\/|$)/.test(specifier), `${relative(root, file)} imports ${specifier}`);
       const target = localTarget(file, specifier);
+      if (target) assert.ok(!target.endsWith(".tsx"), "Model code must not import UI");
       if (target) assert.match(relative(root, target), /^modules\/(story|media)\//, `${relative(root, file)} crosses its model boundary`);
     }
   }

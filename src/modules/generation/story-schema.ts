@@ -57,10 +57,11 @@ export function checkDraft(raw: unknown): DraftCheck {
     };
   const result = storySchema.safeParse({
     ...parsed.data,
-    version: 1,
+    version: 2,
+    assets: [],
     id: crypto.randomUUID(),
     updatedAt: new Date().toISOString(),
-    passages: parsed.data.passages.map((p) => ({ ...p, image: "" })),
+    passages: parsed.data.passages.map((p) => ({ ...p, media: { imageId: "", audioId: "" } })),
   });
   if (!result.success)
     return { story: null, errors: result.error.issues.map((i) => i.message) };

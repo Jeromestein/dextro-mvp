@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react";
 import { loadStories, saveStory, removeStory } from "@/storage/story-repository";
+import { requireStorySize } from "@/modules/media/assets/operations";
 import type { Story } from "@/modules/story/model";
 
 function useLibraryState() {
@@ -22,8 +23,8 @@ function useLibraryState() {
   }, [storageError]);
   const persistStory = useCallback((story: Story) => {
     const stamped = { ...story, updatedAt: new Date().toISOString() };
-    if (new TextEncoder().encode(JSON.stringify(stamped)).length > 24_000_000) {
-      setStorageError("This story is too large to save. Remove an image or shorten the text.");
+    try { requireStorySize(stamped); } catch (error) {
+      setStorageError((error as Error).message);
       return false;
     }
     setStories((previous) => [stamped, ...previous.filter((item) => item.id !== stamped.id)]);

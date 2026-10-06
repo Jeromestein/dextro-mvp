@@ -8,13 +8,13 @@ The root [README](../README.md) covers running the app and the current module ma
 | [System design](SYSTEM_DESIGN.md) | Module responsibilities, dependency rules, state ownership, migration boundaries. | Current structure and explicit next steps |
 | [Workspace architecture](WORKSPACE_ARCHITECTURE.md) | Routes, providers, editor coordination, state lifetimes. | Implemented workspace |
 | [AI game design](AI_GAME_DESIGN.md) | Text generation and proposed targeted editing. | Implemented and proposed sections distinguished |
-| [Graph media design](GRAPH_MEDIA_DESIGN.md) | Graph-integrated images, music, generation, and acceptance criteria. | Proposed next increment |
+| [Graph media design](GRAPH_MEDIA_DESIGN.md) | Graph-integrated images, music, generation, and acceptance criteria. | Implemented foundation; generation and curated catalog proposed |
 | [AI setup and deployment](AI_SETUP.md) | Local ChatGPT mode, API-key mode, deployment configuration. | Setup guide; live eligibility requires verification |
 | [Verification record](VERIFICATION.md) | Dated checks and their limits. | Historical evidence, not a claim about every current environment |
 
 Read requirements first, then system and workspace architecture. Use feature
-designs for implementation detail and verification for evidence. New media
-features remain proposals until implemented and verified.
+designs for implementation detail and verification for evidence. Feature documents distinguish implemented media foundations from proposed
+generation and catalog work.
 
 ## Historical material
 

@@ -1,67 +1,101 @@
 import { storySchema, type Story } from "@/modules/story/model";
+import { requireStorySize } from "@/modules/media/assets/operations";
+
 const DB = "dextro-studio-v1";
+type StoredMedia = { storyId: string; assetId: string; blob: Blob };
+const persistedData = new Map<string, Map<string, string>>();
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB, 1);
-    request.onupgradeneeded = () =>
-      request.result.createObjectStore("stories", { keyPath: "id" });
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () =>
-      reject(
-        new Error(
-          "Browser storage is unavailable. Export a backup before leaving.",
-        ),
-      );
-    request.onblocked = () =>
-      reject(new Error("Close other Dextro tabs and try again."));
+    const request = indexedDB.open(DB, 2);
+    let blocked = false;
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains("stories")) db.createObjectStore("stories", { keyPath: "id" });
+      if (!db.objectStoreNames.contains("media")) db.createObjectStore("media", { keyPath: ["storyId", "assetId"] });
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      if (blocked) { db.close(); return; }
+      db.onversionchange = () => db.close();
+      resolve(db);
+    };
+    request.onerror = () => reject(new Error("Browser storage is unavailable. Export a backup before leaving."));
+    request.onblocked = () => { blocked = true; reject(new Error("Close other Dextro tabs and reload to update media storage.")); };
+  });
+}
+function toBlob(data: string) {
+  const [header, base64] = data.split(",");
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  return new Blob([bytes], { type: header.slice(5).split(";")[0] });
+}
+function fromBlob(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not read saved media."));
+    reader.readAsDataURL(blob);
   });
 }
 export async function loadStories(): Promise<Story[]> {
   const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction("stories", "readonly");
-    const req = tx.objectStore("stories").getAll();
-    req.onsuccess = () => {
-      try {
-        resolve(
-          req.result
-            .map((s) => storySchema.parse(s))
-            .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
-        );
-      } catch {
-        reject(
-          new Error(
-            "A saved story could not be read. Existing data has been preserved.",
-          ),
-        );
-      }
-    };
-    req.onerror = () => reject(new Error("Could not read your saved stories."));
-    tx.oncomplete = () => db.close();
-    tx.onabort = () => {
-      db.close();
-      reject(new Error("Could not read your saved stories."));
-    };
+  const records = await new Promise<{ stories: unknown[]; media: StoredMedia[] }>((resolve, reject) => {
+    const tx = db.transaction(["stories", "media"], "readonly");
+    const stories = tx.objectStore("stories").getAll();
+    const media = tx.objectStore("media").getAll();
+    tx.oncomplete = () => { db.close(); resolve({ stories: stories.result, media: media.result }); };
+    tx.onabort = tx.onerror = () => { db.close(); reject(new Error("Could not read your saved stories. Existing data has been preserved.")); };
   });
+  try {
+    const bytes = new Map<string, string>();
+    await Promise.all(records.media.map(async (item) => bytes.set(JSON.stringify([item.storyId, item.assetId]), await fromBlob(item.blob))));
+    const stories = records.stories.map((raw) => {
+      const record = raw as Story;
+      const input = record.version === 2 ? { ...record, assets: record.assets.map((a) => ({ ...a, data: bytes.get(JSON.stringify([record.id, a.id])) })) } : record;
+      return storySchema.parse(input);
+    });
+    stories.forEach((story) => {
+      // Legacy images were read from the story, not persisted in the media store yet.
+      persistedData.set(story.id, new Map(story.assets.filter((a) => bytes.has(JSON.stringify([story.id, a.id]))).map((a) => [a.id, a.data])));
+    });
+    return stories.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  } catch {
+    throw new Error("A saved story or media file could not be read. Existing data has been preserved.");
+  }
 }
-async function write(action: (store: IDBObjectStore) => void) {
+export async function saveStory(story: Story): Promise<void> {
+  requireStorySize(story);
+  const previous = persistedData.get(story.id) || new Map<string, string>();
+  const changed = story.assets.filter((a) => previous.get(a.id) !== a.data).map((a) => ({ storyId: story.id, assetId: a.id, blob: toBlob(a.data) }));
+  const metadata = { ...story, assets: story.assets.map((asset) => ({ ...asset, data: undefined })) };
   const db = await openDB();
-  return new Promise<void>((resolve, reject) => {
-    const tx = db.transaction("stories", "readwrite");
-    action(tx.objectStore("stories"));
-    tx.oncomplete = () => {
-      db.close();
-      resolve();
-    };
-    tx.onabort = tx.onerror = () => {
-      db.close();
-      reject(
-        new Error(
-          "Your changes could not be saved. Storage may be full. Export a backup before leaving.",
-        ),
-      );
-    };
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(["stories", "media"], "readwrite");
+    tx.oncomplete = () => { db.close(); persistedData.set(story.id, new Map(story.assets.map((a) => [a.id, a.data]))); resolve(); };
+    tx.onabort = tx.onerror = () => { db.close(); reject(new Error("Your changes could not be saved. Storage may be full. Export a backup before leaving.")); };
+    try {
+      tx.objectStore("stories").put(metadata);
+      const media = tx.objectStore("media");
+      changed.forEach((asset) => media.put(asset));
+      const kept = new Set(story.assets.map((a) => a.id));
+      const cursor = media.openKeyCursor(IDBKeyRange.bound([story.id], [story.id, []]));
+      cursor.onsuccess = () => {
+        const row = cursor.result;
+        if (!row) return;
+        const [, assetId] = row.primaryKey as [string, string];
+        if (!kept.has(assetId)) media.delete(row.primaryKey);
+        row.continue();
+      };
+    } catch { tx.abort(); }
+
   });
 }
-export const saveStory = (story: Story) => write((store) => store.put(story));
-export const removeStory = (id: string) => write((store) => store.delete(id));
+export async function removeStory(id: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(["stories", "media"], "readwrite");
+    tx.objectStore("stories").delete(id);
+    tx.objectStore("media").delete(IDBKeyRange.bound([id], [id, []]));
+    tx.oncomplete = () => { db.close(); persistedData.delete(id); resolve(); };
+    tx.onabort = tx.onerror = () => { db.close(); reject(new Error("Could not delete this story. Your saved data has been preserved.")); };
+  });
+}

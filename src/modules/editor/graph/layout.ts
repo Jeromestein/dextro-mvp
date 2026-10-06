@@ -3,7 +3,7 @@ import { GRAPH_COORDINATE_LIMIT, type Passage, type Story } from "@/modules/stor
 import type { Positions } from "../session/types";
 
 export const NODE_WIDTH = 250;
-export const nodeHeight = (p: Passage) => 92 + (p.ending ? 30 : p.choices.length * 38 + 38);
+export const nodeHeight = (p: Passage) => 238 + (p.ending ? 30 : p.choices.length * 38 + 38);
 export const coordinate = (value: number, limit = GRAPH_COORDINATE_LIMIT) => Number.isFinite(value) ? Math.max(-limit, Math.min(limit, value)) : 0;
 
 export function positionsFor(story: Story): Positions {

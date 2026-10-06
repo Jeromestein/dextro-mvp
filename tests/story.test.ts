@@ -66,7 +66,7 @@ test("unreachable passages are warnings; choices on endings are errors", () => {
     title: "Unused",
     text: "An unused ending.",
     ending: true,
-    image: "",
+    media: { imageId: "", audioId: "" },
     choices: [],
   });
   assert.ok(
@@ -93,7 +93,8 @@ test("imports reject duplicate passage IDs and active or remote images", () => {
     "data:image/svg+xml,<svg onload='alert(1)'/>",
   ]) {
     const story = sampleStory();
-    story.passages[0].image = image;
+    story.assets = [{ id: "scene", kind: "image", name: "Scene", data: image, source: "upload", credit: "" }];
+    story.passages[0].media.imageId = "scene";
     assert.equal(storySchema.safeParse(story).success, false);
   }
 });
@@ -102,7 +103,8 @@ test("standalone export roundtrips text and images without script injection", ()
   story.title = '</title><script>alert("unsafe")</script>';
   story.passages[0].text =
     '</script><script>alert("unsafe")</script> & 中文 \u2028';
-  story.passages[0].image = "data:image/png;base64,aGVsbG8=";
+  story.assets = [{ id: "scene", kind: "image", name: "Scene", data: "data:image/png;base64,aGVsbG8=", source: "upload", credit: "" }];
+  story.passages[0].media.imageId = "scene";
   const html = buildGame(story);
   assert.equal(html.includes('<script>alert("unsafe")'), false);
   const data = html.match(

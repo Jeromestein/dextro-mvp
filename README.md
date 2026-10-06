@@ -2,7 +2,7 @@
 
 A choice-based text adventure studio built with Next.js, React, TypeScript, and
 pnpm. Authors create branching stories on a Graph/Outline workspace, edit text
-and scene images, play every path, and export an offline game.
+and shared scene media, play every path, and export an offline game.
 
 Start with the [documentation index](doc/README.md). The
 [system design](doc/SYSTEM_DESIGN.md) defines module ownership;
@@ -19,17 +19,18 @@ separate providers for the saved-game library, AI connection, and unsaved draft.
 | --- | --- |
 | Story | Story schema, branch validation, and sample content. |
 | Editor | Graph, Outline, text form, media field, edit commands, and undo/redo. |
-| Media | Embedded image validation and reading uploaded scene images. |
+| Media | Shared image/audio assets, file validation, assignments, credits, and audio playback. |
 | Generation | Creation UI, draft state/review, and structured story schema. |
 | Player | Shared reading and choice UI for preview and the play route. |
 | Export | Editable backup helpers and standalone HTML generation. |
 | Workspace / Connections | Library state, shell/routing composition, and separate AI settings. |
 | Storage / Server | IndexedDB repository; server-side authorization, providers, and generation. |
 
-This restructuring retains version 1 story files, the existing IndexedDB store,
-URLs, and authentication behavior. Automatic images, audio playback, shared asset
-IDs, and separate media-file storage are the next increment described in
-[Graph media design](doc/GRAPH_MEDIA_DESIGN.md); they are not implemented yet.
+Stories now use version 2 with shared image and audio assets. Version 1 stories
+and backups remain readable; files move into a separate IndexedDB media store
+only after a successful save. Existing routes and authentication are unchanged.
+Automatic images, curated music matching, and unified media generation remain
+future work in [Graph media design](doc/GRAPH_MEDIA_DESIGN.md).
 
 ## Run locally
 
@@ -53,9 +54,12 @@ Open http://localhost:3000. Run the development server from your own terminal fo
 - Session undo/redo for content, connections, deletion, and layout; saved node positions and viewport are included in editable backups.
 - Live preview from a selected passage or the opening, plus a mobile-friendly player and restart controls.
 - Browser-local IndexedDB persistence with a save indicator and explicit storage failure messages.
-- Optional embedded PNG, JPEG, or WebP scene images (up to 2 MB per uploaded image).
+- Story / Media / Preview inspector tabs, Graph thumbnails and music labels, and compact media status in Outline.
+- Shared PNG, JPEG, or WebP images (up to 2 MB) and MP3, M4A, OGG, WAV, or WebM music (up to 6 MB). Upload, reuse, clear assignments, record credits, and undo media changes.
+- Explicit sound enable, volume/mute, same-track continuity, one-second transitions, and Silence per passage. Audition and playback share audio ownership.
+- Independent edit selection and playhead, with current-node and traversed-choice highlighting.
 - Validation for missing content, broken links, unreachable passages, invalid endings, and paths that cannot reach an ending. Broken playable exports are blocked; disconnected passages are warnings.
-- Editable `.dextro.json` backups and standalone HTML games with images embedded. The exported game runs without Next.js or an internet connection.
+- Editable `.dextro.json` backups and standalone HTML games with used images, audio, and credits embedded once per asset. The exported game runs without Next.js or an internet connection.
 - Optional AI draft generation through a server-only endpoint, with English, Simplified Chinese, or automatic language selection. Play the complete draft and inspect every ending before saving it as a new story.
 
 ## Workspace navigation
@@ -97,9 +101,9 @@ src/
 │   │   ├── graph/             # Canvas and automatic layout
 │   │   ├── outline/           # Outline UI and traversal
 │   │   ├── text/              # Passage and choice form
-│   │   ├── media-panel/       # Scene image controls
+│   │   ├── media-panel/       # Image/music assignment and library controls
 │   │   └── session/           # Commands, history, editing hook
-│   ├── media/images/          # Image schema and upload reader
+│   ├── media/                 # Asset schema/commands, upload reader, audio engine
 │   ├── generation/            # Builder, draft provider/review, schema
 │   ├── player/                # Story player
 │   ├── export/                # Downloads and standalone HTML

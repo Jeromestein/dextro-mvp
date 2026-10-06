@@ -44,7 +44,7 @@ Private testing can retain the existing workshop code. Add durable per-user quot
 
 ## Assets and scope
 
-First generate narrative, choice labels, and endings. Retain optional manual image uploads. AI-generated covers and scene images are a later separate step with a shared art brief, preview, regeneration controls, and explicit cost boundaries. Blender, audio, inventory, conditional variables, and free-form AI play remain outside this MVP.
+First generate narrative, choice labels, and endings. Retain optional manual image uploads. AI-generated covers and scene images are a later separate step with a shared art brief, preview, regeneration controls, and explicit cost boundaries. Manual image/audio assets and playback are implemented in the media foundation. AI music composition, Blender, inventory, conditional variables, and free-form AI play remain outside this MVP.
 
 ## Acceptance
 

@@ -1,11 +1,12 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronRight, CornerDownRight, Flag, GitMerge, RotateCcw, AlertCircle } from "lucide-react";
+import { assignedAsset } from "@/modules/media/assets/operations";
 import { outlineFor, type OutlineItem } from "./model";
 import type { Issue, Story } from "@/modules/story/model";
 
-export default function StoryOutline({ story, selected, issues, onSelect }: {
-  story: Story; selected: string; issues: Issue[]; onSelect: (id: string) => void;
+export default function StoryOutline({ story, selected, issues, onSelect, playbackId }: {
+  playbackId?: string; story: Story; selected: string; issues: Issue[]; onSelect: (id: string) => void;
 }) {
   const outline = useMemo(() => outlineFor(story), [story]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -17,14 +18,14 @@ export default function StoryOutline({ story, selected, issues, onSelect }: {
     const problems = issues.filter((i) => i.passageId === p.id);
     return <div className={`outline-entry ${item.disconnected ? "disconnected" : ""}`} key={p.id}>
       {item.disconnected && <div className="outline-detached"><AlertCircle size={13} /> Separate branch</div>}
-      <div className={`outline-passage ${selected === p.id ? "selected" : ""}`}>
+      <div className={`outline-passage ${selected === p.id ? "selected" : ""} ${playbackId === p.id ? "playing" : ""}`}>
         <button className="outline-toggle" disabled={!item.branches.length} aria-expanded={!closed}
           aria-label={`${closed ? "Expand" : "Collapse"} ${p.title || "Untitled passage"}`} onClick={() => {
             if (!closed && item.branches.some((b) => b.child && containsSelection(b.child))) onSelect(p.id);
             setCollapsed((previous) => { const next = new Set(previous); if (closed) next.delete(p.id); else next.add(p.id); return next; });
           }}>{p.ending ? <Flag size={15} /> : closed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}</button>
         <button className="outline-select" onClick={() => onSelect(p.id)} aria-pressed={selected === p.id}>
-          <span><strong>{p.title || "Untitled passage"}</strong><small>{p.id === story.startId ? "Opening" : p.ending ? "Ending" : `${p.choices.length} choices`}</small></span>
+          <span><strong>{p.title || "Untitled passage"}</strong><small>{p.id === story.startId ? "Opening" : p.ending ? "Ending" : `${p.choices.length} choices`}</small><small className="outline-media">{p.media.imageId ? "Image attached" : "No image"} · {assignedAsset(story, p, "audio")?.name || "Silence"}{playbackId === p.id ? " · Playing" : ""}</small></span>
           {problems.length > 0 && <span className={`outline-issue ${problems.some((i) => i.level === "error") ? "error" : ""}`} aria-label={`${problems.length} issues`}><AlertCircle size={14} /></span>}
         </button>
       </div>

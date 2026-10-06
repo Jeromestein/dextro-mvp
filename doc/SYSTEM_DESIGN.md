@@ -8,10 +8,10 @@ Dextro is a modular Next.js application for choice-based text adventures. One
 story model connects authoring, generation, playback, browser persistence, and
 offline export. Graph and Outline are views of the same passages and choices.
 
-The structural increment separates module responsibilities and state providers.
-It retains version 1 story JSON, the existing IndexedDB database, URLs, local
-storage, generation contracts, and authorization. It does not implement audio,
-automatic images, shared asset IDs, or a storage migration.
+The media foundation adds version 2 shared image/audio assets, Graph media,
+passage assignments, explicit audio playback, and portable exports. It retains
+version 1 reads, existing routes, and authorization. Automatic images, licensed
+catalog matching, and unified generation remain later increments.
 
 See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
 [workspace architecture](WORKSPACE_ARCHITECTURE.md) for routing and composition.
@@ -21,20 +21,20 @@ See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
 | Location | Responsibility and current implementation |
 | --- | --- |
 | `src/app/` | Routes, layout, global style loading, and HTTP entry points. |
-| `src/modules/story/` | Version 1 schema, branch validation, and sample content. |
+| `src/modules/story/` | Version 2 schema, version 1 reader, branch validation, and sample content. |
 | `src/modules/editor/` | Authoring composition, selection, validation, preview, and export actions. |
 | `editor/graph/` | React Flow projection, positions, dimensions, and lazy ELK layout. |
 | `editor/outline/` | Outline UI and finite traversal of branches, convergence, and loops. |
 | `editor/text/` | Controlled passage/choice form using editor callbacks. |
-| `editor/media-panel/` | Image input; assignment changes go through the editor session. |
+| `editor/media-panel/` | Image/audio assignment, uploads, shared-use information, and credits. |
 | `editor/session/` | Immutable commands, grouped undo/redo, and a unified commit hook. |
-| `src/modules/media/images/` | Image-value schema, uploaded-file validation and reading. |
+| `src/modules/media/` | Asset schema, file reading, reference operations, size accounting, and shared audio engine/controls. |
 | `src/modules/generation/` | Builder, shared generation schema, draft provider, and review. |
 | `src/modules/player/` | Shared React preview/player and choice progression. |
 | `src/modules/export/` | Download helpers and standalone HTML template. |
 | `src/modules/workspace/` | Saved library, provider composition, shell, route integration. |
 | `src/modules/connections/` | Browser-visible provider readiness, model/access state, settings UI. |
-| `src/storage/` | Existing IndexedDB story repository. |
+| `src/storage/` | Atomic IndexedDB story metadata and media Blob repository. |
 | `src/server/auth/` | OAuth credentials, origin/workshop checks, session cancellation. |
 | `src/server/providers/` | Provider model and streaming-response handling. |
 | `src/server/generation/` | Authorized inference orchestration, deadlines, validation and repair. |
@@ -75,9 +75,9 @@ check transitive server isolation, and enforce the pure story/media boundary.
 
 `WorkspaceProviders` composes the independent providers and remains mounted
 across workspace navigation. Settings does not own the library; saving a story
-does not modify connection settings. The existing preview still restarts when
-selection changes. Independent editor/playhead state and graph path highlighting
-remain part of the proposed media increment.
+does not modify connection settings. Editor selection does not reset an active
+preview. Explicit From selected / From opening actions restart it; Graph shows
+the playhead and traversed choices. Closing preview releases its audio.
 
 ## Main flows
 
@@ -98,42 +98,51 @@ draft, and leaving the builder cancels its active request. Manual editing and
 the sample remain available without a provider. Runtime/duration configuration
 remains in the thin API route; orchestration lives under `server/generation/`.
 
-## Media and persistence evolution
+## Media and persistence
 
-Media currently owns embedded-image validation and upload reading. Music,
-catalog search, automatic images, and shared asset records will be added here
-when implemented; empty placeholder modules are not required now.
+Version 2 passages use `media.imageId` and `media.audioId`; an empty audio ID
+means Silence. A story has up to 300 immutable asset records with kind, ID, name,
+embedded data, source, and credit. Identical uploads reuse a file; replacements
+only change the selected passage. Credit edits apply to the shared file.
 
-The next editing representation uses stable asset IDs in passages, an asset
-catalog for metadata, and separate IndexedDB media bytes. Editing text should
-not copy audio bytes. Persist story references and assets consistently, retain
-assets needed by undo, and preserve files still used by another passage.
+The in-memory editor holds media strings once per asset. IndexedDB keeps story
+metadata in `stories` and file Blobs in `media`, keyed by story and asset ID. The
+existing `dextro-studio-v1` database upgrades to schema version 2 without changing
+old records. Reading version 1 deduplicates passage images in memory. A save
+writes files and metadata in one transaction; failure preserves the old record.
+Unchanged files are not rewritten on text edits. Copies own separate stored files.
 
-Editable backups and playable HTML will bundle required bytes for portability.
-This distinguishes editing storage from the self-contained export format. A
-compatibility reader and explicit migration must precede version 2 writes.
+Unassigned assets remain reusable until Remove unused files. That action is
+undoable: session history retains the original bytes and saving an undo restores
+them to storage. Deleting a story removes its metadata and files atomically.
+Uploads that finish after undo, deletion, or a target-passage edit cannot apply.
 
-Until then, database/store names, version 1 files, the 24 MB serialized-save
-limit, and the 25 MB import limit remain unchanged. Browser persistence is not
-cloud backup or synchronization.
+The shared 24 MB compact serialized-story limit includes encoded media; uploads
+allow 2 MB images and 6 MB audio. Import retains its 25 MB file cap and must pass
+the same save limit. Backups bundle used assets once and omit unused library
+files. Old app versions cannot read new version 2 backups. Browser persistence
+is not cloud backup or synchronization.
 
 ## Player and export
 
 Editor preview and the play route share the React player. Offline HTML retains
 its independent template; tests check branch behavior, image embedding, and
-safe serialization. Exports strip editor layout and require no provider or
-Next.js connection.
+safe serialization. Exports strip editor layout and unused assets and require
+no provider or Next.js connection. JSON backups retain editor layout.
 
-The media increment should share media resolution and audio-transition rules
-across both delivery surfaces. Same-track continuation, crossfades, silence,
-autoplay rejection, and offline audio require explicit acceptance checks.
+The React player and offline template share the self-contained audio controller.
+It requires explicit sound activation, continues identical tracks, fades changed
+tracks/silence over one second, cancels superseded transitions, and releases audio
+on exit. Playback rejection remains visible and does not block story choices.
+Audition claims the same document-level audio ownership. Media controls are React
+UI; story schemas and asset operations remain independent of React.
 
 ## Implementation sequence
 
 1. Structural increment: module relocation, separate providers, extracted editor
    session/forms, unchanged data and behavior, consolidated documentation.
-2. Media increment: shared asset records and compatible persistence, followed
-   by graph media controls and curated music playback.
+2. Media foundation: shared assets, compatible persistence, Graph controls,
+   uploaded music, and portable playback. Curated licensed tracks are still pending.
 3. Automatic media: verified image provider, shared planning, per-asset jobs and
    candidate review, and graph-linked generation.
 

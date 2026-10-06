@@ -186,3 +186,18 @@ under `doc/archive/`. See [system design](SYSTEM_DESIGN.md) for current ownershi
 and [Graph media design](GRAPH_MEDIA_DESIGN.md) for the proposed image/music
 increment. This refactor does not implement automatic image generation, music
 playback, cloud storage, or the proposed version 2 asset format.
+
+
+## Media foundation — 2026-10-06
+
+The user authorized implementation of the media module. The delivered foundation
+supports shared image/audio assets, Graph thumbnails/music labels, a Media
+inspector, upload/reuse/credits, undo/redo, and explicit background playback.
+Editor selection and preview progress are independent. Music continues across
+passages that reference the same file; Silence is an explicit assignment.
+
+New stories and backups use version 2. Existing version 1 stories remain readable;
+successful saves atomically migrate metadata and media files in browser storage.
+Used assets and credits are bundled into backups and standalone HTML. Automatic
+image generation, licensed catalog matching, and unified media creation remain
+subsequent work. See the verification record for tested behavior and limits.

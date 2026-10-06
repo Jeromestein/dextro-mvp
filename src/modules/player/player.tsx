@@ -2,27 +2,37 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { ArrowUpRight, RotateCcw, Flag, ArrowRight } from "lucide-react";
+import SoundControls from "@/modules/media/audio/sound-controls";
+import { assignedAsset } from "@/modules/media/assets/operations";
 import { passageById, type Story } from "@/modules/story/model";
+export type PlaybackProgress = { current: string; path: { passageId: string; choiceId: string; target: string }[] };
 export default function Player({
   story,
   startId,
   compact = false,
+  onProgress,
 }: {
   story: Story;
   startId?: string;
   compact?: boolean;
+  onProgress?: (progress: PlaybackProgress) => void;
 }) {
   const [current, setCurrent] = useState(startId || story.startId);
+  const [path, setPath] = useState<PlaybackProgress["path"]>([]);
   const [steps, setSteps] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
   const passage = passageById(story, current);
+  const image = assignedAsset(story, passage, "image");
+  const music = assignedAsset(story, passage, "audio");
+  useEffect(() => { onProgress?.({ current: passage ? current : "", path }); }, [current, path, onProgress, passage]);
   useEffect(() => {
     if (steps > 0) {
       heading.current?.focus({ preventScroll: true });
       if (!compact) heading.current?.scrollIntoView({ block: "start" });
     }
   }, [steps, compact]);
-  const go = (id: string) => {
+  const go = (id: string, choiceId?: string) => {
+    setPath((old) => choiceId ? [...old, { passageId: current, choiceId, target: id }] : []);
     setCurrent(id);
     setSteps((s) => s + 1);
   };
@@ -39,6 +49,7 @@ export default function Player({
           <RotateCcw size={15} />
         </button>
       </div>
+      {story.assets.some((a) => a.kind === "audio") && <SoundControls data={music?.data || ""} title={music?.name || ""} />}
       {!passage ? (
         <div className="empty-passage">
           <h2>Passage unavailable</h2>
@@ -49,13 +60,13 @@ export default function Player({
         </div>
       ) : (
         <>
-          {passage.image && (
+          {image && (
             <Image
               unoptimized
               width={800}
               height={480}
               className="scene-image"
-              src={passage.image}
+              src={image.data}
               alt={`Illustration for ${passage.title}`}
             />
           )}
@@ -96,7 +107,7 @@ export default function Player({
                   className="choice-button"
                   key={c.id}
                   disabled={!passageById(story, c.target)}
-                  onClick={() => go(c.target)}
+                  onClick={() => go(c.target, c.id)}
                 >
                   <span className="choice-number">
                     {String(i + 1).padStart(2, "0")}
@@ -118,6 +129,7 @@ export default function Player({
           </div>
         </>
       )}
+      {story.assets.some((a) => a.credit) && <details className="media-credits"><summary>Media credits</summary>{story.assets.filter((a) => a.credit).map((a) => <p key={a.id}><strong>{a.name}</strong> — {a.credit}</p>)}</details>}
       <div className="player-signature">
         A story made with{" "}
         <strong>
