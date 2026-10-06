@@ -30,11 +30,14 @@ Providers stay mounted during internal navigation, with separate ownership:
   refresh on focus. Actual credentials remain server-side.
 - `GenerationDraftProvider`: creation brief, unsaved draft, and draft unload
   protection. The builder owns its active request and cancels it on unmount.
+- `GameplayAudioProvider`: audio started by Play, retained through navigation
+  into that game and released when leaving its route. Preview and audition keep
+  their own mounted controllers and share exclusive audio ownership.
 
 `modules/workspace/studio.tsx` composes library/editor/player routing and loads
 the editor on demand. `modules/connections/settings.tsx` consumes connection
-state. `modules/generation/game-builder.tsx` coordinates the three providers
-explicitly when creating or keeping a story.
+state. `modules/generation/game-builder.tsx` coordinates library, connection,
+and draft state explicitly when creating or keeping a story.
 
 ## Editor composition
 

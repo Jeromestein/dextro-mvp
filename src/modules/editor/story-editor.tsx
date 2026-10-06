@@ -18,7 +18,8 @@ import StoryOutline from "@/modules/editor/outline/story-outline";
 import PassageForm from "./text/passage-form";
 import PassageMedia from "./media-panel/passage-media";
 import { readMediaFile } from "@/modules/media/assets/read-file";
-import { addAndAssignAsset, assignAsset, pruneAssets } from "@/modules/media/assets/operations";
+import { addAndAssignAsset, assignedAsset, assignAsset, pruneAssets } from "@/modules/media/assets/operations";
+import { useGameplayAudio } from "@/modules/media/audio/gameplay-provider";
 import type { MediaKind } from "@/modules/media/assets/model";
 import type { PlaybackProgress } from "@/modules/player/player";
 import { useEditorSession } from "./session/use-editor-session";
@@ -29,6 +30,7 @@ const StoryGraph = dynamic(() => import("@/modules/editor/graph/story-graph"), {
 type Modal = "checks" | "delete" | "create" | "details" | null;
 export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const { persistStory, saving, storageError } = useLibrary();
+  const gameplayAudio = useGameplayAudio();
   const { history, historyRef, send, commit } = useEditorSession(initialStory, persistStory);
   const initialRef = useRef(initialStory);
   const [selection, setSelection] = useState(initialStory.startId);
@@ -141,7 +143,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   }}>
     <header className="workbench-header">
       <div className="workbench-identity"><Link href="/library" className="icon-button" aria-label="Back to My Games"><ArrowLeft size={19} /></Link><div><span className="kicker">STORY WORKSPACE</span><input aria-label="Story title" maxLength={200} value={story.title} onChange={(e) => commit((s) => ({ ...s, title: e.target.value }), "story-title")} /><span className={`workbench-save ${storageError ? "failed" : ""}`} role="status">{storageError ? <><AlertCircle size={12} /> Not saved</> : saving ? <><LoaderCircle size={12} className="spin" /> Saving…</> : <><Check size={12} /> Saved in this browser</>}</span></div></div>
-      <div className="workbench-actions"><button className={`button ${errors.length ? "needs-attention" : ""}`} onClick={() => setModal("checks")}>{errors.length ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />} Check story{issues.length > 0 && <span className="workbench-count">{issues.length}</span>}</button><Link href={`/play/${encodeURIComponent(story.id)}`} className="button"><Play size={15} /> Play</Link><details className="export-menu"><summary className="button primary"><Download size={15} /> Export <ChevronDown size={13} /></summary><div><button onClick={exportHTML}>Playable HTML <ArrowUpRight size={14} /></button><button onClick={exportJSON}>Editable backup <Download size={14} /></button></div></details></div>
+      <div className="workbench-actions"><button className={`button ${errors.length ? "needs-attention" : ""}`} onClick={() => setModal("checks")}>{errors.length ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />} Check story{issues.length > 0 && <span className="workbench-count">{issues.length}</span>}</button><Link href={`/play/${encodeURIComponent(story.id)}`} className="button" onNavigate={() => gameplayAudio.start(story.id, assignedAsset(story, story.passages.find((p) => p.id === story.startId), "audio")?.data || "")}><Play size={15} /> Play</Link><details className="export-menu"><summary className="button primary"><Download size={15} /> Export <ChevronDown size={13} /></summary><div><button onClick={exportHTML}>Playable HTML <ArrowUpRight size={14} /></button><button onClick={exportJSON}>Editable backup <Download size={14} /></button></div></details></div>
     </header>
     {storageError && <div className="storage-warning" role="alert"><AlertCircle size={17} />{storageError}<button onClick={exportJSON}>Download backup</button></div>}
     <div className="workbench-toolbar">

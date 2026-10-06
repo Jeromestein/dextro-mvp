@@ -49,7 +49,7 @@ export default function Player({
           <RotateCcw size={15} />
         </button>
       </div>
-      {story.assets.some((a) => a.kind === "audio") && <SoundControls data={music?.data || ""} title={music?.name || ""} />}
+      {story.assets.some((a) => a.kind === "audio") && <SoundControls gameId={compact ? undefined : story.id} data={music?.data || ""} title={music?.name || ""} />}
       {!passage ? (
         <div className="empty-passage">
           <h2>Passage unavailable</h2>

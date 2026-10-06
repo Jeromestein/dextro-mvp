@@ -56,7 +56,7 @@ Open http://localhost:3000. Run the development server from your own terminal fo
 - Browser-local IndexedDB persistence with a save indicator and explicit storage failure messages.
 - Story / Media / Preview inspector tabs, Graph thumbnails and music labels, and compact media status in Outline.
 - Shared PNG, JPEG, or WebP images (up to 2 MB) and MP3, M4A, OGG, WAV, or WebM music (up to 6 MB). Upload, reuse, clear assignments, record credits, and undo media changes.
-- Explicit sound enable, volume/mute, same-track continuity, one-second transitions, and Silence per passage. Audition and playback share audio ownership.
+- Play starts music during the click and carries it into the game. Direct game links try autoplay with an Enable sound fallback; preview and audition remain manual. Volume/mute, same-track continuity, one-second transitions, and Silence per passage are supported.
 - Independent edit selection and playhead, with current-node and traversed-choice highlighting.
 - Validation for missing content, broken links, unreachable passages, invalid endings, and paths that cannot reach an ending. Broken playable exports are blocked; disconnected passages are warnings.
 - Editable `.dextro.json` backups and standalone HTML games with used images, audio, and credits embedded once per asset. The exported game runs without Next.js or an internet connection.
@@ -116,6 +116,7 @@ src/
 │   └── generation/            # Authorized story-generation orchestration
 └── shared/ui/                 # Generic dialog and original artwork
 
+public/media/demo/             # Placeholder image and four chime samples
 doc/                           # Requirements, design, setup, verification
 └── archive/                   # Historical requirements and meeting materials
 ```

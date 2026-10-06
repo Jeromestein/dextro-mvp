@@ -131,11 +131,20 @@ safe serialization. Exports strip editor layout and unused assets and require
 no provider or Next.js connection. JSON backups retain editor layout.
 
 The React player and offline template share the self-contained audio controller.
-It requires explicit sound activation, continues identical tracks, fades changed
+It continues identical tracks, fades changed
 tracks/silence over one second, cancels superseded transitions, and releases audio
 on exit. Playback rejection remains visible and does not block story choices.
 Audition claims the same document-level audio ownership. Media controls are React
 UI; story schemas and asset operations remain independent of React.
+
+The workspace owns a gameplay audio session across client-side navigation.
+Library and editor Play actions start the opening track synchronously during
+the click; the game route reuses that controller without restarting its track.
+Direct game links attempt playback and retain Enable sound when the browser
+blocks it. Changing passages or restarting does not override manual mute.
+Leaving the game route disposes the session. Preview, audition, and offline HTML
+still use explicit sound controls. This does not request or store a browser
+permission grant.
 
 ## Implementation sequence
 

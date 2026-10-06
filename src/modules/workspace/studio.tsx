@@ -27,6 +27,8 @@ import {
   type Story,
 } from "@/modules/story/model";
 import { IMPORT_BYTE_LIMIT } from "@/modules/media/assets/model";
+import { assignedAsset } from "@/modules/media/assets/operations";
+import { useGameplayAudio } from "@/modules/media/audio/gameplay-provider";
 import { sampleStory } from "@/modules/story/sample";
 import { buildBackup, download, filename } from "@/modules/export/standalone";
 import Player from "@/modules/player/player";
@@ -46,6 +48,7 @@ export default function Studio({ view, storyId }: { view: View; storyId?: string
 }
 function StudioContent({ view, initialStory }: { view: View; initialStory: Story | null }) {
   const router = useRouter();
+  const gameplayAudio = useGameplayAudio();
   const { stories, ready, storageError, persistStory, deleteSavedStory } = useLibrary();
   const [active, setActive] = useState<Story | null>(initialStory);
   const [modal, setModal] = useState<Modal>(null);
@@ -72,7 +75,11 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
     setModal(null);
     return true;
   };
-  const play = (story: Story) => router.push(`/play/${encodeURIComponent(story.id)}`);
+  const play = (story: Story) => {
+    const opening = story.passages.find((passage) => passage.id === story.startId);
+    gameplayAudio.start(story.id, assignedAsset(story, opening, "audio")?.data || "");
+    router.push(`/play/${encodeURIComponent(story.id)}`);
+  };
   const exportJSON = () => {
     if (active) {
       download(
