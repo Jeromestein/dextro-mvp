@@ -84,8 +84,8 @@ function Graph(props: Props) {
       animated: !!visited,
       reconnectable: readOnly ? false : "target" as const, type: "default", selected: selectedEdge?.passageId === p.id && selectedEdge.choiceId === c.id,
       ariaLabel: `${c.text || "Untitled choice"} from ${p.title} to ${story.passages.find((p) => p.id === c.target)?.title}`,
-      markerEnd: { type: MarkerType.ArrowClosed, color: visited ? "#b97737" : active ? "#52785d" : "#b0bdb0" },
-      style: { stroke: visited ? "#b97737" : active ? "#52785d" : "#b0bdb0", strokeWidth: visited ? 3 : active ? 2 : 1.5 } }];
+      markerEnd: { type: MarkerType.ArrowClosed, color: visited ? "var(--orange)" : active ? "var(--ink)" : "var(--graph-edge)" },
+      style: { stroke: visited ? "var(--orange)" : active ? "var(--ink)" : "var(--graph-edge)", strokeWidth: visited ? 3 : active ? 2 : 1.5 } }];
   })), [story, selected, selectedEdge, playback, readOnly]);
 
   const onNodesChange = useCallback((changes: NodeChange<PassageNode>[]) => {
@@ -150,7 +150,7 @@ function Graph(props: Props) {
       nodeExtent={[[-GRAPH_COORDINATE_LIMIT, -GRAPH_COORDINATE_LIMIT], [GRAPH_COORDINATE_LIMIT, GRAPH_COORDINATE_LIMIT]]}
       snapToGrid snapGrid={[10, 10]} panOnScroll zoomOnDoubleClick={false} elevateEdgesOnSelect
       onNodeDoubleClick={(_, n) => onSelect(n.id)}>
-      <Background color="#d6ded2" gap={22} size={1} />
+      <Background color="var(--line)" gap={22} size={1} />
       <Controls showInteractive={false} fitViewOptions={{ padding: .18, minZoom: .2, maxZoom: 1 }} />
       <Panel position="top-left"><div className="graph-caption"><span className="graph-caption-dot" /> YOUR STORY MAP <small>{story.passages.length} passages · {story.passages.filter((p) => p.ending).length} endings</small></div></Panel>
       <Panel position="top-right"><div className="graph-view-tools"><button className="graph-fit" aria-pressed={showThumbnails} onClick={() => setShowThumbnails((show) => !show)}><ImagePlus size={14} />{showThumbnails ? "Hide images" : "Show images"}</button><button className="graph-fit" onClick={fit}><Focus size={14} /> Fit story</button></div></Panel>

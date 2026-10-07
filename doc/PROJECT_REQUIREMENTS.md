@@ -1,5 +1,25 @@
 # Project Requirements and Decisions
 
+## Ink Studio workspace decision — 2026-10-07
+
+The author selected the first workspace concept, Ink Studio. Apply warm neutral
+backgrounds, dark ink text and primary actions, white editing surfaces, and
+restrained orange brand accents across creation, My Games, Settings, and the
+editor. Improve secondary-text contrast and consolidate workspace palette values.
+The creation page leads with the story idea and keeps image/music options in an
+expandable section whose summary reflects the current settings. Existing inputs,
+generation safeguards, library actions, and editing behavior remain available.
+
+The creation sidebar uses a botanical story-tree illustration: one beginning at
+the roots, organic branches for choices, and three labeled endings at the tips.
+One orange route grows through neutral branches and sparse leaves. Use a static,
+responsive SVG so the branches and labels stay aligned across sidebar widths.
+
+Story reading themes and Scene glow stay independent of workspace branding.
+Green may remain for a meaningful success/ready state; it is no longer the general
+workspace background or navigation color. Verify desktop/mobile creation,
+library, settings, graph/outline/media/preview, and unchanged story playback.
+
 ## Story atmosphere decision — 2026-10-07
 
 Implement four story themes: Midnight, Starlight, Parchment, and Garden. Recommend

@@ -668,3 +668,54 @@ The existing working directory and local secret configuration were preserved.
   theme matching, palette size, manual assignments/silence, corrupted downloads,
   cancellation, safe API errors, SQL permissions/RLS and private bucket preservation.
   `pnpm build` was not run. Application changes have not been deployed.
+
+## Ink Studio workspace — 2026-10-07
+
+- Applied the selected warm-neutral workspace design to creation, My Games,
+  Settings, graph/outline editing, media controls, and the theme picker. Primary
+  actions use dark ink; orange marks the brand, focus, and playback position.
+  Reading palettes and the Scene glow implementation remain unchanged.
+- Creation now leads with the story idea and an unboxed editorial sidebar.
+  Image/music options expand from a keyboard-accessible summary that reflects
+  their settings. Image billing remains visible when enabled, even with the
+  options collapsed. Existing generation defaults and safeguards are preserved.
+- `pnpm typecheck`, `pnpm lint`, and all 83 automated tests passed. No production
+  build was run. Final CSS refinements were checked visually in the browser.
+- Codex in-app browser checks passed on the existing `localhost:3100` server:
+  desktop creation, prompt insertion/clearing, blank creation mode, option
+  expansion by keyboard, image/style visibility, and billing-summary behavior;
+  My Games cover loading and search; Settings; and the editor's graph arrows,
+  selected/playing states, outline, Media, Preview, and theme controls.
+- Responsive checks passed at 390 × 844 for creation, library, Settings,
+  editor/preview, and illustrated playback, with no horizontal page overflow.
+  At 320 × 780, the creation page and compact navigation also fit. Expanded media
+  fields stack on mobile so their option labels remain readable.
+- Verified the dark Starlight editor preview and the illustrated Garden player
+  for The Letter from Tomorrow. Advancing to The Stranded Traveler preserves
+  the story palette and updates the image glow. No browser console errors were
+  observed during these checks. Restarted playback and restored temporary UI
+  selections, search, and viewport size after verification.
+- Screenshots are saved under `output/playwright/ink-*.jpg` (ignored local
+  evidence). No cloud story content was changed, paid generation requested,
+  development server restarted, deployment performed, or commit/push created.
+  Live AI generation and a newly generated draft-review flow were not exercised.
+
+## Botanical story tree — 2026-10-07
+
+- Replaced the creation sidebar's disconnected box diagram with a static SVG
+  tree. A rooted trunk grows into curved branches and sparse leaves, with three
+  labeled endings and one continuous orange path. The SVG includes an accessible
+  description; it introduces no interactive controls, assets, or animation.
+- Removed the old percentage-positioned connectors. Branches, leaves, and ending
+  labels share one viewBox; labels are enlarged for the narrow desktop sidebar.
+- Type checking, ESLint, and both architecture tests passed. No production build
+  was run. The local shell reported Node 20 rather than the declared Node 22+
+  engine; these checks passed, but they do not verify the deployment runtime.
+- Codex in-app browser checks passed on the existing `localhost:3100/builder`
+  server at 1280, 934, and 780 pixel widths. Branches remain connected, labels do
+  not overlap leaves, and there is no horizontal page overflow. At 390 × 844,
+  the sidebar remains hidden under the existing mobile layout and the creation
+  form fits normally. No browser console errors were observed.
+- Screenshots: `output/playwright/story-tree-desktop.jpg` and
+  `output/playwright/story-tree-mobile.jpg` (ignored local evidence). No cloud
+  data, generation behavior, or reader appearance changed. No commit or push.
