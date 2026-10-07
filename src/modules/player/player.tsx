@@ -7,6 +7,7 @@ import { assignedAsset } from "@/modules/media/assets/operations";
 import { passageById, type Story } from "@/modules/story/model";
 import { resolveTheme, themeVariables } from "@/modules/story/themes";
 import SceneGlow from "./scene-glow";
+import { immersiveCSS } from "./presentation";
 export type PlaybackProgress = { current: string; path: { passageId: string; choiceId: string; target: string }[] };
 export default function Player({
   story,
@@ -23,6 +24,7 @@ export default function Player({
   const [current, setCurrent] = useState(startId || story.startId);
   const [path, setPath] = useState<PlaybackProgress["path"]>([]);
   const [steps, setSteps] = useState(0);
+  const player = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const passage = passageById(story, current);
   const image = assignedAsset(story, passage, "image");
@@ -31,7 +33,7 @@ export default function Player({
   useEffect(() => {
     if (steps > 0) {
       heading.current?.focus({ preventScroll: true });
-      if (!compact) heading.current?.scrollIntoView({ block: "start" });
+      if (!compact) player.current?.scrollIntoView({ block: "start" });
     }
   }, [steps, compact]);
   const go = (id: string, choiceId?: string) => {
@@ -40,7 +42,8 @@ export default function Player({
     setSteps((s) => s + 1);
   };
   return (
-    <div className={`player scene-reading-surface ${compact ? "compact" : ""}`} data-story-theme={theme.id} style={themeVariables(theme)}>
+    <div ref={player} className={`player scene-reading-surface ${compact ? "compact" : ""}`} data-presentation="immersive" data-has-scene={Boolean(image)} data-story-theme={theme.id} style={themeVariables(theme)}>
+      <style>{immersiveCSS}</style>
       <SceneGlow source={story.appearance?.sceneGlow === false ? "" : image?.data || ""} />
       <div className="player-top">
         <span>{compact ? "READER VIEW" : story.genre.toUpperCase()}</span>
@@ -53,7 +56,7 @@ export default function Player({
           <RotateCcw size={15} />
         </button>
       </div>
-      {story.assets.some((a) => a.kind === "audio") && <SoundControls gameId={compact ? undefined : story.id} data={music?.data || ""} title={music?.name || ""} />}
+      {story.assets.some((a) => a.kind === "audio") && <details className="player-audio"><summary>Sound</summary><SoundControls gameId={compact ? undefined : story.id} data={music?.data || ""} title={music?.name || ""} /></details>}
       {!passage ? (
         <div className="empty-passage">
           <h2>Passage unavailable</h2>
@@ -74,6 +77,7 @@ export default function Player({
               alt={`Illustration for ${passage.title}`}
             />
           )}
+          <div className="player-reading">
           <div className="passage-eyebrow">
             {passage.ending ? (
               <>
@@ -93,6 +97,7 @@ export default function Player({
               "Your story will appear here. Start writing and watch it come to life."}
           </div>
           <div className="player-choices">
+            {!passage.ending && passage.choices.length > 0 && <p className="choices-prompt">What will you do?</p>}
             {passage.ending ? (
               <div className="ending">
                 <p>The end.</p>
@@ -129,6 +134,7 @@ export default function Player({
                 Add a choice or mark this passage as an ending.
               </p>
             )}
+          </div>
           </div>
         </>
       )}
