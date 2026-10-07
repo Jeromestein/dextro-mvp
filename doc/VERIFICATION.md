@@ -596,3 +596,36 @@ The existing working directory and local secret configuration were preserved.
   browser download observation.
 - No application source, build, deployment, commit or push was changed by this
   task. The verification document is updated; test helpers/artifacts are ignored.
+
+
+## Automatic story covers — 2026-10-07
+
+- My Games uses the image assigned to the `startId` passage as its cover.
+  Missing or failed images fall back to the existing text cover; later scenes
+  are never selected implicitly. No new asset, cover setting, or generation
+  request is created. Covers retain the editor action and existing card sizes.
+- Cloud summaries return only the opening asset content URL. Local summaries
+  read metadata and opening image Blobs, loading a complete story and its
+  other media only when opened. Existing version-1 images remain readable
+  without a write or migration. Unsynced edits update the summary immediately.
+- `pnpm typecheck`, `pnpm lint`, and `git diff --check` passed. All 11 targeted
+  tests passed across storage, covers, cloud round trips, cloud ownership, and
+  architecture. Tests exercise a start passage that is not first in the array,
+  changing the opening, replacing/removing its image, legacy reads, and bounded
+  media reads.
+- The initial full-suite run encountered three failures in the concurrently
+  edited scene-glow tests. After that separate work was completed, the pre-commit
+  recheck passed all 77 tests, type checking, and lint. The cover change does not
+  include the scene-glow implementation.
+- Codex in-app browser verification passed on the existing localhost:3100
+  server using the current cloud workspace: The Letter from Tomorrow shows its
+  opening illustration; clicking the cover opens its editor and opening node.
+  Search preserves the cover. At 390 x 844, the image is centered and cropped
+  with no horizontal overflow. The Last Light — Theme Demo retains its text
+  cover. The browser viewport and search were restored after verification.
+- Screenshots: `output/playwright/story-covers-desktop.png` and
+  `output/playwright/story-covers-mobile.png` (ignored local evidence).
+  No story data was edited, no paid provider request was made, and no server
+  restart, build, deployment, or push was performed. The updated list
+  route responded through the existing dev server; restart the user-run server
+  after pulling backend route changes.

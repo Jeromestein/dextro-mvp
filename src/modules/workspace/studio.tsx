@@ -35,6 +35,7 @@ import GenerationHistory from "@/modules/storage/generation-history";
 import Player from "@/modules/player/player";
 import { resolveTheme, themeVariables } from "@/modules/story/themes";
 import { Lighthouse } from "@/shared/ui/lighthouse";
+import StoryCover from "@/modules/workspace/story-cover";
 
 const StoryEditor = dynamic(() => import("@/modules/editor/story-editor"), { ssr: false, loading: () => <main className="route-message">Opening story editor…</main> });
 
@@ -234,19 +235,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
                   )}
                   {filtered.map((s, i) => (
                     <article className="story-card" key={s.id}>
-                      <button
-                        className={`written-cover cover-${i % 3}`}
-                        onClick={() => edit(s)}
-                        aria-label={`Edit ${s.title}`}
-                      >
-                        <span className="cover-label">YOUR NEXT ADVENTURE</span>
-                        <span className="cover-symbol">
-                          {["✳", "◇", "◒"][i % 3]}
-                        </span>
-                        <span className="cover-title">
-                          {s.title || "Untitled story"}
-                        </span>
-                      </button>
+                      <StoryCover story={s} variant={i % 3} onEdit={() => edit(s)} />
                       <div className="card-body">
                         <div className="card-meta">
                           <span className="tag draft">DRAFT</span>

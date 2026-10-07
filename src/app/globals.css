@@ -698,6 +698,14 @@ svg {
 .written-cover.cover-2 {
   background: #dde5e6;
 }
+.story-cover-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
 .written-cover .cover-label {
   color: #7b8969;
   background: none;

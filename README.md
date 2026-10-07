@@ -49,6 +49,7 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 
 - A dedicated Game Builder as the default page, with full-page AI generation/review and a blank-game option.
 - A story library with search, editable imports, and confirmed deletion. Each editor and player has its own URL.
+- Story cards automatically use the opening passage's image as their cover, following `startId` and falling back to the text cover when no image is available. Library previews load opening images only; full media loads when a story is opened.
 - A simple Settings page for story and image models, with browser-local preferences and a server-side API key.
 - A complete original sample, **The Last Light**, with nine passages and three endings. Playing the sample does not change it; editing creates a personal copy.
 - Passage editing, choice labels, destinations, branch convergence, opening selection, and multiple endings.

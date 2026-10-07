@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react";
-import { loadStories, saveStory, removeStory } from "@/storage/story-repository";
+import { listLocalStories, loadStory as readLocalStory, loadStories, saveStory, removeStory } from "@/storage/story-repository";
 import { clearUploadCache, listCloudStories, prepareCloudStory, readCloudStory, requestJSON, storageStatus, writePreparedStory } from "@/storage/cloud-repository";
 import { pendingSaves, persistPending, replacePending, type PendingSave } from "@/storage/cloud-outbox";
 import { summarize, type StorageStatus, type StorySummary } from "@/modules/storage/model";
@@ -65,10 +65,9 @@ function useLibraryState() {
         clearUploadCache();
         setCloud(status.mode === "supabase");
         if (status.mode === "local") {
-          const local = await loadStories();
+          const local = await listLocalStories();
           if (cancelled) return;
-          local.forEach(story => loaded.current.set(story.id, story));
-          setStories(local.map(story => summarize(story)));
+          setStories(local);
         } else {
           const [remote, pending] = await Promise.all([status.available ? listCloudStories() : Promise.resolve([]), pendingSaves(status.scope)]);
           if (cancelled) return;
@@ -97,7 +96,11 @@ function useLibraryState() {
   const loadStory = useCallback(async (id: string) => {
     const cached = loaded.current.get(id);
     if (cached) return cached;
-    if (config.current?.mode !== "supabase") throw new Error("This game was not found in this browser.");
+    if (config.current?.mode !== "supabase") {
+      const story = await readLocalStory(id);
+      loaded.current.set(id, story);
+      return story;
+    }
     const result = await readCloudStory(id);
     loaded.current.set(id, result.story);
     revisions.current.set(id, result.revision);

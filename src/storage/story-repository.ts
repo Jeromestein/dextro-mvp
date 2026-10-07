@@ -1,5 +1,6 @@
 import { storySchema, type Story } from "@/modules/story/model";
 import { requireStorySize } from "@/modules/media/assets/operations";
+import { openingImageId, summarize, type StorySummary } from "@/modules/storage/model";
 
 const DB = "dextro-studio-v1";
 type StoredMedia = { storyId: string; assetId: string; blob: Blob };
@@ -36,12 +37,50 @@ function fromBlob(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
 }
-export async function loadStories(): Promise<Story[]> {
+// The library reads metadata and opening images only, leaving other media on disk.
+export async function listLocalStories(): Promise<StorySummary[]> {
+  const db = await openDB();
+  const records = await new Promise<{ stories: Story[]; covers: Map<string, Blob> }>((resolve, reject) => {
+    const tx = db.transaction(["stories", "media"], "readonly");
+    const stories = tx.objectStore("stories").getAll();
+    const covers = new Map<string, Blob>();
+    stories.onsuccess = () => {
+      try {
+        for (const record of stories.result) {
+          if (record.version !== 2) continue;
+          const imageId = openingImageId(record);
+          if (!record.assets.some((a: Story["assets"][number]) => a.id === imageId && a.kind === "image")) continue;
+          const cover = tx.objectStore("media").get([record.id, imageId]);
+          cover.onsuccess = () => { if (cover.result?.blob) covers.set(record.id, cover.result.blob); };
+        }
+      } catch { tx.abort(); }
+    };
+    tx.oncomplete = () => { db.close(); resolve({ stories: stories.result, covers }); };
+    tx.onabort = tx.onerror = () => { db.close(); reject(new Error("Could not read your saved stories. Existing data has been preserved.")); };
+  });
+  try {
+    const summaries = await Promise.all(records.stories.map(async record => {
+      const story = record.version === 2 ? record : storySchema.parse(record);
+      const summary = summarize(story);
+      const cover = records.covers.get(story.id);
+      // An unreadable preview should not hide the story or prevent opening it.
+      if (cover) summary.coverSrc = await fromBlob(cover).catch(() => undefined);
+      return summary;
+    }));
+    return summaries.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  } catch { throw new Error("A saved story could not be read. Existing data has been preserved."); }
+}
+export async function loadStory(id: string): Promise<Story> {
+  const [story] = await loadStories(id);
+  if (!story) throw new Error("This game was not found in this browser.");
+  return story;
+}
+export async function loadStories(storyId?: string): Promise<Story[]> {
   const db = await openDB();
   const records = await new Promise<{ stories: unknown[]; media: StoredMedia[] }>((resolve, reject) => {
     const tx = db.transaction(["stories", "media"], "readonly");
-    const stories = tx.objectStore("stories").getAll();
-    const media = tx.objectStore("media").getAll();
+    const stories = tx.objectStore("stories").getAll(storyId);
+    const media = tx.objectStore("media").getAll(storyId === undefined ? undefined : IDBKeyRange.bound([storyId], [storyId, []]));
     tx.oncomplete = () => { db.close(); resolve({ stories: stories.result, media: media.result }); };
     tx.onabort = tx.onerror = () => { db.close(); reject(new Error("Could not read your saved stories. Existing data has been preserved.")); };
   });
