@@ -47,7 +47,7 @@ export default function PassageMedia({ story, passage, busy, onUpload, onAssign,
       <div>{cloud && <button className="button" aria-expanded={saved===kind} onClick={()=>setSaved(saved===kind?null:kind)}>Saved {kind==="image"?"images":"music"}</button>}{saved===kind && <SavedMedia key={kind} kind={kind} onApply={onApply}/>}</div>
       <small className="media-file-hint">{kind === "image" ? "PNG, JPEG or WebP · up to 2 MB" : "MP3, M4A, OGG, WAV or WebM · up to 6 MB"}</small>
       <div id={`${optionsId}-${kind}`} hidden={expanded !== kind}>
-        {expanded === kind && (kind === "image" ? <ImageGeneration story={story} passage={passage} onApply={onApply} /> : <CatalogPicker assignedId={audio?.id} onApply={onApply} />)}
+        {expanded === kind && (kind === "image" ? <ImageGeneration story={story} passage={passage} onApply={onApply} /> : <CatalogPicker key={passage.id} story={story} passageId={passage.id} assignedId={audio?.id} onApply={onApply} />)}
       </div>
       {asset && <>
         <details className="media-shared"><summary>Used in {shared.length} {shared.length === 1 ? "passage" : "passages"}</summary><p>{shared.map((p) => p.title || "Untitled passage").join(" · ")}</p><p>Choosing a different file changes this passage only.</p></details>

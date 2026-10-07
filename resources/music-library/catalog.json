@@ -1,0 +1,1209 @@
+[
+  {
+    "record": {
+      "id": "freesound-746056",
+      "title": "Piano Melody Loop",
+      "author": "Jadis0x",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/Jadis0x/sounds/746056/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-06",
+      "duration": 59.12,
+      "role": "music",
+      "loop": true,
+      "sha256": "49748ca3965ed306112fe4ecf1fee5445b31fccf629168bc14408ca11232a867",
+      "originalTitle": "Piano Melody Loop",
+      "description": "Gentle piano for quiet scenes.",
+      "moods": [
+        "calm",
+        "hopeful"
+      ],
+      "themes": [
+        "cozy",
+        "drama",
+        "mystery"
+      ],
+      "family": "piano",
+      "instruments": [
+        "piano"
+      ],
+      "energy": 1,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "byteSize": 946302,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-746056/49748ca3965ed306112fe4ecf1fee5445b31fccf629168bc14408ca11232a867.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-746056.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/746/746056_11915007-hq.mp3",
+    "processing": "Public HQ MP3 derivative; normalized to -23 LUFS, 80/160 ms edge fades, 128 kbps MP3. Original download requires Freesound login.",
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-746056/49748ca3965ed306112fe4ecf1fee5445b31fccf629168bc14408ca11232a867.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-464920",
+      "title": "(Ambient Loop) In the Deep",
+      "author": "plasterbrain",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/plasterbrain/sounds/464920/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-06",
+      "duration": 8.05,
+      "role": "music",
+      "loop": true,
+      "sha256": "560c6bc0015b1711baad85cf918976bc66689b515f8692a269e9be92878059c8",
+      "originalTitle": "(Ambient Loop) In the Deep",
+      "description": "An understated ambient setting for discovery.",
+      "moods": [
+        "mysterious"
+      ],
+      "themes": [
+        "mystery",
+        "scifi"
+      ],
+      "family": "ambient",
+      "instruments": [
+        "synth"
+      ],
+      "energy": 1,
+      "autoEligible": false,
+      "review": "technical-checks",
+      "byteSize": 129192,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-464920/560c6bc0015b1711baad85cf918976bc66689b515f8692a269e9be92878059c8.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-464920.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/464/464920_4284968-hq.mp3",
+    "processing": "Public HQ MP3 derivative; normalized to -23 LUFS, 80/160 ms edge fades, 128 kbps MP3. Original download requires Freesound login.",
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-464920/560c6bc0015b1711baad85cf918976bc66689b515f8692a269e9be92878059c8.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-671900",
+      "title": "Calm background Music",
+      "author": "Bertsz",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/Bertsz/sounds/671900/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-06",
+      "duration": 107.33,
+      "role": "music",
+      "loop": true,
+      "sha256": "756aa7736b149ff214abc410765b4d1ea382572f1fc7a5a88b0d2600351c8334",
+      "originalTitle": "Calm background Music",
+      "description": "A calm instrumental background.",
+      "moods": [
+        "hopeful",
+        "calm"
+      ],
+      "themes": [
+        "cozy",
+        "adventure"
+      ],
+      "family": "ambient",
+      "instruments": [
+        "synth",
+        "keys"
+      ],
+      "energy": 1,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "byteSize": 1717855,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-671900/756aa7736b149ff214abc410765b4d1ea382572f1fc7a5a88b0d2600351c8334.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-671900.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/671/671900_6714882-hq.mp3",
+    "processing": "Public HQ MP3 derivative; normalized to -23 LUFS, 80/160 ms edge fades, 128 kbps MP3. Original download requires Freesound login.",
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-671900/756aa7736b149ff214abc410765b4d1ea382572f1fc7a5a88b0d2600351c8334.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-788677",
+      "title": "Ambient piano loop",
+      "author": "Boatlanman-",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/Boatlanman-/sounds/788677/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-06",
+      "duration": 38.42,
+      "role": "music",
+      "loop": true,
+      "sha256": "3405ea60f5a13338dd3a837dbb78033c9835d48f40929e4ee305dd79697c4550",
+      "originalTitle": "Ambient piano loop",
+      "description": "A reflective piano and pad loop.",
+      "moods": [
+        "somber",
+        "calm"
+      ],
+      "themes": [
+        "drama",
+        "mystery"
+      ],
+      "family": "piano",
+      "instruments": [
+        "piano",
+        "pad"
+      ],
+      "energy": 1,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "byteSize": 615278,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-788677/3405ea60f5a13338dd3a837dbb78033c9835d48f40929e4ee305dd79697c4550.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-788677.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/788/788677_16161631-hq.mp3",
+    "processing": "Public HQ MP3 derivative; normalized to -23 LUFS, 80/160 ms edge fades, 128 kbps MP3. Original download requires Freesound login.",
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-788677/3405ea60f5a13338dd3a837dbb78033c9835d48f40929e4ee305dd79697c4550.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-438901",
+      "title": "Ambient Loop",
+      "author": "YellowTree",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/YellowTree/sounds/438901/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-06",
+      "duration": 35.19,
+      "role": "music",
+      "loop": true,
+      "sha256": "7ea3e82bb9b725dcf48d20a7999d4042432b7d5ca9ef142892c6c0746eedd24d",
+      "originalTitle": "Ambient Loop",
+      "description": "A minor-key synthetic atmosphere.",
+      "moods": [
+        "tense",
+        "mysterious"
+      ],
+      "themes": [
+        "scifi",
+        "mystery"
+      ],
+      "family": "electronic",
+      "instruments": [
+        "synth"
+      ],
+      "energy": 2,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "byteSize": 563452,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-438901/7ea3e82bb9b725dcf48d20a7999d4042432b7d5ca9ef142892c6c0746eedd24d.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-438901.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/438/438901_1954411-hq.mp3",
+    "processing": "Public HQ MP3 derivative; normalized to -23 LUFS, 80/160 ms edge fades, 128 kbps MP3. Original download requires Freesound login.",
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-438901/7ea3e82bb9b725dcf48d20a7999d4042432b7d5ca9ef142892c6c0746eedd24d.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-852235",
+      "title": "Zambian ( Lo-fi Loop ) C#maj 70 BPM",
+      "author": "holizna",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/holizna/sounds/852235/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-06",
+      "duration": 27.45,
+      "role": "music",
+      "loop": true,
+      "sha256": "10322c37b1189848e9f376863080959280aea5fc90d3462253e298ee4b95f5c8",
+      "originalTitle": "Zambian ( Lo-fi Loop ) C#maj 70 BPM",
+      "description": "A relaxed lo-fi melody.",
+      "moods": [
+        "calm",
+        "hopeful"
+      ],
+      "themes": [
+        "cozy"
+      ],
+      "family": "lofi",
+      "instruments": [
+        "keys",
+        "drums"
+      ],
+      "energy": 2,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "byteSize": 439736,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-852235/10322c37b1189848e9f376863080959280aea5fc90d3462253e298ee4b95f5c8.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-852235.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/852/852235_12574855-hq.mp3",
+    "processing": "Public HQ MP3 derivative; normalized to -23 LUFS, 80/160 ms edge fades, 128 kbps MP3. Original download requires Freesound login.",
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-852235/10322c37b1189848e9f376863080959280aea5fc90d3462253e298ee4b95f5c8.mp3"
+  },
+  {
+    "record": {
+      "id": "kenney-steel-00",
+      "title": "Steel jingle 00",
+      "author": "Kenney",
+      "provider": "kenney",
+      "sourceUrl": "https://kenney.nl/assets/music-jingles",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-06",
+      "duration": 0.932812,
+      "role": "sfx",
+      "loop": false,
+      "sha256": "8799eb726d784ae0aa1a9df80648a873ac60015bc00aea12c8e2dd1431a2bd7d",
+      "originalTitle": "Steel jingle 00",
+      "description": "Short completion cue.",
+      "moods": [
+        "hopeful"
+      ],
+      "themes": [
+        "adventure"
+      ],
+      "family": "jingle",
+      "instruments": [
+        "bells"
+      ],
+      "energy": 2,
+      "autoEligible": false,
+      "review": "technical-checks",
+      "byteSize": 15691,
+      "mimeType": "audio/ogg",
+      "objectPath": "effects/kenney-steel-00/8799eb726d784ae0aa1a9df80648a873ac60015bc00aea12c8e2dd1431a2bd7d.ogg"
+    },
+    "file": "output/music-curation/processed/kenney-steel-00.ogg",
+    "sourceDownload": "https://kenney.nl/assets/music-jingles",
+    "processing": "Original Kenney CC0 file; unchanged.",
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/effects/kenney-steel-00/8799eb726d784ae0aa1a9df80648a873ac60015bc00aea12c8e2dd1431a2bd7d.ogg"
+  },
+  {
+    "record": {
+      "id": "kenney-steel-05",
+      "title": "Steel jingle 05",
+      "author": "Kenney",
+      "provider": "kenney",
+      "sourceUrl": "https://kenney.nl/assets/music-jingles",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-06",
+      "duration": 0.944785,
+      "role": "sfx",
+      "loop": false,
+      "sha256": "7e1f170ee00a8265723342c8d30e797a64641603a2c59c2316d3357b8c5f60d6",
+      "originalTitle": "Steel jingle 05",
+      "description": "Short completion cue.",
+      "moods": [
+        "hopeful"
+      ],
+      "themes": [
+        "adventure"
+      ],
+      "family": "jingle",
+      "instruments": [
+        "bells"
+      ],
+      "energy": 2,
+      "autoEligible": false,
+      "review": "technical-checks",
+      "byteSize": 15082,
+      "mimeType": "audio/ogg",
+      "objectPath": "effects/kenney-steel-05/7e1f170ee00a8265723342c8d30e797a64641603a2c59c2316d3357b8c5f60d6.ogg"
+    },
+    "file": "output/music-curation/processed/kenney-steel-05.ogg",
+    "sourceDownload": "https://kenney.nl/assets/music-jingles",
+    "processing": "Original Kenney CC0 file; unchanged.",
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/effects/kenney-steel-05/7e1f170ee00a8265723342c8d30e797a64641603a2c59c2316d3357b8c5f60d6.ogg"
+  },
+  {
+    "record": {
+      "id": "kenney-steel-07",
+      "title": "Steel jingle 07",
+      "author": "Kenney",
+      "provider": "kenney",
+      "sourceUrl": "https://kenney.nl/assets/music-jingles",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-06",
+      "duration": 1.554694,
+      "role": "sfx",
+      "loop": false,
+      "sha256": "206b5cb18870c1faa393047cb857eda28441b9682380c9eb5910119ea04c2ece",
+      "originalTitle": "Steel jingle 07",
+      "description": "Short completion cue.",
+      "moods": [
+        "hopeful"
+      ],
+      "themes": [
+        "adventure"
+      ],
+      "family": "jingle",
+      "instruments": [
+        "bells"
+      ],
+      "energy": 2,
+      "autoEligible": false,
+      "review": "technical-checks",
+      "byteSize": 22460,
+      "mimeType": "audio/ogg",
+      "objectPath": "effects/kenney-steel-07/206b5cb18870c1faa393047cb857eda28441b9682380c9eb5910119ea04c2ece.ogg"
+    },
+    "file": "output/music-curation/processed/kenney-steel-07.ogg",
+    "sourceDownload": "https://kenney.nl/assets/music-jingles",
+    "processing": "Original Kenney CC0 file; unchanged.",
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/effects/kenney-steel-07/206b5cb18870c1faa393047cb857eda28441b9682380c9eb5910119ea04c2ece.ogg"
+  },
+  {
+    "record": {
+      "id": "freesound-832628",
+      "title": "Quiet Morning",
+      "originalTitle": "Calm Ambient Piano Loop",
+      "author": "Jadis0x",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/Jadis0x/sounds/832628/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Simple piano loop made in FL Studio",
+      "role": "music",
+      "moods": [
+        "calm",
+        "hopeful"
+      ],
+      "themes": [
+        "cozy",
+        "drama"
+      ],
+      "instruments": [
+        "piano"
+      ],
+      "family": "piano",
+      "energy": 1,
+      "duration": 86.439,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "f08b3683607e33798fc30dff28f78ea2da6015735eb2271f0c0f98f5d700ed01",
+      "byteSize": 1383487,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-832628/f08b3683607e33798fc30dff28f78ea2da6015735eb2271f0c0f98f5d700ed01.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-832628.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/832/832628_11915007-hq.mp3",
+    "sourceSha256": "761628d8777c1587f9a1fa4a8705045bbb3e3221d6845ed81ba223ba1176fec8",
+    "sourcePageSha256": "11e6c1952d88d2089171459121f0ad981d8724bfcacef7663f0aa1a00fa9334a",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.97,
+      "truePeakDb": -8.12
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-832628/f08b3683607e33798fc30dff28f78ea2da6015735eb2271f0c0f98f5d700ed01.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-859607",
+      "title": "Sleepy Upright",
+      "originalTitle": "Sleepy Upright Piano Seamless Loop",
+      "author": "blankie.rest",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/blankie.rest/sounds/859607/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "A soft, sleepy piano loop cut from a larger composition. Made in Logic Pro using Vintage Upright studio piano. It features a wide stereo image, a warm, rolled-off high end and natural mechanical key and pedal noise for an intimate, acoustic texture.\n\nThis piece was commissioned and recorded for <a href=\"https://blankie.rest/\" rel=\"nofollow\">Blankie</a>, an open source ambient sound app for iPhone, iPad and Mac.",
+      "role": "music",
+      "moods": [
+        "calm"
+      ],
+      "themes": [
+        "cozy",
+        "drama"
+      ],
+      "instruments": [
+        "piano"
+      ],
+      "family": "piano",
+      "energy": 1,
+      "duration": 115.776,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "740d6859b338f8f04b75947bb3520c05796d1dec8db00432cceca166af22264d",
+      "byteSize": 1853274,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-859607/740d6859b338f8f04b75947bb3520c05796d1dec8db00432cceca166af22264d.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-859607.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/859/859607_15820073-hq.mp3",
+    "sourceSha256": "853640ecc0f906d18b4b07cb66d36e47015f94d5435cd2a4e725c034c9d36d49",
+    "sourcePageSha256": "dcd6af0264d21d07ea66d291fd22f21d0536bd288edc4bf7c4ecc8931cc5235d",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -24.01,
+      "truePeakDb": -6.85
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-859607/740d6859b338f8f04b75947bb3520c05796d1dec8db00432cceca166af22264d.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-414557",
+      "title": "The Old Mansion",
+      "originalTitle": "Jazzy Ambient Piano (Mansion)",
+      "author": "Hakren",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/Hakren/sounds/414557/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "A simple ambient song piano improvisation with a jazzy feel. It could be used as soundtracks or ambient music for bars, mansion and some other luxurious scenes. Recorded with Audacity and Kontakt.",
+      "role": "music",
+      "moods": [
+        "mysterious",
+        "calm"
+      ],
+      "themes": [
+        "mystery",
+        "drama"
+      ],
+      "instruments": [
+        "piano"
+      ],
+      "family": "piano",
+      "energy": 1,
+      "duration": 115.512,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "09924dc96f5b79444eabd4c0e693b32c14c5cdb4c913bd4f80963a8d2768aa4a",
+      "byteSize": 1848676,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-414557/09924dc96f5b79444eabd4c0e693b32c14c5cdb4c913bd4f80963a8d2768aa4a.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-414557.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/414/414557_6944346-hq.mp3",
+    "sourceSha256": "51a9e2672d2c7f1562e2abe3e55b4dd69ce58d903744ac71b1de45b25b6f7ec7",
+    "sourcePageSha256": "992a05209d85189f3750b33c9ee4ed01351e08efc808cc8ca09ce72e675c7aaa",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.28,
+      "truePeakDb": -5.8
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-414557/09924dc96f5b79444eabd4c0e693b32c14c5cdb4c913bd4f80963a8d2768aa4a.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-418442",
+      "title": "Afternoon Light",
+      "originalTitle": "Afternoon (Ambient Piano Solo)",
+      "author": "Hakren",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/Hakren/sounds/418442/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Another solo piano. This one can be used in a variety of ways. I think of it representing a warm, tranquilizing afternoon.",
+      "role": "music",
+      "moods": [
+        "calm",
+        "hopeful"
+      ],
+      "themes": [
+        "cozy",
+        "drama"
+      ],
+      "instruments": [
+        "piano"
+      ],
+      "family": "piano",
+      "energy": 1,
+      "duration": 128.209,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "a1a0c564bfeee6f8c27d7540bd9fb457c6363d3383e5781a31489fc0e1728e7f",
+      "byteSize": 2051804,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-418442/a1a0c564bfeee6f8c27d7540bd9fb457c6363d3383e5781a31489fc0e1728e7f.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-418442.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/418/418442_6944346-hq.mp3",
+    "sourceSha256": "410acfa9adbaf78691c90d28b056800f7d0a9e160cde9f9cafc474bc0f88b499",
+    "sourcePageSha256": "a5b24741319485d93617b0bc815bd00f97458c68200539288a1d7690bc5d64f8",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.37,
+      "truePeakDb": -6.81
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-418442/a1a0c564bfeee6f8c27d7540bd9fb457c6363d3383e5781a31489fc0e1728e7f.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-819108",
+      "title": "The Eternal Lighthouse",
+      "originalTitle": "TheEternalLighthouse - a soft slow piano with basic chords and Rythm for my book promo video",
+      "author": "jcmbo369",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/jcmbo369/sounds/819108/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "A haunting, emotional piano piece composed for the book trailer of The Eternal Lighthouse. Written in A minor, the melody blends gentle arpeggios and rising chords to evoke themes of love, loss, and hope in a coastal, fog-shrouded world. Perfect for use in cinematic trailers, emotional storytelling, romantic drama, or atmospheric scenes. This is an original composition, copyright-free for personal and commercial use under the Creative Commons license selected.",
+      "role": "music",
+      "moods": [
+        "somber",
+        "hopeful"
+      ],
+      "themes": [
+        "mystery",
+        "drama"
+      ],
+      "instruments": [
+        "piano"
+      ],
+      "family": "piano",
+      "energy": 1,
+      "duration": 88.584,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "fe7b97b1f5a5ec949ca2d35d03a2c75e2bb0b76b64ca09cb341ee1d27d68e78a",
+      "byteSize": 1417760,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-819108/fe7b97b1f5a5ec949ca2d35d03a2c75e2bb0b76b64ca09cb341ee1d27d68e78a.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-819108.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/819/819108_17534996-hq.mp3",
+    "sourceSha256": "ec69a50b20a2f3800944cb1472939971fe6ff2045fca09c5c61d785783a8d299",
+    "sourcePageSha256": "a70691a71a3e11fb7214523d96e21ed93f66c96ff3e9296a854628240bc62955",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.79,
+      "truePeakDb": -5.85
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-819108/fe7b97b1f5a5ec949ca2d35d03a2c75e2bb0b76b64ca09cb341ee1d27d68e78a.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-608399",
+      "title": "Unanswered Questions",
+      "originalTitle": "mysterious piano #2.mp3",
+      "author": "ZHRØ",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/ZHR%C3%98/sounds/608399/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Piano music created for various purposes. Created with a syntheziser and recorded with MagiX studio.",
+      "role": "music",
+      "moods": [
+        "mysterious",
+        "somber"
+      ],
+      "themes": [
+        "mystery",
+        "drama"
+      ],
+      "instruments": [
+        "piano"
+      ],
+      "family": "piano",
+      "energy": 1,
+      "duration": 78.08,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "6105ce0e1264d941c70c25512673ca19707bd0ac5876e034e4000c4d0210c1e1",
+      "byteSize": 1249741,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-608399/6105ce0e1264d941c70c25512673ca19707bd0ac5876e034e4000c4d0210c1e1.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-608399.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/608/608399_10859468-hq.mp3",
+    "sourceSha256": "bdd917a0ba92accbde3450af3f96d6ebeb2d22500f6e5617d30ca0aa54861cd4",
+    "sourcePageSha256": "19fc569421be8b554534090ab955ba31f490be69fefd95da659a2b1bc307d591",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -22.77,
+      "truePeakDb": -3.9
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-608399/6105ce0e1264d941c70c25512673ca19707bd0ac5876e034e4000c4d0210c1e1.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-572931",
+      "title": "Behind the Door",
+      "originalTitle": "Dark-Ambient-Suspenseful-Piano.wav",
+      "author": "StudioOneThirtyOne",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/StudioOneThirtyOne/sounds/572931/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Selected Voice Lead on a Yamaha EW300 Keyboard and PaulStretched by 2.0 in Audacity and Then Amplified it Down by -5.0dB to use as a Background Drone Ambience, Next I Selected MIDI Grand Piano Voice on Keyboard and Played Over the Background Drone",
+      "role": "music",
+      "moods": [
+        "tense",
+        "mysterious"
+      ],
+      "themes": [
+        "mystery",
+        "drama"
+      ],
+      "instruments": [
+        "piano"
+      ],
+      "family": "piano",
+      "energy": 1,
+      "duration": 124.578,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "2b029a67c48f76793609b67788808c99bc6e1b1c3104cd9961da234a1c38685c",
+      "byteSize": 1993708,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-572931/2b029a67c48f76793609b67788808c99bc6e1b1c3104cd9961da234a1c38685c.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-572931.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/572/572931_9239755-hq.mp3",
+    "sourceSha256": "a3b5ebeb57f4c576ca90b2670e1ee4d46bfa13b7465658e3fccf6d5560775e29",
+    "sourcePageSha256": "5ff7275dcd6e82b222d0fa268870b9c3db52533026a03c188aecb2865d1088f5",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.54,
+      "truePeakDb": -10.82
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-572931/2b029a67c48f76793609b67788808c99bc6e1b1c3104cd9961da234a1c38685c.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-441650",
+      "title": "Pieces of a Puzzle",
+      "originalTitle": "puzzle.wav",
+      "author": "VABsounds",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/VABsounds/sounds/441650/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "symphonic atmosphere, piano fl tools",
+      "role": "music",
+      "moods": [
+        "mysterious",
+        "hopeful"
+      ],
+      "themes": [
+        "mystery",
+        "fantasy"
+      ],
+      "instruments": [
+        "piano",
+        "strings"
+      ],
+      "family": "orchestral",
+      "energy": 1,
+      "duration": 80.144,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "013dcb9362510ba3854e1aed021a0ba5a15cbbf5e646113c6823caa7819fa82f",
+      "byteSize": 1282759,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-441650/013dcb9362510ba3854e1aed021a0ba5a15cbbf5e646113c6823caa7819fa82f.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-441650.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/441/441650_7084234-hq.mp3",
+    "sourceSha256": "e163d557081115d86dd580baa9475826992c0e02afc6207e31b1c8c717fdd2b4",
+    "sourcePageSha256": "2331b8857be1b54b0896a53bff961b2ecd2a4a48fa3aaf2279a24ed3cecc826c",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -21.65,
+      "truePeakDb": -8.14
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-441650/013dcb9362510ba3854e1aed021a0ba5a15cbbf5e646113c6823caa7819fa82f.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-520191",
+      "title": "An Unknown Path",
+      "originalTitle": "Unknown Path Groove",
+      "author": "code_box",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/code_box/sounds/520191/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Walking along an unknown path, careful but upbeat.\n\nComposed and rendered using Ableton Live.\nYou are free to do whatever you want with this snippet.\nAlthough I'm always interested in hearing new projects using this loop!",
+      "role": "music",
+      "moods": [
+        "hopeful",
+        "calm"
+      ],
+      "themes": [
+        "adventure",
+        "cozy"
+      ],
+      "instruments": [
+        "synth",
+        "keys"
+      ],
+      "family": "electronic",
+      "energy": 2,
+      "duration": 32.026,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "6cac719e691ee783462466255abc65dd5c4975aff61ec9f5884606195e970dbe",
+      "byteSize": 512878,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-520191/6cac719e691ee783462466255abc65dd5c4975aff61ec9f5884606195e970dbe.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-520191.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/520/520191_10962806-hq.mp3",
+    "sourceSha256": "bb5ab3ee84b10a841a776e40c57dd3f5ecce4d0bc5302fc35e6c7a0af217233a",
+    "sourcePageSha256": "95fc6a6b54b676d7316ffdb944375d3e0273233eb964a97882aeca9a000f987e",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.33,
+      "truePeakDb": -9.75
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-520191/6cac719e691ee783462466255abc65dd5c4975aff61ec9f5884606195e970dbe.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-595713",
+      "title": "Wind Across the Valley",
+      "originalTitle": "Windy day - Cinematic Fantasy Music atmo Amb soundscape.wav",
+      "author": "szegvari",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/szegvari/sounds/595713/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Windy day - Cinematic Fantasy Music atmo Amb soundscape",
+      "role": "music",
+      "moods": [
+        "calm",
+        "mysterious"
+      ],
+      "themes": [
+        "fantasy",
+        "adventure"
+      ],
+      "instruments": [
+        "synth",
+        "pad"
+      ],
+      "family": "ambient",
+      "energy": 1,
+      "duration": 68.4,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "3fad8e71bdf3b6ceda116a74e21a784fab6fd28f64d15151c40350c80128a614",
+      "byteSize": 1095096,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-595713/3fad8e71bdf3b6ceda116a74e21a784fab6fd28f64d15151c40350c80128a614.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-595713.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/595/595713_2282212-hq.mp3",
+    "sourceSha256": "6ae9f3056341a8a044288bd4dcd88149a0ea7d4472c02a9e8f1fc2b725abea6b",
+    "sourcePageSha256": "36863d70659d2c6e8929f3f509460dd52a2d942964b4ad32747a104613b9d035",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -22.97,
+      "truePeakDb": -8.5
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-595713/3fad8e71bdf3b6ceda116a74e21a784fab6fd28f64d15151c40350c80128a614.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-595716",
+      "title": "A New Arrival",
+      "originalTitle": "Arrived - Cinematic Fantasy synth atmo Amb soundscape.wav",
+      "author": "szegvari",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/szegvari/sounds/595716/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Arrived - Cinematic Fantasy Music synth atmo Amb soundscape",
+      "role": "music",
+      "moods": [
+        "hopeful",
+        "mysterious"
+      ],
+      "themes": [
+        "fantasy",
+        "scifi"
+      ],
+      "instruments": [
+        "synth",
+        "pad"
+      ],
+      "family": "ambient",
+      "energy": 1,
+      "duration": 68.4,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "327353bcde770389fad3e532d3516a6ff77821ab949a0fd08118ece7f48b5e23",
+      "byteSize": 1095096,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-595716/327353bcde770389fad3e532d3516a6ff77821ab949a0fd08118ece7f48b5e23.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-595716.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/595/595716_2282212-hq.mp3",
+    "sourceSha256": "74df2cc5de3bb08bf7bbc75ef0ad4871cb4d1fc508f6972ad21b7a70074c92a3",
+    "sourcePageSha256": "68f1aa93b36a7192f0be4873ba4f7a604e9d2fd81db5601c3dcabfbd8b7640bf",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.08,
+      "truePeakDb": -8.01
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-595716/327353bcde770389fad3e532d3516a6ff77821ab949a0fd08118ece7f48b5e23.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-442902",
+      "title": "A Town Remembered",
+      "originalTitle": "sad_rpg-town_background.mp3",
+      "author": "SciCodeDev",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/SciCodeDev/sounds/442902/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Composed as an melancholic background music theme for a rpg town.\nUse it however you want, I'm interested in what you make out of it!",
+      "role": "music",
+      "moods": [
+        "somber",
+        "calm"
+      ],
+      "themes": [
+        "fantasy",
+        "drama"
+      ],
+      "instruments": [
+        "keys",
+        "strings"
+      ],
+      "family": "orchestral",
+      "energy": 1,
+      "duration": 56.059,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "2a744031a3386d0f7cf8c465ed9385ee5745abd1387c90893da2c27f315f8873",
+      "byteSize": 897401,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-442902/2a744031a3386d0f7cf8c465ed9385ee5745abd1387c90893da2c27f315f8873.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-442902.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/442/442902_3556771-hq.mp3",
+    "sourceSha256": "41f4cedfd213555474c14f900f05444e4028639cd9c6442381ecbb6f65f10ebb",
+    "sourcePageSha256": "81d27230e00b6d8e05314f51ee460fe9f9cf5cdd83b9692ed781b22eb9426028",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.61,
+      "truePeakDb": -9.53
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-442902/2a744031a3386d0f7cf8c465ed9385ee5745abd1387c90893da2c27f315f8873.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-757869",
+      "title": "Under the Old Tree",
+      "originalTitle": "Injured under an old tree (music ambiance)",
+      "author": "xkeril",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/xkeril/sounds/757869/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Slow, soaring music, good for background ambience. Quite repetitive. The tone is serious, but not too dark. More like a difficult wait. Can be use for fantasy, sci-fi, in video game or movie.\n\nCreated by extremely slowing down another of my sounds.",
+      "role": "music",
+      "moods": [
+        "somber",
+        "mysterious"
+      ],
+      "themes": [
+        "fantasy",
+        "scifi"
+      ],
+      "instruments": [
+        "pad"
+      ],
+      "family": "ambient",
+      "energy": 1,
+      "duration": 100.728,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "592fdfe7d5ad4c818744d3755d602c5354d640d23dac8f20c44f7063120d44a7",
+      "byteSize": 1612111,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-757869/592fdfe7d5ad4c818744d3755d602c5354d640d23dac8f20c44f7063120d44a7.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-757869.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/757/757869_13504080-hq.mp3",
+    "sourceSha256": "e595386c845aea704e610edb259b2b0b517034ed14867872acd15e463db7836f",
+    "sourcePageSha256": "6cc0ba04b71b636df5eec7276f7b2a23ffa2761ce02cfcf7afaa1c36af5684e5",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.69,
+      "truePeakDb": -9.54
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-757869/592fdfe7d5ad4c818744d3755d602c5354d640d23dac8f20c44f7063120d44a7.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-595385",
+      "title": "Star Walk",
+      "originalTitle": "Star walk - Cinematic Atmo Amb Fantasy Sci-fi Keys Piano Music.wav",
+      "author": "szegvari",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/szegvari/sounds/595385/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Star walk - Cinematic Atmo Amb Fantasy Sci-fi Keys Piano Music",
+      "role": "music",
+      "moods": [
+        "calm",
+        "hopeful"
+      ],
+      "themes": [
+        "scifi",
+        "fantasy"
+      ],
+      "instruments": [
+        "keys",
+        "piano"
+      ],
+      "family": "ambient",
+      "energy": 1,
+      "duration": 67.224,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "e2e804a144ba6399f0e1a85a4886b210a7f4e38052ffbbaec47bda6da8ef50a7",
+      "byteSize": 1076287,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-595385/e2e804a144ba6399f0e1a85a4886b210a7f4e38052ffbbaec47bda6da8ef50a7.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-595385.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/595/595385_2282212-hq.mp3",
+    "sourceSha256": "653c114e874dd9f3b6c0d244d134e3c12d606007de43174e377c533bed43c90e",
+    "sourcePageSha256": "20e5cfeec85794094aa18e5df0c0e228bc4a2112c3d78a5663ce6dd5d6b2d68f",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.48,
+      "truePeakDb": -9.4
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-595385/e2e804a144ba6399f0e1a85a4886b210a7f4e38052ffbbaec47bda6da8ef50a7.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-476556",
+      "title": "Beyond the Stars",
+      "originalTitle": "Sci-Fi Music Loop 01",
+      "author": "Magmi.Soundtracks",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/Magmi.Soundtracks/sounds/476556/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Royalty free Sci-Fi sound design made in fl studio. Can be used everywhere (Would appreciate &amp; be very thankful if you credit me or send project link)",
+      "role": "music",
+      "moods": [
+        "mysterious",
+        "calm"
+      ],
+      "themes": [
+        "scifi",
+        "adventure"
+      ],
+      "instruments": [
+        "synth"
+      ],
+      "family": "electronic",
+      "energy": 1,
+      "duration": 107.05,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "dc298d51befc8b6594ef094e191a6077dc993fd776772794ceb96dd25ac2c2fe",
+      "byteSize": 1713257,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-476556/dc298d51befc8b6594ef094e191a6077dc993fd776772794ceb96dd25ac2c2fe.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-476556.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/476/476556_6900479-hq.mp3",
+    "sourceSha256": "142e68c5c0835b1446c09edb47bfadf18eb13342ee2ca7d14875d57bfed1795e",
+    "sourcePageSha256": "d1b3291582aa9f197eed30b2a070a4a0570518f6f4d6d0013f24b419cf807634",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -21.71,
+      "truePeakDb": -4.44
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-476556/dc298d51befc8b6594ef094e191a6077dc993fd776772794ceb96dd25ac2c2fe.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-726320",
+      "title": "An Unfamiliar Signal",
+      "originalTitle": "Sci-Fi mysterious intro music",
+      "author": "Sayn698",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/Sayn698/sounds/726320/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Sci-Fi mysterious intro music made in Lmms.",
+      "role": "music",
+      "moods": [
+        "mysterious",
+        "tense"
+      ],
+      "themes": [
+        "scifi",
+        "mystery"
+      ],
+      "instruments": [
+        "synth"
+      ],
+      "family": "electronic",
+      "energy": 2,
+      "duration": 72.046,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "421c2a8f17e8fefd5f5dd39c2ace8464806327ffe0d5a251bf1c2aab587a9907",
+      "byteSize": 1153192,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-726320/421c2a8f17e8fefd5f5dd39c2ace8464806327ffe0d5a251bf1c2aab587a9907.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-726320.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/726/726320_10500177-hq.mp3",
+    "sourceSha256": "031fcc37c3cef3ed1850920046ea327c401cb42e5cc6b6fd38b900c7cfbed523",
+    "sourcePageSha256": "dd9b66d8aa0b1e926c70e587fb2f28339db439d55b5ec860c9de6a6d6a4d6853",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.12,
+      "truePeakDb": -9.02
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-726320/421c2a8f17e8fefd5f5dd39c2ace8464806327ffe0d5a251bf1c2aab587a9907.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-527783",
+      "title": "A Small Campfire",
+      "originalTitle": "G - C - D - Chord",
+      "author": "ValentinSosnitskiy",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/ValentinSosnitskiy/sounds/527783/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "This is stereo record where  I played on my acoustic guitar simple sequence with G, C, D major chords with using fingerpicking style. Record through \"AKG Perception 100\". This is good sweety loop for your background needs. Tempo - 96 bpm.",
+      "role": "music",
+      "moods": [
+        "calm",
+        "hopeful"
+      ],
+      "themes": [
+        "cozy",
+        "adventure"
+      ],
+      "instruments": [
+        "guitar"
+      ],
+      "family": "acoustic",
+      "energy": 1,
+      "duration": 38.792,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "921d099d7a1fd713c55a325c499fee1d090927be800317c98674563f6f32f3b0",
+      "byteSize": 621130,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-527783/921d099d7a1fd713c55a325c499fee1d090927be800317c98674563f6f32f3b0.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-527783.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/527/527783_3908940-hq.mp3",
+    "sourceSha256": "e6247098d1c99c0120251c74fd24c445da74a1822278dd06a3b673ae458017ef",
+    "sourcePageSha256": "23e85011b369dd0d32f6529b94dd4f9177e3778458caae96552456d500334211",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -23.04,
+      "truePeakDb": -8.73
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-527783/921d099d7a1fd713c55a325c499fee1d090927be800317c98674563f6f32f3b0.mp3"
+  },
+  {
+    "record": {
+      "id": "freesound-676787",
+      "title": "Blinking Forest",
+      "originalTitle": "Blinking Forest [Acoustic]",
+      "author": "NearTheAtmoshphere",
+      "provider": "freesound",
+      "sourceUrl": "https://freesound.org/people/NearTheAtmoshphere/sounds/676787/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAt": "2026-10-07",
+      "description": "Background Music, but with adventure",
+      "role": "music",
+      "moods": [
+        "hopeful",
+        "calm"
+      ],
+      "themes": [
+        "adventure",
+        "cozy"
+      ],
+      "instruments": [
+        "guitar"
+      ],
+      "family": "acoustic",
+      "energy": 1,
+      "duration": 69.864,
+      "loop": true,
+      "autoEligible": true,
+      "review": "technical-checks",
+      "sha256": "bb3d6c8da8c7eaa7688172be61a2aef0c63ad2148e45e727f3439d677ea40c1a",
+      "byteSize": 1118083,
+      "mimeType": "audio/mpeg",
+      "objectPath": "music/freesound-676787/bb3d6c8da8c7eaa7688172be61a2aef0c63ad2148e45e727f3439d677ea40c1a.mp3"
+    },
+    "file": "output/music-curation/processed/freesound-676787.mp3",
+    "sourceDownload": "https://cdn.freesound.org/previews/676/676787_2578040-hq.mp3",
+    "sourceSha256": "3d0623a70550adc6deb23b58b189dd84ff7a0ecdf65912834615dcda1856be20",
+    "sourcePageSha256": "c0ce7899cc350a3d8f8300ca0d31f16bac3b2c978b5d17461cc29ac263bde5ef",
+    "processing": "Full HQ preview; loudnorm -23 LUFS / -2 dBTP / LRA 9, 150 ms in / 400 ms out fades, stereo 44.1 kHz MP3 128 kbps. No claim of seamless looping or subjective audition.",
+    "checks": {
+      "decoded": true,
+      "integratedLufs": -22.84,
+      "truePeakDb": -8.84
+    },
+    "publishedUrl": "https://sbsmnewkilhkcaylpmue.supabase.co/storage/v1/object/public/music-library/music/freesound-676787/bb3d6c8da8c7eaa7688172be61a2aef0c63ad2148e45e727f3439d677ea40c1a.mp3"
+  }
+]

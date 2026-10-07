@@ -15,22 +15,31 @@ provider candidates discussed earlier.
 - Curate Kenney short effects and Freesound music loops, ambience, and effects.
   Accept only assets whose individual source/license records establish CC0.
   Do not include CC BY, CC BY-NC, or unspecified-license downloads in this catalog.
-- Start with locally bundled, reviewed files rather than runtime Freesound search
-  or download requests. Freesound's API terms are separate from each file's license.
+- Publish curated, versioned files to Supabase instead of runtime Freesound search
+  or source-site download requests. Freesound's API terms are separate from each file's license.
 - Do not add AI music generation or another stock provider to this increment.
   A missing suitable track resolves to Silence rather than an unreviewed source.
 
-Catalog files live under `public/media/library/`, separate from the test
-chimes in `public/media/demo/`. Catalog metadata belongs to the Media module and
-records a stable ID, provider, source URL/ID, author, CC0 license URL, verification
-date, local file path, duration, audio role, theme/mood tags, and auditioned loop
-behavior. Preserve source/license evidence alongside the catalog. Export only
-the selected files and their provenance; do not copy the whole catalog into each
-story. Generated images use the existing story media storage, not the public
-catalog directory.
+Catalog audio lives in the public Supabase `music-library` bucket; active records
+are read from `public.music_library_tracks` through `/api/media/music`. The Media
+module owns validation, scoring, download integrity and audition. The versioned
+manifest and source/license evidence live in `resources/music-library/`. Metadata
+includes the original title, author, CC0 source, verification date, duration,
+role, theme/mood/instrument tags, energy, processing records and content hash.
+Only chosen audio bytes and provenance travel with a story. Generated images
+and selected story media continue using private story storage.
 
-The starter collection contains six Freesound tracks, with three Kenney jingles
-reserved for one-shot playback. Expansion toward 12–16 tracks follows listening review. Short effects and ambience can be collected in the
+As of 2026-10-07 the collection contains 24 music tracks plus three reserved
+Kenney jingles. The picker offers three recommendations, one-click audition,
+and a searchable library with theme/mood filters. Automatic enrichment infers
+a whole-story theme from genre and brief, then combines it with planned passage
+moods and a preferred instrumentation family. It reuses a palette of at most
+four newly chosen tracks, preserves manual selections and planned silence, and
+excludes clips shorter than 25 seconds from automatic selection. This is
+heuristic matching, not semantic audio analysis. Files have technical checks;
+subjective suitability and seamless musical loops still require audition.
+
+Short effects and ambience can be collected in the
 same catalog, but must remain unavailable for automatic playback until dedicated
 one-shot triggers and layered ambience exist. The current player loops a single
 audio assignment; it cannot yet play a bell once over background music.
@@ -97,7 +106,7 @@ existing release implements.
 | Story generation | Retain 8–12 passages, 2–3 endings, language selection, and graph validation. |
 | Scene images | Generate up to four distinct scene images in the initial story run; reuse images across compatible passages. |
 | Visual style | Storybook by default, with Cinematic as a second option. |
-| Music | Automatically assign tracks from a curated library of approximately 12–16 licensed instrumental loops. |
+| Music | Automatically assign tracks from a curated library of approximately 20–30 licensed instrumental tracks. |
 | Music per story | Usually reuse two or three tracks; allow individual passage assignments to be changed. |
 | Themes | Auto, Mystery, Fantasy, Sci-Fi, and Cozy. Theme and narrative mood remain separate settings. |
 | Authoring | Graph scene cards, passage inspector, missing-media generation, individual replacement, and linked playtesting. |
@@ -456,8 +465,8 @@ pricing, and allowed usage. Requests use the environment API key without a sign-
 
 Choose and audition the actual Kenney/Freesound CC0 files, normalize playback
 levels, check loop seams, and fit the existing asset/export size limits before
-inclusion. Reject harsh or distracting samples. The six-track starter catalog is bundled; live image generation and final
-subjective listening approval remain unverified.
+inclusion. Reject harsh or distracting samples. The expanded 24-track catalog is hosted in Supabase; technical checks do not
+replace subjective listening approval.
 
 Selected-source references:
 

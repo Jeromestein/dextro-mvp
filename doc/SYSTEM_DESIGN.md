@@ -23,7 +23,7 @@ offline export. Graph and Outline are views of the same passages and choices.
 
 The media foundation adds version 2 shared image/audio assets, Graph media,
 passage assignments, explicit audio playback, and portable exports. It retains
-version 1 reads, existing story routes. The initial OpenAI image adapter, bundled CC0 catalog, media planning, and draft
+version 1 reads, existing story routes. The initial OpenAI image adapter, Supabase-hosted CC0 catalog, media planning, and draft
 enrichment are now implemented; live image access remains unverified.
 
 See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
@@ -187,7 +187,7 @@ permission grant.
 1. Structural increment: module relocation, separate providers, extracted editor
    session/forms, unchanged data and behavior, consolidated documentation.
 2. Media foundation: shared assets, compatible persistence, Graph controls,
-   uploaded music, and portable playback. The CC0 starter catalog is now bundled.
+   uploaded music, and portable playback. The expanded CC0 catalog is now hosted in Supabase.
 3. Automatic media: verified image provider, shared planning, per-asset jobs and
    candidate review, and graph-linked generation.
 
@@ -203,9 +203,11 @@ provider, deployment, or media behavior.
   story generation.
 - `src/modules/media/generation/` owns validated scene/music plans, stale-plan
   detection, client requests, per-passage candidates, and incremental enrichment.
-- `src/modules/media/catalog/` owns curated metadata, deterministic mood matching,
-  local file loading, and preview controls. `public/media/library/` owns distributable
-  audio files and source/license evidence. No runtime stock-provider API is used.
+- `src/modules/media/catalog/` owns catalog validation, theme/mood scoring, verified
+  downloads and preview controls. `/api/media/music` reads active metadata from
+  `music_library_tracks`; immutable audio lives in the public `music-library` bucket.
+  `resources/music-library/` preserves the publishing manifest and license evidence.
+  Selected bytes remain private story snapshots. No runtime stock-provider API is used.
 - Generated/catalog assets extend version 2 with optional provenance. Existing
   version 1/2 inputs remain readable; storage uses the existing metadata/Blob split.
   Media plans remain in editable backups and are omitted from playable HTML.

@@ -29,7 +29,7 @@ separate providers for the saved-game library, AI connection, and unsaved draft.
 Stories now use version 2 with shared image and audio assets. Version 1 stories
 and backups remain readable; files move into a separate IndexedDB media store
 only after a successful save. Story/editor routes are unchanged.
-OpenAI scene images and a bundled Freesound CC0 music catalog now integrate with
+OpenAI scene images and a Supabase-hosted Freesound CC0 music catalog now integrate with
 Graph/Media and story creation. Image calls require separately billed API access;
 configuration and mocked verification do not establish live provider access.
 See [Graph media design](doc/GRAPH_MEDIA_DESIGN.md) for remaining target features.
@@ -65,7 +65,7 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 - Editable `.dextro.json` backups and standalone HTML games with used images, audio, and credits embedded once per asset. The exported game runs without Next.js or an internet connection.
 - Optional AI draft generation through a server-only endpoint, with English, Simplified Chinese, or automatic language selection. Play the complete draft and inspect every ending before saving it as a new story.
 
-- Six bundled CC0 music tracks with preview, per-passage assignment, source records, and offline export; three Kenney jingles are reserved for later one-shot playback.
+- 24 cloud-hosted CC0 music tracks with three recommendations, audition, theme/mood filters, per-passage assignment, and offline export; three Kenney jingles are reserved for later one-shot playback.
 - Optional story media planning: up to four shared scenes, mood-based music matching, incremental draft media, and a read-only Graph in draft review.
 - OpenAI scene previews with Apply/Discard, Storybook/Cinematic styles, cancellation, and independent image readiness in Settings. Missing-media recovery preserves existing assignments and skips stale scene plans.
 
@@ -129,7 +129,8 @@ src/
 └── shared/ui/                 # Generic dialog and original artwork
 
 public/media/demo/             # Placeholder image and four chime samples
-public/media/library/          # CC0 music, reserved effects, source/license records
+resources/music-library/       # CC0 source/license manifest; audio lives in Supabase
+scripts/music-library/         # Verified immutable catalog publishing
 doc/                           # Requirements, design, setup, verification
 └── archive/                   # Historical requirements and meeting materials
 ```
@@ -137,6 +138,12 @@ doc/                           # Requirements, design, setup, verification
 Browser and shared modules must not import `src/server/`. API routes connect
 browser requests to server implementations. ESLint and dependency-graph tests
 enforce this boundary. Keep providers and credentials out of client imports.
+
+The shared [CC0 music library](resources/music-library/README.md) contains 24 music
+tracks and 3 reserved effects. Audio lives in the public Supabase `music-library`
+bucket; active metadata comes from `music_library_tracks`. The Media panel offers
+three recommendations, audition, and theme/mood filters. Selected audio remains
+embedded in story backups and offline HTML exports.
 
 ## AI and deployment
 

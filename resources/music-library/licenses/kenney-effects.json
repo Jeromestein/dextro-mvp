@@ -10,11 +10,11 @@
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "verifiedAt": "2026-10-06",
-    "path": "/media/library/effects/kenney-steel-00.ogg",
     "originalFile": "Audio/Steel jingles/jingles_STEEL00.ogg",
     "sha256": "8799eb726d784ae0aa1a9df80648a873ac60015bc00aea12c8e2dd1431a2bd7d",
     "duration": 0.932812,
-    "review": "Reserved for one-shot playback; not assigned as background music."
+    "review": "Reserved for one-shot playback; not assigned as background music.",
+    "legacyPublicPath": "/media/library/effects/kenney-steel-00.ogg"
   },
   {
     "id": "kenney-steel-05",
@@ -27,11 +27,11 @@
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "verifiedAt": "2026-10-06",
-    "path": "/media/library/effects/kenney-steel-05.ogg",
     "originalFile": "Audio/Steel jingles/jingles_STEEL05.ogg",
     "sha256": "7e1f170ee00a8265723342c8d30e797a64641603a2c59c2316d3357b8c5f60d6",
     "duration": 0.944785,
-    "review": "Reserved for one-shot playback; not assigned as background music."
+    "review": "Reserved for one-shot playback; not assigned as background music.",
+    "legacyPublicPath": "/media/library/effects/kenney-steel-05.ogg"
   },
   {
     "id": "kenney-steel-07",
@@ -44,10 +44,10 @@
     "license": "CC0-1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "verifiedAt": "2026-10-06",
-    "path": "/media/library/effects/kenney-steel-07.ogg",
     "originalFile": "Audio/Steel jingles/jingles_STEEL07.ogg",
     "sha256": "206b5cb18870c1faa393047cb857eda28441b9682380c9eb5910119ea04c2ece",
     "duration": 1.554694,
-    "review": "Reserved for one-shot playback; not assigned as background music."
+    "review": "Reserved for one-shot playback; not assigned as background music.",
+    "legacyPublicPath": "/media/library/effects/kenney-steel-07.ogg"
   }
 ]

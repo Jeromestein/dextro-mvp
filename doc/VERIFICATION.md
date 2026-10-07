@@ -629,3 +629,42 @@ The existing working directory and local secret configuration were preserved.
   restart, build, deployment, or push was performed. The updated list
   route responded through the existing dev server; restart the user-run server
   after pulling backend route changes.
+
+## Supabase music library expansion — 2026-10-07
+
+- Applied `202610070001_music_library.sql` to `sbsmnewkilhkcaylpmue`
+  (Everlove Foundation / dextro-mvp) in the existing Jerome Chrome session.
+- Migrated six existing music tracks and three Kenney effects byte-for-byte.
+  Added 18 distinct Freesound CC0 tracks: **24 music + 3 reserved effects**,
+  27 different SHA-256 hashes, 28.44 MB total. Every public object was read back
+  and verified against its manifest size/hash before its database row was published.
+- Live bucket check: `music-library` public; `user-media` and `generation-output`
+  remain private. The local `/api/media/music` returned 24 active music records
+  with immutable Supabase URLs. Effects do not appear in the music picker.
+- All 18 additions passed full decode and loudness/peak checks. Source pages identify
+  CC0; the manifest preserves URLs, dates, original titles, authors, page/source
+  hashes and processing notes. These are technical checks, not subjective auditory
+  review or a guarantee of seamless musical loops. No paid provider calls were made.
+- In-app browser on the user's restarted `localhost:3100`: verified three
+  recommendations, all-track browsing, combined Sci-fi + Tense filters, text search,
+  audition start/stop and switching, and applying An Unfamiliar Signal to the
+  opening of the existing **Deployment QA — Backup restored 2026-10-07** story.
+  The graph label, assignment, credits and Saved to cloud state updated together.
+- The saved private story audio matched the public catalog hash. Production export
+  functions generated self-contained HTML and JSON from the hydrated saved story;
+  verified the exact audio bytes are embedded, no Storage URL is a playback
+  dependency, unrelated catalog tracks are absent, and the backup round-trips.
+  The browser download-event helper timed out; direct file playback was blocked by
+  the in-app browser's URL policy. Actual browser playback of this new offline
+  artifact was therefore not verified. Existing export regression tests passed.
+- Undid the temporary QA assignment and confirmed the saved document exactly matches
+  its pre-test snapshot (revision 2 → 3 for application → 4 for restoration).
+  The newly uploaded private audio remains available as a reusable Saved music asset.
+- Verified the picker at desktop size and 390 × 844: search, filters and card buttons
+  remain usable; page width equals viewport width with no horizontal overflow.
+  Reset the viewport after testing. Screenshots: `output/playwright/music-library-desktop.jpg`
+  and `output/playwright/music-library-mobile.jpg` (ignored QA evidence).
+- Typecheck, ESLint and 83 automated tests passed. Added coverage for catalog records,
+  theme matching, palette size, manual assignments/silence, corrupted downloads,
+  cancellation, safe API errors, SQL permissions/RLS and private bucket preservation.
+  `pnpm build` was not run. Application changes have not been deployed.

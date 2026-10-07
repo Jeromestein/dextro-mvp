@@ -244,7 +244,8 @@ it is not a second identity check. Supabase supports private authenticated
 downloads and time-limited signed URLs, whereas public buckets allow URL holders
 to read files. See [Storage access models](https://supabase.com/docs/guides/storage/buckets/fundamentals).
 
-Bundled, intentionally public CC0 audio remains a separate catalog. When copied
+Intentionally public CC0 audio lives in the separate `music-library` bucket,
+with active metadata in `music_library_tracks`. When copied
 into a private story, keep its catalog ID, author, source URL, and license. Do not
 make generated user images public to reuse the catalog delivery mechanism.
 

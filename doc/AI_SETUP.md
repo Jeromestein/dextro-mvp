@@ -38,7 +38,7 @@ The server rejects arbitrary models not in that list or its configured default.
 
 Settings checks configuration presence, not live account eligibility. An unavailable
 model produces an error; Dextro never silently substitutes another model. The API
-key pays for all AI usage. Music remains a bundled free CC0 selection.
+key pays for all AI usage. Music uses the free CC0 library hosted in Supabase.
 
 ## Generate and review
 
@@ -67,10 +67,13 @@ Each provider call is limited to 8,000 output tokens; input/response sizes are
 bounded. Refusals, incomplete output, provider failures, and timeouts are not
 retried. Provider errors do not expose credentials or raw upstream responses.
 
-The library contains six Freesound CC0 tracks. Selected bytes and source credits
-travel with stories, backups, and offline exports. Three Kenney jingles are
-reserved for future one-shot support. No runtime Freesound search or API key is
-required. See the [library records](../public/media/library/README.md).
+The library contains 24 Freesound CC0 music tracks and three Kenney jingles reserved
+for future one-shot support. Selected bytes and credits travel with stories,
+backups, and offline exports. Catalog audio is hosted in the public Supabase
+`music-library` bucket, with metadata in `music_library_tracks`. Apply the music
+library migration and run the publisher as described in the [library records](../resources/music-library/README.md).
+`SUPABASE_URL` and `SUPABASE_SECRET_KEY` are required for the catalog even when
+story storage is browser-local. No runtime Freesound search or API key is required.
 
 ## Vercel
 
