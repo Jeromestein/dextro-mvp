@@ -6,7 +6,6 @@ import { buildGame } from "../src/modules/export/standalone";
 import { appendPassage, changePassage, connectChoice, removePassage } from "../src/modules/editor/session/operations";
 import { createHistory, editorReducer } from "../src/modules/editor/session/history";
 import { autoLayout, layoutSignature, NODE_WIDTH, nodeHeight, positionsFor, setPositions } from "../src/modules/editor/graph/layout";
-import { outlineFor, type OutlineItem } from "../src/modules/editor/outline/model";
 
 test("layout roundtrips through backups without leaking into playable HTML", () => {
   const old = sampleStory();
@@ -80,24 +79,6 @@ test("text edits group into one undo; branch edits and dragging remain separate 
   assert.equal(state.present.title, "AB");
   state = editorReducer(state, { type: "commit", story: { ...state.present, title: "New branch" }, time: 400 });
   assert.equal(state.future.length, 0);
-});
-test("outline represents convergence and cycles as references, with separate disconnected roots", () => {
-  let story = sampleStory();
-  story = changePassage(story, "boat", { choices: [
-    ...story.passages.find((p) => p.id === "boat")!.choices,
-    { id: "loop", text: "Back to the inn", target: "arrival" },
-    { id: "missing", text: "Unknown path", target: "" },
-  ] });
-  const orphan = newPassage();
-  story = appendPassage(story, orphan);
-  const outline = outlineFor(story);
-  const ids: string[] = [], refs: string[] = [];
-  const visit = (item: OutlineItem) => { ids.push(item.passage.id); item.branches.forEach((b) => { if (b.child) visit(b.child); if (b.reference) refs.push(b.reference); }); };
-  outline.forEach(visit);
-  assert.equal(ids.length, story.passages.length);
-  assert.equal(new Set(ids).size, story.passages.length);
-  assert.ok(refs.includes("loop") && refs.includes("shared") && refs.includes("missing"));
-  assert.ok(outline.find((item) => item.passage.id === orphan.id)?.disconnected);
 });
 test("a new connected passage is one reversible transaction", () => {
   const story = sampleStory(), p = newPassage();

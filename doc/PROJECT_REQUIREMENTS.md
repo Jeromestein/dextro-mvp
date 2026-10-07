@@ -1,5 +1,14 @@
 # Project Requirements and Decisions
 
+## Single Graph workspace — 2026-10-07
+
+Remove Outline and the Graph / Outline mode switch from the editor. Desktop and
+mobile open directly in Graph, retaining passage dragging, pan/zoom, choice
+connections, and the Story / Media / Preview inspector. Remove the unused Outline
+UI, traversal, styles, and dedicated tests. Existing story data, layout, backups,
+and cloud persistence require no migration. This supersedes earlier decisions
+that offered both views or defaulted mobile to Outline.
+
 ## Editor and cover loading skeletons — 2026-10-07
 
 While opening a story, preserve the editor's visual structure with skeletons for
@@ -15,8 +24,8 @@ loading intentionally to display the animation.
 
 ## Graph-first editing drawer — 2026-10-07
 
-The graph occupies the full workspace on entry. Selecting a passage in Graph or
-Outline opens a right-side editing drawer over the canvas, initially two-thirds
+The graph occupies the full workspace on entry. Selecting a passage in Graph
+opens a right-side editing drawer over the canvas, initially two-thirds
 of the workspace width. Opening, resizing, and closing the drawer must preserve
 the graph viewport. The exposed canvas remains interactive on desktop.
 

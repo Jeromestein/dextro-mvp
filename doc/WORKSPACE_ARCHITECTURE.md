@@ -10,7 +10,7 @@ and [Graph media design](GRAPH_MEDIA_DESIGN.md) for current media scope and plan
 | --- | --- |
 | `/` | Redirect to `/builder`. |
 | `/builder` | AI brief or blank-game creation; full-page draft review. |
-| `/builder/[storyId]` | Graph/Outline authoring, text/media editing, preview, validation, export. |
+| `/builder/[storyId]` | Graph authoring, text/media editing, preview, validation, export. |
 | `/library` | Find, import, copy, and manage saved games. |
 | `/play/[storyId]` | Focused story playback; `sample-last-light` is the bundled sample. |
 | `/settings` | Story and image model selection. |
@@ -45,7 +45,7 @@ and draft state explicitly when creating or keeping a story.
 
 ## Editor composition
 
-`modules/editor/story-editor.tsx` coordinates selection, Graph/Outline switching,
+`modules/editor/story-editor.tsx` coordinates selection, the Graph workspace,
 inspector, layout jobs, validation, preview, and export controls.
 
 - `session/use-editor-session.ts` owns the current story reference, reducer,
@@ -55,8 +55,6 @@ inspector, layout jobs, validation, preview, and export controls.
   preservation. Up to 50 edit snapshots are retained in the mounted editor.
 - `graph/story-graph.tsx` displays nodes and connections. `graph/layout.ts` owns
   positions, dimensions, layout signatures, and lazy ELK layout.
-- `outline/model.ts` derives finite traversal with convergence/loop references;
-  `outline/story-outline.tsx` displays it.
 - `text/passage-form.tsx` edits narrative and choices through callbacks.
 - `media-panel/passage-media.tsx` assigns shared files, uploads images/audio,
   displays shared use, and edits credits through the same history. Reusable asset
@@ -66,9 +64,11 @@ Every view receives the same current story. Edits share one history; viewport
 updates are saved without entering it. Asynchronous layout results apply only
 when graph structure and manual positions still match the submitted version.
 
-Mobile opens in Outline, with the passage panel below the structure. Graph is
-also available. The inspector has Story, Media, and Preview tabs. Graph adds
-fixed-size thumbnails and music labels; hiding images keeps structural overview.
+Desktop and mobile open directly in Graph. Selecting a passage opens a resizable
+drawer on desktop and a full-screen editor on mobile, with a Back to graph control.
+The inspector has Story, Media, and Preview tabs. Graph adds
+fixed-size thumbnails and music labels. Scene images are always visible; clicking
+a thumbnail opens its media editor.
 File completion does not move manually positioned nodes.
 
 ## State and persistence

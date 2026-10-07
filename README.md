@@ -1,7 +1,7 @@
 # Dextro
 
 A choice-based text adventure studio built with Next.js, React, TypeScript, and
-pnpm. Authors create branching stories on a Graph/Outline workspace, edit text
+pnpm. Authors create branching stories on a Graph workspace, edit text
 and shared scene media, play every path, and export an offline game.
 
 Start with the [documentation index](doc/README.md). The
@@ -11,14 +11,14 @@ Start with the [documentation index](doc/README.md). The
 ## Architecture
 
 One story model connects the editor, media, generation, player, and export
-modules. Graph and Outline project the same passages and choices. Text and image
+modules. The graph renders the story's passages and choices. Text and image
 edits go through one editor session and undo history. The workspace composes
 separate providers for the saved-game library, AI connection, and unsaved draft.
 
 | Module | Responsibility |
 | --- | --- |
 | Story | Story schema, branch validation, and sample content. |
-| Editor | Graph, Outline, text form, media field, edit commands, and undo/redo. |
+| Editor | Graph, text form, media field, edit commands, and undo/redo. |
 | Media | Shared image/audio assets, file validation, assignments, credits, and audio playback. |
 | Generation | Creation UI, draft state/review, and structured story schema. |
 | Player | Shared reading and choice UI for preview and the play route. |
@@ -53,11 +53,11 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 - A simple Settings page for story and image models, with browser-local preferences and a server-side API key.
 - A complete original sample, **The Last Light**, with nine passages and three endings. Playing the sample does not change it; editing creates a personal copy.
 - Passage editing, choice labels, destinations, branch convergence, opening selection, and multiple endings.
-- Synchronized Graph and Outline views: drag passages, pan and zoom, connect individual choices, and arrange branches automatically. Mobile opens in Outline.
+- A single Graph workspace on desktop and mobile: drag passages, pan and zoom, connect individual choices, and automatically arrange new stories.
 - Session undo/redo for content, connections, deletion, and layout; saved node positions and viewport are included in editable backups.
 - Live preview from a selected passage or the opening, plus a mobile-friendly player and restart controls.
 - Browser-local IndexedDB persistence with a save indicator and explicit storage failure messages.
-- Story / Media / Preview inspector tabs, Graph thumbnails and music labels, and compact media status in Outline.
+- Story / Media / Preview inspector tabs, Graph thumbnails and music labels, and a full-screen passage editor on mobile.
 - Shared PNG, JPEG, or WebP images (up to 2 MB) and MP3, M4A, OGG, WAV, or WebM music (up to 6 MB). Upload, reuse, clear assignments, record credits, and undo media changes.
 - Play starts music during the click and carries it into the game. Direct game links try autoplay with an Enable sound fallback; preview and audition remain manual. Volume/mute, same-track continuity, one-second transitions, and Silence per passage are supported.
 - Independent edit selection and playhead, with current-node and traversed-choice highlighting.
@@ -74,7 +74,7 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 | Page | Purpose |
 | --- | --- |
 | `/builder` | Default destination: generate a draft or start a blank game. |
-| `/builder/[storyId]` | Graph/Outline authoring, passage editing, live preview, validation, and export. |
+| `/builder/[storyId]` | Graph authoring, passage editing, live preview, validation, and export. |
 | `/library` | Find, import, and manage saved games. |
 | `/play/[storyId]` | Play one game in a focused reading view. |
 | `/settings` | Choose story and image models; view API configuration readiness. |
@@ -87,7 +87,7 @@ Storage defaults to browser-local. In that mode, drafts belong to the browser pr
 
 See [Cloud Storage implementation status and design](doc/CLOUD_STORAGE_DESIGN.md) for configuration boundaries and remaining deployment work. Set `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and `INTERNAL_TEST_OWNER_ID` on the server and apply `supabase/migrations/202610060001_cloud_storage.sql`. Never expose the secret with `NEXT_PUBLIC_`. The Everlove project migration is applied and local application connectivity was verified on 2026-10-07: seven readable tables and two private buckets. Live save/upload and generation round trips remain to be tested. Restart the development server after changing environment values.
 
-Cloud saves preserve Graph/Outline source data, layout, shared assets and media plans. Conflicts keep a recovery copy instead of overwriting another revision. The media library keeps generated images even if a preview is dismissed. HTML exports embed media bytes and work independently of signed URLs; editable backups remain embedded version 2. Use editable backups to continue authoring.
+Cloud saves preserve passages and choices, layout, shared assets and media plans. Conflicts keep a recovery copy instead of overwriting another revision. The media library keeps generated images even if a preview is dismissed. HTML exports embed media bytes and work independently of signed URLs; editable backups remain embedded version 2. Use editable backups to continue authoring.
 
 There is no public publishing service, cloud user account system, analytics, payment system, free-form player input, inventory system, or Blender integration. AI generation uses the server environment API key with no sign-in or access code.
 
@@ -110,7 +110,6 @@ src/
 │   ├── story/                 # Schema, validation, sample story
 │   ├── editor/
 │   │   ├── graph/             # Canvas and automatic layout
-│   │   ├── outline/           # Outline UI and traversal
 │   │   ├── text/              # Passage and choice form
 │   │   ├── media-panel/       # Image/music assignment and library controls
 │   │   └── session/           # Commands, history, editing hook

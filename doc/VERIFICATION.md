@@ -818,3 +818,67 @@ The existing working directory and local secret configuration were preserved.
   `library-skeleton-mobile.png`, and `library-cover-fallback.png` (ignored local
   evidence). Browser viewport overrides were restored. No story content or
   cloud assets were changed by these checks.
+
+## 2026-10-07 — Single Graph workspace
+
+- Removed the Outline mode, mode-switch controls, traversal/UI modules, styles,
+  loading placeholder, and dedicated traversal test. Desktop uses one compact
+  toolbar; mobile retains two rows of canvas and authoring controls. Story data
+  and persistence formats are unchanged.
+- TypeScript, ESLint, and `git diff --check` passed. All 84 tests passed using
+  Node 24. The initial run under unsupported Node 20 failed two service tests;
+  both passed with the project's supported runtime. No production build ran.
+- The existing server at `http://localhost:3100` was used. Codex in-app browser
+  verified the desktop editor, passage selection, the 390 × 844 mobile canvas,
+  the full-screen passage editor, and Back to graph. Mobile document width was
+  390 px with no horizontal overflow; the Outline control was absent. The
+  temporary viewport override was reset, leaving the desktop graph open.
+- A fresh supplemental Playwright session had no console errors or warnings and
+  saved `output/playwright/graph-only-editor.png`. The temporary browser was
+  closed. Verification did not edit story text, choices, or media.
+
+## 2026-10-07 — Clearer story check in the canvas toolbar
+
+- Renamed Check story to Check for problems and moved it beside the canvas tools.
+  The header now contains Play and Export. The tooltip and result dialog explain
+  missing text, choices without destinations, and passages readers cannot reach
+  or finish. Updated loading placeholders to match the action placement.
+- TypeScript, ESLint, whitespace checks, and all 17 story/editor tests passed
+  under Node 24. No production build or server restart ran.
+- Codex in-app browser verified the existing editor on desktop and at 390 × 844,
+  opened the check dialog on both layouts, and confirmed No problems found for
+  the current story. Mobile had no horizontal overflow. Closed the dialog and
+  reset the temporary viewport override. Story content was not edited.
+
+## 2026-10-07 — Green and red story-check status
+
+- The toolbar shows a green check when validation finds no problems and a red
+  alert with a count for any error or warning. Tooltip text states the result;
+  correcting the last problem updates the button to green automatically.
+- TypeScript, ESLint, whitespace checks, and all 17 story/editor tests passed.
+  No production build or server restart ran.
+- Codex in-app browser verified the current story's green state on desktop and
+  at 390 × 844 without horizontal overflow, then restored the viewport. An
+  isolated Playwright session mocked local storage mode and used disposable
+  fixtures to verify green, warning-only red, error red, and repair-to-green
+  states, including rendered colors, icons, and issue counts. User cloud stories
+  were not modified. Screenshots: `output/playwright/story-check-green.png` and
+  `output/playwright/story-check-red.png`.
+
+## 2026-10-07 — Always-visible graph images
+
+- Removed the Images toolbar toggle and its visibility state. Scene thumbnails
+  always render, including in draft review; clicking a thumbnail still opens
+  its media panel. The existing empty-image placeholder remains available.
+- TypeScript, ESLint, whitespace checks, and all nine editor tests passed. No
+  production build or server restart ran.
+- Codex in-app browser verified the toolbar and images on desktop, clicked
+  Lemons and Listening's image to open its Image media panel, and checked the
+  390 × 844 layout with ten scene images and no horizontal overflow. Viewport
+  overrides were reset and the temporary tab closed. A supplemental Playwright
+  check confirmed the toggle was absent and images loaded, saving
+  `output/playwright/graph-images-default.png`. User story content was unchanged.
+
+- Before the scoped editor commit, an isolated export of the staged files passed
+  TypeScript, ESLint, and all 83 tests under Node 24. Pending player, appearance,
+  and audio changes in the working directory were excluded from that snapshot.

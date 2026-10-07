@@ -31,9 +31,9 @@ export default function EditorSkeleton() {
     <span className="sr-only" role="status">Loading your story and checking its media…</span>
     <div className={styles.header} aria-hidden="true">
       <div className={styles.identity}><Skeleton className={styles.eyebrow} /><Skeleton className={styles.title} /><Skeleton className={styles.save} /></div>
-      <div className={styles.actions}><Skeleton /><Skeleton /><Skeleton /></div>
+      <div className={styles.actions}><Skeleton /><Skeleton /></div>
     </div>
-    <div className={styles.toolbar} aria-hidden="true"><Skeleton className={styles.views} /><Skeleton className={styles.history} /><div className={styles.actions}><Skeleton /><Skeleton /></div></div>
+    <div className={styles.toolbar} aria-hidden="true"><Skeleton className={styles.history} /><Skeleton className={styles.check} /><div className={styles.actions}><Skeleton /><Skeleton /></div></div>
     <GraphSkeleton />
     <div className={styles.footer} aria-hidden="true"><Skeleton /><Skeleton /></div>
   </main>;

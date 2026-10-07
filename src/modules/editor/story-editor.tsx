@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, Check, CheckCircle2, ChevronDown, Download, Flag,
-  GitBranch, ListTree, LoaderCircle, PanelRightClose, PanelRightOpen, PenLine,
+  LoaderCircle, PanelRightClose, PanelRightOpen, PenLine,
   Play, Plus, Redo2, Undo2, X, AlertCircle, Images } from "lucide-react";
 import { newPassage, uid, validateStory, type Story, type Passage } from "@/modules/story/model";
 import { appendPassage, changePassage, connectChoice, removePassage } from "./session/operations";
@@ -16,7 +16,6 @@ import Dialog from "@/shared/ui/dialog";
 import Player from "@/modules/player/player";
 import ThemePicker from "@/modules/player/theme-picker";
 import { changeSceneGlow, changeTheme, resolveTheme, themeVariables } from "@/modules/story/themes";
-import StoryOutline from "@/modules/editor/outline/story-outline";
 
 import PassageForm from "./text/passage-form";
 import InspectorDrawer from "./inspector-drawer";
@@ -46,7 +45,6 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const { history, historyRef, send, commit } = useEditorSession(initialStory, persistStory);
   const initialRef = useRef(initialStory);
   const [selection, setSelection] = useState(initialStory.startId);
-  const [view, setView] = useState<"graph" | "outline">("graph");
   const [graphToolbar, setGraphToolbar] = useState<HTMLDivElement | null>(null);
   const [panel, setPanel] = useState<"edit" | "media" | "preview">("edit");
   const [panelOpen, setPanelOpen] = useState(false);
@@ -175,15 +173,15 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   }}>
     <header className="workbench-header">
       <div className="workbench-identity"><Link href="/library" className="icon-button" aria-label="Back to My Games"><ArrowLeft size={19} /></Link><div><span className="kicker">STORY WORKSPACE</span><input aria-label="Story title" maxLength={200} value={story.title} onChange={(e) => commit((s) => ({ ...s, title: e.target.value }), "story-title")} /><span className={`workbench-save ${storageError ? "failed" : ""}`} role="status">{storageError ? <><AlertCircle size={12} /> Not saved</> : saving ? <><LoaderCircle size={12} className="spin" /> Saving…</> : <><Check size={12} /> {cloud ? "Saved to cloud" : "Saved in this browser"}</>}</span></div></div>
-      <div className="workbench-actions"><button className={`button ${errors.length ? "needs-attention" : ""}`} onClick={() => setModal("checks")}>{errors.length ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />} Check story{issues.length > 0 && <span className="workbench-count">{issues.length}</span>}</button><Link href={`/play/${encodeURIComponent(story.id)}`} className="button" onNavigate={() => gameplayAudio.start(story.id, assignedAsset(story, story.passages.find((p) => p.id === story.startId), "audio")?.data || "")}><Play size={15} /> Play</Link><details className="export-menu"><summary className="button primary"><Download size={15} /> Export <ChevronDown size={13} /></summary><div><button onClick={exportHTML}>Playable HTML <ArrowUpRight size={14} /></button><button onClick={exportJSON}>Editable backup <Download size={14} /></button></div></details></div>
+      <div className="workbench-actions"><Link href={`/play/${encodeURIComponent(story.id)}`} className="button" onNavigate={() => gameplayAudio.start(story.id, assignedAsset(story, story.passages.find((p) => p.id === story.startId), "audio")?.data || "")}><Play size={15} /> Play</Link><details className="export-menu"><summary className="button primary"><Download size={15} /> Export <ChevronDown size={13} /></summary><div><button onClick={exportHTML}>Playable HTML <ArrowUpRight size={14} /></button><button onClick={exportJSON}>Editable backup <Download size={14} /></button></div></details></div>
     </header>
     {storageError && <div className="storage-warning" role="alert"><AlertCircle size={17} />{storageError}<button onClick={() => void retrySync()}>Retry sync</button><button onClick={exportJSON}>Download backup</button>{cloud && recovery.some(item=>item.id===story.id) && <button onClick={()=>void saveRecoveryAsCopy(story.id).then(id=>{ router.push(`/builder/${encodeURIComponent(id)}`); }).catch(error=>setNotice(error.message))}>Save as new game</button>}</div>}
     <div className="workbench-toolbar">
-      <div className="workbench-view-switch" role="group" aria-label="Story view"><button aria-pressed={view === "graph"} onClick={() => { setView("graph"); send({ type: "break-group" }); }}><GitBranch size={15} /> Graph</button><button aria-pressed={view === "outline"} onClick={() => { setView("outline"); send({ type: "break-group" }); }}><ListTree size={16} /> Outline</button></div>
       <div className="workbench-history"><button className="icon-button" aria-label="Undo" title="Undo (⌘Z outside a text field)" disabled={!history.past.length} onClick={undo}><Undo2 size={17} /></button><button className="icon-button" aria-label="Redo" title="Redo (⌘⇧Z outside a text field)" disabled={!history.future.length} onClick={redo}><Redo2 size={17} /></button></div>
-      <div className="workbench-canvas-row" data-view={view}>
-        <div className="workbench-canvas-tools" hidden={view !== "graph"}>
+      <div className="workbench-canvas-row">
+        <div className="workbench-canvas-tools">
           <div ref={setGraphToolbar} />
+          <button className={`button workbench-check ${issues.length ? "needs-attention" : ""}`} title={issues.length ? `${issues.length} ${issues.length === 1 ? "problem" : "problems"} found. Open to see what needs attention.` : "No problems found. Your story is ready to export."} aria-haspopup="dialog" onClick={() => setModal("checks")}>{issues.length ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />} Check for problems{issues.length > 0 && <span className="workbench-count">{issues.length}</span>}</button>
         </div>
         <button className="icon-button workbench-panel-toggle" aria-label={panelOpen ? "Hide passage panel" : "Show passage panel"} title={panelOpen ? "Close passage editor" : "Show passage panel"} aria-expanded={panelOpen} aria-controls="passage-editor" onClick={() => panelOpen ? closePanel() : setPanelOpen(true)}>{panelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}</button>
       </div>
@@ -191,9 +189,8 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
     </div>
     <div className="workbench-body">
       <section className="workbench-structure" aria-label="Story structure">
-        {view === "graph" ? <StoryGraph toolbarHost={graphToolbar} story={story} selected={selected} issues={issues} onMedia={(id) => { select(id); setMediaKind("image"); setPanel("media"); }} playback={panel === "preview" && panelOpen ? playback : undefined} onSelect={select} onSelectEdge={closePanel} onMove={move} onViewport={saveViewport}
-          onConnect={link} onAddChoice={addChoice} onCreateAt={createAt} onDelete={requestDelete} focusToken={focusToken} /> :
-          <StoryOutline story={story} selected={selected} issues={issues} playbackId={panel === "preview" && panelOpen ? playback.current : undefined} onSelect={select} />}
+        <StoryGraph toolbarHost={graphToolbar} story={story} selected={selected} issues={issues} onMedia={(id) => { select(id); setMediaKind("image"); setPanel("media"); }} playback={panel === "preview" && panelOpen ? playback : undefined} onSelect={select} onSelectEdge={closePanel} onMove={move} onViewport={saveViewport}
+          onConnect={link} onAddChoice={addChoice} onCreateAt={createAt} onDelete={requestDelete} focusToken={focusToken} />
         <div className="workbench-structure-foot"><button onClick={() => setModal("details")}>Story details <ArrowUpRight size={12} /></button><span>{story.passages.length}/150 passages · {story.passages.filter((p) => p.ending).length} endings</span></div>
       </section>
       <InspectorDrawer open={panelOpen} title={passage.title} onClose={closePanel}>
@@ -209,7 +206,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
         <div hidden={panel !== "edit"} className="inspector-form">
           <PassageForm story={story} passage={passage} issues={selectedIssues} onChange={writePassage}
           onSetOpening={() => commit((s) => s.startId === selected ? s : ({ ...s, startId: selected }))}
-          onLocate={() => { closePanel(); setView("graph"); setFocusToken((n) => n + 1); }} onDelete={() => requestDelete(selected)}
+          onLocate={() => { closePanel(); setFocusToken((n) => n + 1); }} onDelete={() => requestDelete(selected)}
           onAddChoice={() => addChoice(selected)} onConnect={link} onAddPassage={addPassage} onOpenTarget={focus}
           media={<div className="inspector-image"><button onClick={() => setPanel("media")}><Images size={14} /> Scene image & music</button><span>{passage.text.length} characters</span></div>} />
         </div>
@@ -217,7 +214,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
       </InspectorDrawer>
     </div>
     {notice && <div className="toast" role="status"><span>{notice}</span><button className="icon-button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={15} /></button></div>}
-    {modal === "checks" && <Dialog title="Check your story" onClose={closeModal}><p className="modal-description">We check story paths and missing content. Select an issue to find its passage.</p>{!issues.length ? <div className="check-success"><CheckCircle2 size={35} /><h3>All paths look good.</h3><p>Your story is ready to export.</p></div> : <div className="issues-list">{issues.map((issue, i) => <button key={i} className={`issue ${issue.level}`} onClick={() => { if (issue.passageId) { focus(issue.passageId); setPanel("edit"); closeModal(); } }}><AlertCircle size={15} /><span><small>{issue.level === "error" ? "NEEDS ATTENTION" : "GOOD TO KNOW"}</small>{issue.message}</span>{issue.passageId && <ArrowUpRight size={14} />}</button>)}</div>}<button className="button primary full" disabled={errors.length > 0} onClick={exportHTML}><Download size={15} /> Export playable story</button></Dialog>}
+    {modal === "checks" && <Dialog title="Story problems" onClose={closeModal}><p className="modal-description">Find missing text, choices that lead nowhere, and passages readers cannot reach or finish. Select a problem to open its passage.</p>{!issues.length ? <div className="check-success"><CheckCircle2 size={35} /><h3>No problems found.</h3><p>Your story is ready to export.</p></div> : <div className="issues-list">{issues.map((issue, i) => <button key={i} className={`issue ${issue.level}`} onClick={() => { if (issue.passageId) { focus(issue.passageId); setPanel("edit"); closeModal(); } }}><AlertCircle size={15} /><span><small>{issue.level === "error" ? "NEEDS ATTENTION" : "GOOD TO KNOW"}</small>{issue.message}</span>{issue.passageId && <ArrowUpRight size={14} />}</button>)}</div>}<button className="button primary full" disabled={errors.length > 0} onClick={exportHTML}><Download size={15} /> Export playable story</button></Dialog>}
     {modal === "delete" && <Dialog title="Delete this passage?" onClose={closeModal}><p className="modal-description">“{passage.title || "Untitled passage"}” will be removed. {incoming.length ? `${incoming.length} incoming ${incoming.length === 1 ? "choice will" : "choices will"} keep their text and need a new destination.` : "No choices point to this passage."} {story.startId === selected && "The first remaining passage will become the opening."} You can undo this change.</p><div className="dialog-actions"><button className="button" onClick={closeModal}>Keep passage</button><button className="button danger-solid" onClick={() => { commit((s) => removePassage(s, selected)); select(historyRef.current.present.startId); closeModal(); }}>Delete passage</button></div></Dialog>}
     {modal === "create" && pendingCreate && <Dialog title="Continue this branch" onClose={closeModal}><p className="modal-description">Create a destination here. The choice will connect to it automatically.</p><div className="dialog-actions"><button className="button" onClick={closeModal}>Cancel</button><button className="button" onClick={() => addPassage(true, pendingCreate.position, pendingCreate.from)}><Flag size={15} /> New ending</button><button className="button primary" onClick={() => addPassage(false, pendingCreate.position, pendingCreate.from)}><Plus size={15} /> New passage</button></div></Dialog>}
     {modal === "details" && <Dialog title="Story details" onClose={closeModal}><label className="editor-field">Description<textarea maxLength={1000} value={story.description} onChange={(e) => commit((s) => ({ ...s, description: e.target.value }), "description")} /></label><label className="editor-field">Genre<input maxLength={50} value={story.genre} onChange={(e) => commit((s) => ({ ...s, genre: e.target.value }), "genre")} /></label><p className="modal-description">Stories and graph layouts stay in this browser. Download an editable backup to move your work to another device.</p><button className="button primary" onClick={closeModal}>Done</button></Dialog>}

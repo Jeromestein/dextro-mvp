@@ -1,5 +1,10 @@
 # Graph-Based Scene Images and Background Music
 
+Editor update (2026-10-07): Outline has been removed. Earlier references below
+to Outline or Graph/Outline describe the previous design. The editor now uses
+Graph on desktop and mobile; the passage/choice model and persistence are unchanged.
+See [the current authoring decision](PROJECT_REQUIREMENTS.md#single-graph-workspace--2026-10-07).
+
 Date: 2026-10-06\
 Status: media foundation, initial OpenAI adapter, CC0 catalog, and coordinated creation implemented; live image access and later target features remain unverified.
 

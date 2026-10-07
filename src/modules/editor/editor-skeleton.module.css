@@ -9,8 +9,8 @@
 .actions>span:nth-child(2) { width:72px; }
 .toolbar { display:flex; align-items:center; gap:20px; padding:12px 30px; border-bottom:1px solid var(--line); background:var(--surface,#fff); }
 .toolbar>.actions { margin-left:auto; }
-.views { width:196px; height:38px; border-radius:7px; }
 .history { width:68px; height:24px; }
+.check { width:140px; height:34px; border-radius:7px; }
 .graph { flex:1; position:relative; min-height:380px; height:100%; background:radial-gradient(var(--line,#deded6) .7px,transparent .7px) 0 0 / 22px 22px; }
 .graphContents { position:absolute; inset:0; overflow:hidden; }
 .mapLabel { position:absolute; top:24px; left:24px; width:140px; height:9px; }

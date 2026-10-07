@@ -19,7 +19,7 @@ account access remains future work; the internal adapter uses one shared owner.
 
 Dextro is a modular Next.js application for choice-based text adventures. One
 story model connects authoring, generation, playback, browser persistence, and
-offline export. Graph and Outline are views of the same passages and choices.
+offline export. The Graph workspace renders passages and choices.
 
 The media foundation adds version 2 shared image/audio assets, Graph media,
 passage assignments, explicit audio playback, and portable exports. It retains
@@ -37,7 +37,6 @@ See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
 | `src/modules/story/` | Version 2 schema, version 1 reader, branch validation, and sample content. |
 | `src/modules/editor/` | Authoring composition, selection, validation, preview, and export actions. |
 | `editor/graph/` | React Flow projection, positions, dimensions, and lazy ELK layout. |
-| `editor/outline/` | Outline UI and finite traversal of branches, convergence, and loops. |
 | `editor/text/` | Controlled passage/choice form using editor callbacks. |
 | `editor/media-panel/` | Image/audio assignment, uploads, shared-use information, and credits. |
 | `editor/session/` | Immutable commands, grouped undo/redo, and a unified commit hook. |
@@ -61,7 +60,7 @@ See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
    provider work and never import `src/server/` or Node built-ins.
 2. Story and media model code is independent of React, routes, persistence, and
    editor UI. Story validation may use the media module's image-value schema.
-3. Graph, Outline, Text, and media controls read the same current story and submit
+3. Graph, Text, and media controls read the same current story and submit
    changes through the editor session. They do not own competing story copies.
 4. A media input may read a file; the editor applies its result after checking
    that the original target still exists.
@@ -84,7 +83,6 @@ check transitive server isolation, and enforce the pure story/media boundary.
 | Current edited story, undo/redo | `useEditorSession` | Mounted editor; commits use the supplied library save function. |
 | Selection, panels, layout jobs, preview start | `StoryEditor` | Current editing view. |
 | Drag and connection gestures | `StoryGraph` | Graph-local presentation state. |
-| Expanded outline branches | `StoryOutline` | Outline-local presentation state. |
 | Current player passage and steps | `Player` | Player instance. |
 | In-flight generation | Builder and server generation service | Local: bounded request. Cloud: persistent job/attempt records and Workflow; stopping browser polling does not cancel dispatched calls. |
 
@@ -98,7 +96,7 @@ the playhead and traversed choices. Closing preview releases its audio.
 
 In local mode, an edit follows:
 
-`Graph / Outline / Text / Media input → editor command → history → library save queue → IndexedDB`
+`Graph / Text / Media input → editor command → history → library save queue → IndexedDB`
 
 Layout and viewport remain editor metadata in editable backups. Viewport changes
 do not create history entries. Automatic layout checks the current graph and
@@ -115,7 +113,7 @@ remains in the thin API route; orchestration lives under `server/generation/`.
 
 In cloud mode, edits enter the recovery outbox, upload/verify required assets,
 then atomically save the reference-only story, revision and asset references in
-PostgreSQL. Outline derives from the stored passage/choice graph. Opening a story
+PostgreSQL. Graph renders the stored passages and choices. Opening a story
 hydrates its private media with checksum checks into the portable editor model.
 
 Cloud generation first persists an idempotent job, then dispatches Workflow.

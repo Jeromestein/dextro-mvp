@@ -10,7 +10,7 @@ import { bindMediaPlan } from '../src/modules/media/generation/plan';
 import type { StoredStory } from '../src/modules/storage/model';
 class Reader { result='';onload:(()=>void)|null=null;onerror:(()=>void)|null=null;readAsDataURL(blob:Blob){blob.arrayBuffer().then(bytes=>{this.result=`data:${blob.type};base64,${Buffer.from(bytes).toString('base64')}`;this.onload?.();}).catch(()=>this.onerror?.());} }
 Object.defineProperty(globalThis,'FileReader',{value:Reader,configurable:true});
-test('cloud references round-trip graph, outline, layout and shared media into a fully embedded offline export',async t=>{
+test('cloud references round-trip graph, layout and shared media into a fully embedded offline export',async t=>{
  clearUploadCache();
  const id=randomUUID(),bytes=Buffer.from('RIFF0000WEBPpreserved'),sha=createHash('sha256').update(bytes).digest('hex');
  const story=sampleStory();story.appearance={theme:"midnight",recommendation:"starlight"};story.id=randomUUID();story.editor={positions:[{id:'arrival',x:81,y:42},{id:'keeper',x:640,y:260}],viewport:{x:12,y:34,zoom:0.9}};
