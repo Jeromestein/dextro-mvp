@@ -192,10 +192,35 @@
 .media-scene { aspect-ratio:16/9; border-radius:8px; overflow:hidden; margin-bottom:16px; background:var(--soft); }
 .media-scene img { width:100%; height:100%; object-fit:cover; }
 .media-scene.empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; font-size:11px; color:var(--muted); border:1px dashed var(--line); }
-.media-source-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-.media-source-actions .button { min-width:0; padding:10px 8px; font-size:11px; line-height:1.5; white-space:normal; justify-content:center; text-align:center; }
-.media-source-actions .button svg { flex-shrink:0; }
-.media-source-actions .button[aria-expanded="true"] { background:var(--soft); border-color:var(--line-strong); color:var(--ink); }
+.media-source-tabs { display:flex; gap:3px; margin-top:18px; padding:4px; border:1px solid var(--line); border-radius:9px; background:var(--soft); }
+.media-source-tabs [role=tab] { flex:1; min-width:0; display:flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:8px 5px; border-radius:6px; color:var(--muted); font-size:11px; line-height:1.4; white-space:nowrap; }
+.media-source-tabs [role=tab][aria-selected=true] { background:var(--surface); color:var(--ink); box-shadow:0 1px 4px #25272312; font-weight:600; }
+.media-source-tabs [role=tab]:hover { color:var(--ink); }
+.media-source-tabs [role=tab]:focus-visible { outline:2px solid var(--orange); outline-offset:1px; }
+.media-source-panel { padding-top:18px; }
+.media-source-panel .media-generation,.media-source-panel .media-catalog { border:0; border-radius:0; background:transparent; padding:0; margin:0; gap:16px; }
+.media-source-panel .saved-media { padding:0; }
+.media-source-panel .saved-media>h4 { font-size:14px; margin-bottom:8px; }
+.media-source-panel .saved-media>.media-file-hint { text-align:left; margin-bottom:14px; }
+.media-source-panel .saved-media-list { display:grid; gap:6px; max-height:280px; overflow-y:auto; overscroll-behavior:contain; padding:3px; margin-inline:-3px; }
+.media-source-panel .saved-media-row { background:var(--surface); padding:12px 13px; margin:0; border-color:var(--line); }
+.media-source-panel .saved-media-row:hover,.media-source-panel .saved-media-row[aria-pressed=true] { border-color:var(--line-strong); background:var(--surface-subtle); }
+.media-source-panel .saved-media-row strong { font-size:12px; font-weight:550; }
+.media-source-panel .saved-media-row small { font-size:11px; color:var(--muted); opacity:1; }
+.media-source-panel .media-generation .editor-field { margin-bottom:0; }
+.media-source-panel .media-generation .media-file-hint { text-align:left; margin-top:0; }
+.media-source-panel .media-generation>.media-actions>.primary { flex:1; }
+.media-source-panel .music-library-tabs { gap:18px; border-bottom:1px solid var(--line); }
+.media-source-panel .music-library-tabs .button { border:0; border-bottom:2px solid transparent; border-radius:0; padding:8px 0; min-height:36px; background:transparent; color:var(--muted); }
+.media-source-panel .music-library-tabs .button[aria-pressed=true] { background:transparent; border-color:transparent; border-bottom-color:var(--ink); color:var(--ink); }
+.media-upload { display:flex; flex-direction:column; align-items:center; gap:12px; padding:24px 14px; border:1px dashed var(--line-strong); border-radius:9px; background:var(--surface-subtle); text-align:center; }
+.media-upload>svg { color:var(--muted); }
+.media-upload strong { font-size:13px; font-weight:550; }
+.media-upload p { font-size:11px; color:var(--muted); line-height:1.7; max-width:240px; }
+.media-shared p { margin:8px 0; }
+.media-shared .media-credit { margin-bottom:0; }
+.media-section>.sound-controls { margin-top:14px; }
+@media (max-width:760px) { .media-source-tabs [role=tab] { min-height:40px; font-size:12px; } }
 .media-file-hint { display:block; color:var(--muted); font-size:11px; text-align:center; margin-top:8px; }
 .media-shared { margin:16px 0; color:var(--muted); font-size:11px; line-height:1.7; }
 .media-shared summary { cursor:pointer; color:var(--muted); }

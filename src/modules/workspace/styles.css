@@ -238,6 +238,8 @@
 .media-options-body { padding-bottom:18px; }
 .media-options-body .creation-options { padding-top:0; margin-bottom:14px; }
 .media-options-body .generation-footnote { text-align:left; }
+.creation-visual-style { display:grid; gap:8px; }
+.creation-visual-style>small { color:var(--muted); font-size:11px; line-height:1.7; }
 .image-billing-note { color:var(--muted); font-size:11px; line-height:1.7; margin:12px 0 0; }
 .blueprint-heading { line-height:1.8; }
 .recent-section { padding-top:24px; border-top:1px solid var(--line); }
@@ -270,8 +272,7 @@
   .builder-heading { margin-bottom:28px; }
   .builder-heading .builder-heading-note { display:none; }
   .creation-tabs button { min-height:50px; }
-  .product-shell .creation-options select,.product-shell .blank-form input,.idea-label textarea { font-size:16px; }
-  .product-shell .creation-options select { min-height:44px; }
+  .product-shell .blank-form input,.idea-label textarea { font-size:16px; }
   .media-options-body .creation-options { grid-template-columns:1fr; }
   .builder-steps { flex-wrap:wrap; justify-content:flex-start; }
   .creation-media-options summary { flex-wrap:wrap; }

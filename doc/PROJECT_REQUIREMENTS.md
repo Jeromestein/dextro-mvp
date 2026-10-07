@@ -1,5 +1,22 @@
 # Project Requirements and Decisions
 
+## Media sources and selection controls — 2026-10-07
+
+Use a compact source tab row in each passage media section: AI image / Upload /
+Saved for images, and Free library / Upload / Saved for music. Saved sources are
+available in cloud mode. Show only the selected source panel, retain the current
+assignment above it, and group credits and usage under file details. Upload
+limits belong in the upload panel. Preserve an image description and candidate
+when switching sources; leaving the music library stops its audition.
+
+Builder fields and passage-media selection controls share a neutral dropdown:
+white surface, restrained border and focus ring, checked selection, warm-gray
+highlight, and a viewport-aware popup that escapes the inspector's overflow.
+Support keyboard arrows, Home/End, type-ahead, Enter/Space, Escape, and Tab.
+Opening a selector or changing source never applies media or starts generation.
+Generation billing, explicit application, validation, and storage limits remain
+in force. Reader themes and unrelated editor controls stay independent.
+
 ## Ink Studio workspace decision — 2026-10-07
 
 The author selected the first workspace concept, Ink Studio. Apply warm neutral

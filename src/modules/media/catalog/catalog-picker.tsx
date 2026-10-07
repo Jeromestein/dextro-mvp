@@ -7,6 +7,7 @@ import { createAudioController, type AudioStatus } from "../audio/controller";
 import { fetchMusicCatalog, loadCatalogTrack } from "./catalog";
 import { catalogAssetId, musicThemes, type CatalogTrack } from "./model";
 import { passageMood, recommendTracks } from "./recommend";
+import SelectField from "@/shared/ui/select-field";
 
 export default function CatalogPicker({ story, passageId, onApply, assignedId }: {
   story: Story; passageId: string; assignedId?: string; onApply: (asset: MediaAsset) => boolean;
@@ -64,8 +65,8 @@ export default function CatalogPicker({ story, passageId, onApply, assignedId }:
       <div className="music-library-tabs"><button className="button" aria-pressed={!browse} onClick={() => setBrowse(false)}>Recommended</button><button className="button" aria-pressed={browse} onClick={() => setBrowse(true)}>Browse all</button></div>
       {browse ? <div className="music-library-filters">
         <label className="editor-field">Search music<input value={query} placeholder="Title, instrument or creator" onChange={e => setQuery(e.target.value)} /></label>
-        <div><label className="editor-field">Theme<select value={theme} onChange={e => setTheme(e.target.value)}><option value="">All themes</option>{musicThemes.map(t => <option key={t} value={t}>{t === "scifi" ? "Sci-fi" : t[0].toUpperCase() + t.slice(1)}</option>)}</select></label>
-        <label className="editor-field">Mood<select value={mood} onChange={e => setMood(e.target.value)}><option value="">All moods</option>{["calm", "mysterious", "tense", "hopeful", "somber"].map(m => <option key={m} value={m}>{m[0].toUpperCase() + m.slice(1)}</option>)}</select></label></div>
+        <div><SelectField label="Theme" value={theme} onChange={setTheme} options={[{ value: "", label: "All themes" }, ...musicThemes.map(t => ({ value: t, label: t === "scifi" ? "Sci-fi" : t[0].toUpperCase() + t.slice(1) }))]} />
+        <SelectField label="Mood" value={mood} onChange={setMood} options={[{ value: "", label: "All moods" }, ...["calm", "mysterious", "tense", "hopeful", "somber"].map(m => ({ value: m, label: m[0].toUpperCase() + m.slice(1) }))]} /></div>
       </div> : <p className="music-library-note">{currentMood === "silence" ? "This passage is planned as silence. Browse all to choose music instead." : "Three suggestions for this story and passage. Listen before choosing."}</p>}
       <div className="music-library-results" aria-label={browse ? "All music" : "Recommended music"}>
         {visible.map(track => {
@@ -74,7 +75,7 @@ export default function CatalogPicker({ story, passageId, onApply, assignedId }:
           return <article className="music-track" key={track.id} aria-label={track.title}>
             <strong>{track.title}</strong><p>{track.instruments.join(" · ")} · {track.moods.join(" / ")} · {Math.round(track.duration)}s</p>
             <div className="music-track-actions"><button className="button" aria-label={`${playing ? "Stop" : "Listen to"} ${track.title}`} aria-pressed={playing} onClick={() => listen(track)}>{playing ? <Square size={13} /> : <Play size={13} />}{playing ? "Stop" : "Listen"}</button>
-            <button className="button" disabled={Boolean(busy) || assigned} onClick={() => void apply(track)}>{assigned ? "In use" : busy === track.id ? "Adding…" : "Use music"}</button>
+            <button className={`button${assigned ? "" : " primary"}`} disabled={Boolean(busy) || assigned} onClick={() => void apply(track)}>{assigned ? "In use" : busy === track.id ? "Adding…" : "Use music"}</button>
             <a href={track.sourceUrl} target="_blank" rel="noreferrer" aria-label={`Source and license for ${track.title}`}>Source</a></div>
           </article>;
         })}

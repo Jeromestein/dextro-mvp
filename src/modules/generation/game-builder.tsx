@@ -6,6 +6,7 @@ import { ArrowRight, ArrowUpRight, Sparkles, PenLine, BookOpen, GitBranch, Flag,
 import { copyStory, newStory, storySchema, validateStory, type Story } from "@/modules/story/model";
 import AIDraftReview from "./draft-review";
 import StoryTree from "./story-tree";
+import SelectField from "@/shared/ui/select-field";
 import { changeSceneGlow, changeTheme, preserveAppearance } from "@/modules/story/themes";
 import { useLibrary } from "@/modules/workspace/library-provider";
 import { useConnection } from "@/modules/connections/provider";
@@ -101,16 +102,19 @@ export default function GameBuilder() {
           <div className="creation-intro"><h2>Where does your story begin?</h2><p>A character, a place, a difficult choice.</p></div>
           <label className="idea-label"><span className="sr-only">Your game idea</span><textarea required minLength={15} maxLength={1500} value={draftState.brief.premise} disabled={generating} onChange={(event) => draftState.setBrief({ ...draftState.brief, premise: event.target.value })} placeholder="You arrive in a town where nobody is allowed to dream. Tonight, you fall asleep…" /><span className="character-count">{draftState.brief.premise.length} / 1,500</span></label>
           <div className="idea-prompts"><span>Need a spark?</span>{ideas.map((idea) => <button type="button" disabled={generating} key={idea.label} onClick={() => draftState.setBrief({ ...draftState.brief, premise: idea.text })}>{idea.label} <ArrowUpRight size={12} /></button>)}</div>
-          <div className="creation-options"><label className="field-label">Mood<select value={draftState.brief.tone} disabled={generating} onChange={(event) => draftState.setBrief({ ...draftState.brief, tone: event.target.value })}>{["Mysterious", "Hopeful", "Adventurous", "Whimsical", "Suspenseful"].map((tone) => <option key={tone}>{tone}</option>)}</select></label><label className="field-label">Language<select value={draftState.brief.language} disabled={generating} onChange={(event) => draftState.setBrief({ ...draftState.brief, language: event.target.value })}><option value="auto">Match my idea</option><option value="en">English</option><option value="zh">简体中文</option></select></label></div>
+          <div className="creation-options">
+            <SelectField label="Mood" value={draftState.brief.tone} disabled={generating} onChange={tone => draftState.setBrief({ ...draftState.brief, tone })} options={["Mysterious", "Hopeful", "Adventurous", "Whimsical", "Suspenseful"].map(tone => ({ value: tone, label: tone }))} />
+            <SelectField label="Language" value={draftState.brief.language} disabled={generating} onChange={language => draftState.setBrief({ ...draftState.brief, language })} options={[{ value: "auto", label: "Match my idea" }, { value: "en", label: "English" }, { value: "zh", label: "简体中文" }]} />
+          </div>
           <details className="creation-media-options">
             <summary><span>Scene images &amp; sound</span><span className="media-options-summary">{images ? "Images on" : "Images off"} · {music ? "Music on" : "Music off"}<ChevronDown size={14} /></span></summary>
             <div className="media-options-body">
-          <div className="creation-options">
-            <label className="field-label">Background music<select disabled={generating} value={music ? "auto" : "off"} onChange={(e) => setMusic(e.target.value === "auto")}><option value="auto">Auto · Free CC0 library</option><option value="off">Off</option></select></label>
-            <label className="field-label">Scene images<select disabled={generating || !connection.imagesReady} value={images ? "on" : "off"} onChange={(e) => setImages(e.target.value === "on")}><option value="off">Off</option><option value="on">Generate · Up to 4 images</option></select></label>
-          </div>
-          {images && <label className="field-label">Visual style<select disabled={generating} value={style} onChange={(e) => setStyle(e.target.value as VisualStyle)}><option value="storybook">Storybook</option><option value="cinematic">Cinematic</option></select><small>Text is playable while images finish.</small></label>}
-          {!connection.imagesReady ? <p className="generation-footnote">Check image availability in <Link href="/settings">Settings</Link>. Free music works without an image connection.</p> : null}
+              <div className="creation-options">
+                <SelectField label="Background music" disabled={generating} value={music ? "auto" : "off"} onChange={value => setMusic(value === "auto")} options={[{ value: "auto", label: "Auto · Free CC0 library" }, { value: "off", label: "Off" }]} />
+                <SelectField label="Scene images" disabled={generating || !connection.imagesReady} value={images ? "on" : "off"} onChange={value => setImages(value === "on")} options={[{ value: "off", label: "Off" }, { value: "on", label: "Generate · Up to 4 images", description: "OpenAI API usage is billed separately." }]} />
+              </div>
+              {images && <div className="creation-visual-style"><SelectField label="Visual style" disabled={generating} value={style} onChange={value => setStyle(value as VisualStyle)} options={[{ value: "storybook", label: "Storybook" }, { value: "cinematic", label: "Cinematic" }]} /><small>Text is playable while images finish.</small></div>}
+              {!connection.imagesReady ? <p className="generation-footnote">Check image availability in <Link href="/settings">Settings</Link>. Free music works without an image connection.</p> : null}
             </div>
           </details>
           {images && <p className="image-billing-note">Generated images use separately billed OpenAI API usage.</p>}

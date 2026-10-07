@@ -719,3 +719,37 @@ The existing working directory and local secret configuration were preserved.
 - Screenshots: `output/playwright/story-tree-desktop.jpg` and
   `output/playwright/story-tree-mobile.jpg` (ignored local evidence). No cloud
   data, generation behavior, or reader appearance changed. No commit or push.
+
+## Media source tabs and custom selectors — 2026-10-07
+
+- Replaced the stacked media-source buttons with equal-width source tabs. Each
+  section shows one source, keeps its current assignment above the tabs, and
+  groups credits/usage into file details. Upload limits appear in the upload
+  panel. Saved-file lists have bounded scrolling and an explicit preview/apply
+  step. Image-generation input remains mounted when switching sources; the music
+  picker unmounts and disposes its audition when leaving the library.
+- Added a shared, labeled select-only combobox for Builder settings, media
+  assignments, image style, and music filters. Its listbox is rendered outside
+  the scrolling inspector with viewport-aware placement, selected checks, and
+  consistent neutral styling. Source tabs support roving keyboard focus.
+- Type checking, ESLint, all 83 automated tests, and `git diff --check` passed.
+  Checks used the installed Node 25 runtime, satisfying the Node 22+ requirement.
+  No production build was run.
+- Codex in-app browser checks passed on the user's existing `localhost:3100`
+  server. Builder checks covered mouse selection, arrows/Enter, Home/End,
+  type-ahead, Escape cancellation, Tab dismissal, language selection, and image
+  style/billing visibility. Temporary values were restored without generation.
+- In The Letter from Tomorrow's editor, checked all image/music source tabs,
+  keyboard tab selection, preservation of an edited image description across
+  tabs, the 11-option assignment menu, saved-image preview without applying it,
+  and combined Sci-fi/Tense filters returning two catalog tracks. Music audition
+  entered the playing state; switching source and returning restored the stopped
+  state. Current story assignments and credits were not edited.
+- Desktop and 390 × 844 mobile checks passed for the Builder menus and media
+  panels. The popup stayed within the viewport and outside the inspector's clip;
+  both mobile source rows fit with no horizontal page overflow. Screenshots:
+  `output/playwright/controls-builder-desktop.jpg`, `controls-builder-mobile.jpg`,
+  `controls-media-desktop.jpg`, and `controls-media-mobile.jpg` (local evidence).
+- Real file upload, paid image/story generation, and applying a replacement to
+  the live cloud story were not exercised. Existing upload/assignment/billing
+  regression tests passed. No server restart, deployment, commit, or push.

@@ -9,6 +9,7 @@ import type { Passage, Story } from "@/modules/story/model";
 import type { MediaAsset } from "../assets/model";
 import { imageBrief, type VisualStyle } from "./plan";
 import { requestSceneImage } from "./client";
+import SelectField from "@/shared/ui/select-field";
 
 export default function ImageGeneration({ story, passage, onApply }: { story: Story; passage: Passage; onApply: (asset: MediaAsset) => boolean }) {
   const connection = useConnection();
@@ -34,12 +35,12 @@ export default function ImageGeneration({ story, passage, onApply }: { story: St
     finally { if (controller.current === request) { controller.current = null; setBusy(false); } }
   };
   return <div className="media-generation">
-    <h4>Create a scene image with AI</h4>
+    <h4>Imagine this scene</h4>
     <label className="editor-field">Scene description<textarea maxLength={4000} value={scene} disabled={busy} onChange={(e) => { setScene(e.target.value); setCandidate(null); }} /></label>
-    <label className="editor-field">Visual style<select value={style} disabled={busy} onChange={(e) => { setStyle(e.target.value as VisualStyle); setCandidate(null); }}><option value="storybook">Storybook</option><option value="cinematic">Cinematic</option></select></label>
+    <SelectField label="Visual style" value={style} disabled={busy} onChange={value => { setStyle(value as VisualStyle); setCandidate(null); }} options={[{ value: "storybook", label: "Storybook" }, { value: "cinematic", label: "Cinematic" }]} />
     <p className="media-file-hint">One image · OpenAI API usage is billed separately. Review before applying.</p>
     {!canGenerate && <p className="media-file-hint">{connection.checking ? "Checking image configuration…" : "Image generation is unavailable. Check Settings."} <Link href="/settings">Settings</Link></p>}
-    <div className="media-actions"><button className="button" disabled={!canGenerate || busy || scene.trim().length < 10} onClick={() => void generate()}>{busy ? <LoaderCircle size={14} className="spin" /> : <Sparkles size={14} />}{busy ? "Generating scene…" : "Generate scene"}</button>{busy && <button className="button" onClick={() => { controller.current?.abort(); setError(library.cloud ? "Stopped waiting. The generated image will be kept in Saved media." : "Cancelled. Any provider usage already started may still be billed."); }}>{library.cloud ? "Stop waiting" : "Cancel"}</button>}</div>
+    <div className="media-actions"><button className="button primary" disabled={!canGenerate || busy || scene.trim().length < 10} onClick={() => void generate()}>{busy ? <LoaderCircle size={14} className="spin" /> : <Sparkles size={14} />}{busy ? "Generating scene…" : "Generate image"}</button>{busy && <button className="button" onClick={() => { controller.current?.abort(); setError(library.cloud ? "Stopped waiting. The generated image will be kept in Saved media." : "Cancelled. Any provider usage already started may still be billed."); }}>{library.cloud ? "Stop waiting" : "Cancel"}</button>}</div>
     {error && <p className="form-error" role="alert">{error}</p>}
     {candidate && !currentCandidate && <p className="quiet">This passage changed. Generate a new preview for the latest scene.</p>}
     {currentCandidate && <div className="media-candidate"><span className="kicker">NEW IMAGE · REVIEW</span><Image unoptimized src={currentCandidate.data} width={640} height={426} alt="Generated scene candidate" /><div className="media-actions"><button className="button primary" onClick={() => { try { if (!onApply(currentCandidate)) throw new Error("Could not apply this image. Check available storage."); setCandidate(null); } catch (e) { setError((e as Error).message); } }}>Apply image</button><button className="button" onClick={() => setCandidate(null)}>{library.cloud ? "Keep in Saved media" : "Discard"}</button></div></div>}
