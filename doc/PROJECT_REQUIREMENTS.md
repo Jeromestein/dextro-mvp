@@ -1,5 +1,26 @@
 # Project Requirements and Decisions
 
+## Graph-first editing drawer — 2026-10-07
+
+The graph occupies the full workspace on entry. Selecting a passage in Graph or
+Outline opens a right-side editing drawer over the canvas, initially two-thirds
+of the workspace width. Opening, resizing, and closing the drawer must preserve
+the graph viewport. The exposed canvas remains interactive on desktop.
+
+Support dragging the drawer's left edge, keyboard resizing, double-click/Enter
+to restore the default width, and a remembered local width preference. Keep at
+least 380 px for editing and 200 px of the canvas on desktop. A visible close
+control and Escape collapse the drawer. Mobile uses a full-screen editor with a
+Back to graph control; its background is inert while open.
+
+Keep Story / Media / Preview at the top. Media has full-width, equal-size Image /
+Audio subtabs with large icons, short descriptions, and a dark selected state
+(with a checkmark on desktop) to make this second navigation level conspicuous.
+Show one media kind at a time. Preserve image-generation input and previews when
+switching media types, switching the main editor tab, or collapsing the drawer.
+Stop audio auditions when leaving Audio or closing the editor. Story-wide media
+actions sit in a collapsed disclosure below the passage's media controls.
+
 ## Media sources and selection controls — 2026-10-07
 
 Use a compact source tab row in each passage media section: AI image / Upload /

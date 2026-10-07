@@ -753,3 +753,44 @@ The existing working directory and local secret configuration were preserved.
 - Real file upload, paid image/story generation, and applying a replacement to
   the live cloud story were not exercised. Existing upload/assignment/billing
   regression tests passed. No server restart, deployment, commit, or push.
+
+## Graph-first editing drawer and media subtabs — 2026-10-07
+
+- Graph now opens at full workspace width, with its editor collapsed. Graph and
+  Outline passage selection opens a modeless desktop drawer at two-thirds width.
+  Its left edge supports pointer and keyboard resizing, double-click/Enter reset,
+  and a local width preference. Canvas dimensions stay unchanged underneath it.
+- Story / Media / Preview remain available. Media separates Image and Audio with
+  keyboard-accessible subtabs. Image-generation state stays mounted across tabs
+  and drawer collapse; inactive audio auditions are disposed. File details and
+  story-wide media tools remain available without crowding the active passage.
+- Type checking, lint, all 83 regression tests, and whitespace checks passed.
+  No production build or server restart was run.
+- Codex in-app browser checks on the existing localhost:3100 server passed:
+  default collapsed/full-width state, a 619 px drawer within a 929 px workspace,
+  pointer resizing, arrow-key resizing, double-click/Enter reset, width retention
+  after reload, exposed-node switching, Outline selection, and Preview rendering.
+- Verified an unchanged graph transform after opening, resizing, and closing.
+  Disabled graph auto-pan on focus so restoring keyboard focus cannot recenter
+  the canvas. Dragging a node did not open the editor; the test move was undone
+  and its exact original position was confirmed restored.
+- Image description edits survived Image/Audio switching and close/reopen. The
+  temporary description was restored without generation. Audio audition started,
+  then returned stopped after leaving Audio. Escape dismissed a select popup
+  first; a subsequent Escape could close the editor. Subtab arrow keys worked.
+- At 390 × 844, the drawer covered the viewport, kept background controls inert,
+  trapped keyboard focus within the editor, and provided a Back to graph button.
+  Closing restored background interaction and scrolling. No horizontal overflow;
+  Image and Audio were separately visible, with fixed editor controls and sticky
+  media tabs. Restored the browser's default viewport after verification.
+- Screenshots: `output/playwright/graph-full-width.jpg`, `graph-media-drawer.jpg`,
+  and `graph-audio-mobile.jpg` (ignored local evidence). No paid generation,
+  upload, media replacement, export, or deployment was exercised.
+
+- Follow-up: made Image / Audio equal-width, prominent selection cards with
+  larger icons, descriptive subtitles, and dark active styling. Desktop and
+  390 px mobile checks passed for both mouse/touch-sized targets and arrow-key
+  switching; mobile targets measured 171 × 68 px with no horizontal overflow.
+  Type checking and lint passed again. Evidence:
+  `output/playwright/media-tabs-prominent-desktop.jpg` and
+  `output/playwright/media-tabs-prominent-mobile.jpg`.

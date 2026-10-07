@@ -146,7 +146,7 @@ function Graph(props: Props) {
       isValidConnection={(c) => !!c.sourceHandle && !!c.target && !!story.passages.find((p) => p.id === c.source && !p.ending)?.choices.some((v) => v.id === c.sourceHandle)}
       onMoveEnd={(_, v: FlowViewport) => props.onViewport(v)}
       defaultViewport={story.editor?.viewport} fitView={!story.editor?.viewport} fitViewOptions={{ padding: .2, minZoom: .2, maxZoom: .9 }}
-      minZoom={.2} maxZoom={2} deleteKeyCode={null} selectionKeyCode={null} multiSelectionKeyCode={null}
+      minZoom={.2} maxZoom={2} deleteKeyCode={null} selectionKeyCode={null} multiSelectionKeyCode={null} autoPanOnNodeFocus={false}
       nodeExtent={[[-GRAPH_COORDINATE_LIMIT, -GRAPH_COORDINATE_LIMIT], [GRAPH_COORDINATE_LIMIT, GRAPH_COORDINATE_LIMIT]]}
       snapToGrid snapGrid={[10, 10]} panOnScroll zoomOnDoubleClick={false} elevateEdgesOnSelect
       onNodeDoubleClick={(_, n) => onSelect(n.id)}>

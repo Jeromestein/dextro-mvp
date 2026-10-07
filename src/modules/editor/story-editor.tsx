@@ -19,6 +19,7 @@ import { changeSceneGlow, changeTheme, resolveTheme, themeVariables } from "@/mo
 import StoryOutline from "@/modules/editor/outline/story-outline";
 
 import PassageForm from "./text/passage-form";
+import InspectorDrawer from "./inspector-drawer";
 import PassageMedia from "./media-panel/passage-media";
 import { enrichStoryMedia } from "@/modules/media/generation/enrich";
 import { useConnection } from "@/modules/connections/provider";
@@ -44,9 +45,10 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const { history, historyRef, send, commit } = useEditorSession(initialStory, persistStory);
   const initialRef = useRef(initialStory);
   const [selection, setSelection] = useState(initialStory.startId);
-  const [view, setView] = useState<"graph" | "outline">(() => typeof window !== "undefined" && window.matchMedia("(max-width:760px)").matches ? "outline" : "graph");
+  const [view, setView] = useState<"graph" | "outline">("graph");
   const [panel, setPanel] = useState<"edit" | "media" | "preview">("edit");
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [mediaKind, setMediaKind] = useState<MediaKind>("image");
   const [modal, setModal] = useState<Modal>(null);
   const [notice, setNotice] = useState("");
   const [layoutBusy, setLayoutBusy] = useState(false);
@@ -57,7 +59,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const [playback, setPlayback] = useState<PlaybackProgress>({ current: "", path: [] });
   const [preview, setPreview] = useState({ from: initialStory.startId, key: 0 });
   const [pendingCreate, setPendingCreate] = useState<{ position: Point; from?: ChoiceRef } | null>(null);
-  const panelRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const layoutJob = useRef(0);
   const initialized = useRef(false);
   const story = history.present;
@@ -67,6 +69,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const issues = useMemo(() => validateStory(story), [story]);
   const errors = issues.filter((i) => i.level === "error");
   const selectedIssues = issues.filter((i) => i.passageId === selected);
+  useEffect(() => { contentRef.current?.scrollTo({ top: 0 }); }, [panel, mediaKind, selected]);
 
   const select = useCallback((id: string) => {
     setSelection(id); setPanelOpen(true);
@@ -166,8 +169,10 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
     finally { setMediaBusy(false); }
   };
   const incoming = story.passages.flatMap((p) => p.choices.filter((c) => c.target === selected));
+  const closePanel = useCallback(() => { setPanelOpen(false); send({ type: "break-group" }); }, [send]);
   const closeModal = () => { setModal(null); setPendingCreate(null); };
   return <main className="story-workbench" onKeyDown={(e) => {
+    if (e.key === "Escape" && panelOpen && !modal && !e.defaultPrevented) { e.preventDefault(); closePanel(); return; }
     const editable = (e.target as HTMLElement).closest("input,textarea,select,[contenteditable=true]");
     if (editable || modal) return;
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
@@ -182,30 +187,34 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
       <div className="workbench-history"><button className="icon-button" aria-label="Undo" title="Undo (⌘Z outside a text field)" disabled={!history.past.length} onClick={undo}><Undo2 size={17} /></button><button className="icon-button" aria-label="Redo" title="Redo (⌘⇧Z outside a text field)" disabled={!history.future.length} onClick={redo}><Redo2 size={17} /></button></div>
       <button className="workbench-layout" disabled={layoutBusy} onClick={() => void runLayout()}>{layoutBusy ? <LoaderCircle size={15} className="spin" /> : <Sparkles size={15} />}<span>{layoutBusy ? "Arranging…" : "Auto layout"}</span></button>
       <div className="workbench-add"><button className="button" disabled={story.passages.length >= 150} onClick={() => addPassage()}><Plus size={15} /> Add passage</button><button className="button" disabled={story.passages.length >= 150} onClick={() => addPassage(true)}><Flag size={14} /> Add ending</button></div>
-      <button className="icon-button workbench-panel-toggle" aria-label={panelOpen ? "Hide passage panel" : "Show passage panel"} title={panelOpen ? "Expand workspace" : "Show passage panel"} onClick={() => setPanelOpen((open) => !open)}>{panelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}</button>
+      <button className="icon-button workbench-panel-toggle" aria-label={panelOpen ? "Hide passage panel" : "Show passage panel"} title={panelOpen ? "Close passage editor" : "Show passage panel"} aria-expanded={panelOpen} aria-controls="passage-editor" onClick={() => panelOpen ? closePanel() : setPanelOpen(true)}>{panelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}</button>
     </div>
-    <div className={`workbench-body ${panelOpen ? "" : "panel-hidden"}`}>
+    <div className="workbench-body">
       <section className="workbench-structure" aria-label="Story structure">
-        {view === "graph" ? <StoryGraph story={story} selected={selected} issues={issues} onMedia={(id) => { select(id); setPanel("media"); }} playback={panel === "preview" && panelOpen ? playback : undefined} onSelect={select} onMove={move} onViewport={saveViewport}
+        {view === "graph" ? <StoryGraph story={story} selected={selected} issues={issues} onMedia={(id) => { select(id); setMediaKind("image"); setPanel("media"); }} playback={panel === "preview" && panelOpen ? playback : undefined} onSelect={select} onMove={move} onViewport={saveViewport}
           onConnect={link} onAddChoice={addChoice} onCreateAt={createAt} onDelete={requestDelete} focusToken={focusToken} layoutToken={layoutToken} /> :
-          <StoryOutline story={story} selected={selected} issues={issues} playbackId={panel === "preview" && panelOpen ? playback.current : undefined} onSelect={(id) => { focus(id); if (window.matchMedia("(max-width:760px)").matches) requestAnimationFrame(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />}
+          <StoryOutline story={story} selected={selected} issues={issues} playbackId={panel === "preview" && panelOpen ? playback.current : undefined} onSelect={select} />}
         <div className="workbench-structure-foot"><button onClick={() => setModal("details")}>Story details <ArrowUpRight size={12} /></button><span>{story.passages.length}/150 passages · {story.passages.filter((p) => p.ending).length} endings</span></div>
       </section>
-      {panelOpen && <aside className="workbench-inspector" ref={panelRef} aria-label="Passage editor">
+      <InspectorDrawer open={panelOpen} title={passage.title} onClose={closePanel}>
         <div className="inspector-tabs" role="group" aria-label="Passage panel"><button aria-pressed={panel === "edit"} onClick={() => setPanel("edit")}><PenLine size={14} /> Story</button><button aria-pressed={panel === "media"} onClick={() => setPanel("media")}><Images size={14} /> Media</button><button aria-pressed={panel === "preview"} onClick={() => setPanel("preview")}><Play size={14} /> Preview</button></div>
-        {panel === "preview" ? <div className="inspector-preview"><div className="inspector-preview-actions"><button onClick={() => setPreview((p) => ({ from: selected, key: p.key + 1 }))}>From selected</button><button onClick={() => setPreview((p) => ({ from: story.startId, key: p.key + 1 }))}>From opening <ArrowUpRight size={12} /></button><button disabled={!playback.current} onClick={() => focus(playback.current)}>Locate playing</button></div><ThemePicker story={story} onChange={(value) => commit((s) => changeTheme(s, value))} onSceneGlowChange={(enabled) => commit((s) => changeSceneGlow(s, enabled))} /><div className="story-preview-stage" data-story-theme={theme.id} style={themeVariables(theme)}><Player key={preview.key} onProgress={setPlayback} story={story} startId={story.passages.some((p) => p.id === preview.from) ? preview.from : selected} compact /></div></div> : panel === "media" ? <PassageMedia key={passage.id} story={story} passage={passage} busy={mediaBusy} onUpload={uploadMedia}
+        <div className="inspector-content" ref={contentRef} key={passage.id}>
+        {panel === "preview" && panelOpen && <div className="inspector-preview"><div className="inspector-preview-actions"><button onClick={() => setPreview((p) => ({ from: selected, key: p.key + 1 }))}>From selected</button><button onClick={() => setPreview((p) => ({ from: story.startId, key: p.key + 1 }))}>From opening <ArrowUpRight size={12} /></button><button disabled={!playback.current} onClick={() => focus(playback.current)}>Locate playing</button></div><ThemePicker story={story} onChange={(value) => commit((s) => changeTheme(s, value))} onSceneGlowChange={(enabled) => commit((s) => changeSceneGlow(s, enabled))} /><div className="story-preview-stage" data-story-theme={theme.id} style={themeVariables(theme)}><Player key={preview.key} onProgress={setPlayback} story={story} startId={story.passages.some((p) => p.id === preview.from) ? preview.from : selected} compact /></div></div>}
+        <div hidden={panel !== "media"}><PassageMedia active={panelOpen && panel === "media"} kind={mediaKind} onKindChange={setMediaKind} story={story} passage={passage} busy={mediaBusy} onUpload={uploadMedia}
           batchControls={story.mediaPlan && <div className="media-batch"><h4>Story media plan</h4><p>Fill empty assignments across this story. Existing media stays in place.</p><div className="media-actions"><button className="button" disabled={batchBusy} onClick={() => void fillMedia(false)}>Match missing music</button><button className="button" disabled={batchBusy || !connection.imagesReady} onClick={() => void fillMedia(true)}>Generate missing images</button>{batchBusy && <button className="button" onClick={() => batch.current?.abort()}>Stop</button>}</div><small>Up to {story.mediaPlan.scenes.length} images · separately billed OpenAI API usage.</small>{batchStatus && <p role="status">{batchStatus}</p>}</div>}
           onApply={(asset) => assignedAsset(historyRef.current.present, historyRef.current.present.passages.find((p) => p.id === selected), asset.kind)?.data === asset.data || commit((s) => addAndAssignAsset(s, selected, asset))}
           onAssign={(kind, id) => commit((s) => assignAsset(s, selected, kind, id))}
           onCredit={(id, credit) => commit((s) => ({ ...s, assets: s.assets.map((a) => a.id === id ? { ...a, credit } : a) }), `credit:${id}`)}
-          onPrune={() => commit(pruneAssets)} /> : <div className="inspector-form">
+          onPrune={() => commit(pruneAssets)} /></div>
+        <div hidden={panel !== "edit"} className="inspector-form">
           <PassageForm story={story} passage={passage} issues={selectedIssues} onChange={writePassage}
           onSetOpening={() => commit((s) => s.startId === selected ? s : ({ ...s, startId: selected }))}
-          onLocate={() => { setView("graph"); setFocusToken((n) => n + 1); }} onDelete={() => requestDelete(selected)}
+          onLocate={() => { closePanel(); setView("graph"); setFocusToken((n) => n + 1); }} onDelete={() => requestDelete(selected)}
           onAddChoice={() => addChoice(selected)} onConnect={link} onAddPassage={addPassage} onOpenTarget={focus}
           media={<div className="inspector-image"><button onClick={() => setPanel("media")}><Images size={14} /> Scene image & music</button><span>{passage.text.length} characters</span></div>} />
-        </div>}
-      </aside>}
+        </div>
+        </div>
+      </InspectorDrawer>
     </div>
     {notice && <div className="toast" role="status"><span>{notice}</span><button className="icon-button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={15} /></button></div>}
     {modal === "checks" && <Dialog title="Check your story" onClose={closeModal}><p className="modal-description">We check story paths and missing content. Select an issue to find its passage.</p>{!issues.length ? <div className="check-success"><CheckCircle2 size={35} /><h3>All paths look good.</h3><p>Your story is ready to export.</p></div> : <div className="issues-list">{issues.map((issue, i) => <button key={i} className={`issue ${issue.level}`} onClick={() => { if (issue.passageId) { focus(issue.passageId); setPanel("edit"); closeModal(); } }}><AlertCircle size={15} /><span><small>{issue.level === "error" ? "NEEDS ATTENTION" : "GOOD TO KNOW"}</small>{issue.message}</span>{issue.passageId && <ArrowUpRight size={14} />}</button>)}</div>}<button className="button primary full" disabled={errors.length > 0} onClick={exportHTML}><Download size={15} /> Export playable story</button></Dialog>}
