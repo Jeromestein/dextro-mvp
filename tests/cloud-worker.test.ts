@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runGenerationJob } from '../src/server/generation/jobs/worker';
 import { randomUUID } from 'node:crypto';
+import { sampleStory } from '../src/modules/story/sample';
 import type { storageClient } from '../src/server/storage/client';
 type Row=Record<string,unknown>;
 function fixture(failAfterArchive=false){
@@ -21,7 +22,7 @@ function fixture(failAfterArchive=false){
      return Promise.resolve(resolve({data:rows,error:null}));
    }
   };return query;},
-  async rpc(name:string,input:Row){assert.equal(name,'dextro_claim_attempt');assert.equal(input.p_owner,owner);assert.equal(input.p_job,id);const previous=tables.generation_attempts.find(row=>row.sequence===input.p_sequence);if(previous)return {data:{...previous,claimed:false},error:null};const attempt={id:randomUUID(),owner_id:owner,job_id:id,sequence:input.p_sequence,status:'dispatched',created_at:new Date().toISOString()};tables.generation_attempts.push(attempt);job.status='running';return {data:{...attempt,claimed:true},error:null};},
+  async rpc(name:string,input:Row){if(name==='dextro_finish_story'){job.status='succeeded';job.savedStory=input.p_story;return {data:{},error:null};}assert.equal(name,'dextro_claim_attempt');assert.equal(input.p_owner,owner);assert.equal(input.p_job,id);const previous=tables.generation_attempts.find(row=>row.sequence===input.p_sequence);if(previous)return {data:{...previous,claimed:false},error:null};const attempt={id:randomUUID(),owner_id:owner,job_id:id,sequence:input.p_sequence,status:'dispatched',created_at:new Date().toISOString()};tables.generation_attempts.push(attempt);job.status='running';return {data:{...attempt,claimed:true},error:null};},
   storage:{from(bucket:string){return {
    async upload(key:string,body:string|Buffer){const path=`${bucket}/${key}`;if(objects.has(path))return {error:{message:'Already exists'}};objects.set(path,new Blob([typeof body==='string'?body:new Uint8Array(body)]));return {error:null};},
    async download(key:string){const data=objects.get(`${bucket}/${key}`);return {data,error:data?null:{message:'Not found'}};}
@@ -45,4 +46,14 @@ test('a lost provider connection is recorded as uncertain and never silently reg
  t.mock.method(globalThis,'fetch',async()=>{calls++;throw new Error('Connection lost after dispatch');});
  await runGenerationJob(f.owner,f.id,f.db);assert.equal(f.job.status,'outcome_unknown');
  await runGenerationJob(f.owner,f.id,f.db);assert.equal(calls,1);assert.equal(f.tables.generation_attempts.length,1);assert.equal(f.objects.size,0);
+});
+
+test('cloud story generation saves a stable recommendation from the creation brief',async t=>{
+ const f=fixture();f.job.kind='story';f.job.input={model:'test-story-model',premise:'A haunted town survives one final night.',tone:'Hopeful',language:'en'};
+ const old=process.env.OPENAI_API_KEY;process.env.OPENAI_API_KEY='unit-test-only';t.after(()=>{if(old===undefined)delete process.env.OPENAI_API_KEY;else process.env.OPENAI_API_KEY=old;});
+ t.mock.method(globalThis,'fetch',async()=>Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(sampleStory())}]}]}));
+ await runGenerationJob(f.owner,f.id,f.db);
+ assert.equal(f.job.status,'succeeded');
+ const saved=f.job.savedStory as {document:{appearance:unknown}};
+ assert.deepEqual(saved.document.appearance,{theme:'auto',recommendation:'midnight'});
 });

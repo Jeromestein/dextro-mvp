@@ -155,6 +155,12 @@ is not cloud backup or synchronization.
 
 ## Player and export
 
+Story appearance uses optional metadata validated by the story and cloud-document
+schemas. A shared, React-independent theme module owns the four palettes, bounded
+content/mood recommendation rules, and CSS variables used by React and offline
+HTML. Author theme changes belong to story history, not passage selection or
+application settings. See [Story atmosphere themes](STORY_THEMES_DESIGN.md).
+
 Editor preview and the play route share the React player. Offline HTML retains
 its independent template; tests check branch behavior, image embedding, and
 safe serialization. Exports strip editor layout and unused assets and require

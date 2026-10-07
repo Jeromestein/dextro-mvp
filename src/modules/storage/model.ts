@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { appearanceSchema } from '@/modules/story/themes';
 import { passageSchema, editorLayoutSchema, type Story } from '@/modules/story/model';
 import { mediaPlanSchema } from '@/modules/media/generation/plan';
 export const cloudDocumentSchema = z.object({
   startId: z.string().max(100), passages: z.array(passageSchema).min(1).max(150),
   assets: z.array(z.object({id:z.string().min(1).max(100),assetId:z.uuid(),name:z.string().min(1).max(200),credit:z.string().max(1000)})).max(300),
-  editor:editorLayoutSchema.optional(),mediaPlan:mediaPlanSchema.optional(),
+  editor:editorLayoutSchema.optional(),mediaPlan:mediaPlanSchema.optional(),appearance:appearanceSchema.optional(),
 });
 export const storedStorySchema = z.object({title:z.string().max(200),description:z.string().max(1000),genre:z.string().max(50),document:cloudDocumentSchema});
 export type StoredStory = z.infer<typeof storedStorySchema>;

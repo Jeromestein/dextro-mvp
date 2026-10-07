@@ -132,7 +132,7 @@ export async function generateStory(request: Request) {
       } catch {
         parsed = null;
       }
-      const checked = checkDraft(parsed);
+      const checked = checkDraft(parsed, input);
       if (checked.story)
         return json({ story: checked.story, repaired: attempt === 1, mediaWarning: input.includeMedia && !checked.story.mediaPlan ? "The story is ready, but its media plan could not be validated. Add media in the editor." : undefined });
       if (attempt === 0)

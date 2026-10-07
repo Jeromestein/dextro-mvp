@@ -10,6 +10,16 @@ An author describes an idea and receives a complete, editable choice-based text 
 
 The dedicated `/builder` page accepts a premise, mood, and language, provides a complete playable preview with passage/ending selection, and saves an accepted draft as a new story. Structural failures get at most one repair within a shared deadline. Cancellation prevents late results from replacing a newer draft. The server uses the OpenAI Responses API with strict structured output, same-origin request checks, and graph validation. The server environment supplies the API key; no sign-in or access code is required. Drafts target 8–12 passages and 2–3 endings. Local ChatGPT authorization, model discovery, and generation were verified on 2026-10-01; hosted API-key generation remains unverified. Local editing, playing, and export are already implemented. Story and image model selectors live on `/settings`; the builder only shows a compact connection status and a Settings link. Creation and review are page content, not dialogs.
 
+## Story atmosphere (2026-10-07)
+
+Validated drafts receive an automatic recommendation from the creation mood,
+premise, story metadata, and opening text. The recommendation selects Midnight,
+Starlight, Parchment, or Garden using local rules; it does not call another model
+or accept generated CSS. Both the request-based and durable cloud generation
+paths persist that initial recommendation. Authors can override it in draft
+review or editor preview. Late image/music results preserve the latest theme
+choice. See [Story atmosphere themes](STORY_THEMES_DESIGN.md).
+
 ## Code ownership
 
 Cloud mode changes draft retention and execution: the same endpoint persists a

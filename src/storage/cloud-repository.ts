@@ -44,7 +44,7 @@ export async function storeCloudAsset(asset:MediaAsset):Promise<string>{
 export async function prepareCloudStory(story:Story):Promise<StoredStory>{
  requireStorySize(story);const refs=[];
  for(const asset of story.assets)refs.push({id:asset.id,assetId:await storeCloudAsset(asset),name:asset.name,credit:asset.credit});
- const document={startId:story.startId,passages:story.passages,assets:refs,editor:story.editor,mediaPlan:story.mediaPlan};
+ const document={startId:story.startId,passages:story.passages,assets:refs,editor:story.editor,mediaPlan:story.mediaPlan,appearance:story.appearance};
  return {title:story.title,description:story.description,genre:story.genre,document};
 }
 export async function writePreparedStory(id:string,story:StoredStory,baseRevision:number,mutationId:string,status='ready'):Promise<{revision:number;updatedAt:string}>{return requestJSON(`/api/stories/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({baseRevision,mutationId,status,story})});}

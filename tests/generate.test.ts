@@ -108,6 +108,7 @@ test("AI generation pipeline", async (t) => {
         assert.equal(res.status, 200);
         const data = await res.json();
         assert.equal(data.repaired, false);
+        assert.deepEqual(data.story.appearance, { theme: "auto", recommendation: "starlight" });
         assert.notEqual(data.story.id, sampleStory().id);
         assert.ok(buildGame(data.story).includes("story-data"));
         assert.equal(calls, 1);

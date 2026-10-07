@@ -33,6 +33,7 @@ import { sampleStory } from "@/modules/story/sample";
 import { buildBackup, download, filename } from "@/modules/export/standalone";
 import GenerationHistory from "@/modules/storage/generation-history";
 import Player from "@/modules/player/player";
+import { resolveTheme, themeVariables } from "@/modules/story/themes";
 import { Lighthouse } from "@/shared/ui/lighthouse";
 
 const StoryEditor = dynamic(() => import("@/modules/editor/story-editor"), { ssr: false, loading: () => <main className="route-message">Opening story editor…</main> });
@@ -327,7 +328,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
           </main>
         )}
         {view === "play" && active && (
-          <main className="play-page">
+          <main className="play-page" data-story-theme={resolveTheme(active).id} style={themeVariables(resolveTheme(active))}>
             <div className="play-heading">
               <button className="text-button" onClick={() => router.push("/library")}>
                 <ArrowLeft size={16} /> My stories

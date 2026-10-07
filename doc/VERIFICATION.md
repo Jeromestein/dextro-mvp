@@ -1,5 +1,48 @@
 # Verification Record
 
+## Story atmosphere themes — 2026-10-07
+
+- `pnpm typecheck`, `pnpm lint`, and `git diff --check`: passed.
+- `pnpm test`: 71 tests passed, 0 failed. No `pnpm build` was run.
+- Coverage includes bilingual mood/content recommendations, generated-draft
+  stability in both generation paths, manual overrides, legacy imports, unsafe
+  theme rejection, local persistence, cloud document round trips, backups,
+  copies, undo/redo, late media results, and identical exported palette values.
+- All four palettes meet a 4.5:1 text contrast threshold for their text colors
+  against the reading, backdrop, choice, and hover surfaces in automated checks.
+
+In-app browser, using the existing development server at `http://localhost:3100`:
+
+- Visually inspected all four editor preview themes. Switching theme preserved
+  the current passage; radio-keyboard navigation, undo, and redo worked.
+- Created a separate sample copy, **The Last Light — Theme Demo**, and retained
+  it for review. Midnight persisted through actual cloud saves and page reloads.
+  Existing user stories were not edited. This verifies the current shared
+  workspace's save path, not per-person isolation or hosted deployment.
+- Checked editor and full gameplay at desktop size and 390 × 844. No horizontal
+  overflow on mobile. Choices, an ending, and restart retained the theme.
+- Exercised the real draft-review component with a temporary local fixture,
+  including dark/light sound controls, theme switching without passage reset,
+  and mobile layout. The fixture route was removed afterward.
+- Downloaded actual playable HTML through the editor. The in-app download-event
+  listener timed out, but the file arrived in Downloads and was inspected.
+  It contains the saved Midnight palette and no external URLs. Served the
+  unchanged file temporarily through the existing dev server; desktop/mobile
+  rendering, branch navigation, ending, and restart passed. Removed that
+  temporary public file after verification. Network-disabled/file-URL execution
+  was not retested in this run.
+- Reset temporary viewport overrides. No development server was started or
+  restarted by Codex. No paid AI generation was invoked; provider calls remain
+  mocked for this feature's tests. Deployment was not performed.
+
+Screenshots and the actual HTML export are ignored artifacts under
+`output/playwright/`: `theme-player-desktop.jpg`, `theme-player-mobile.jpg`,
+`theme-editor-mobile.jpg`, `theme-draft-mobile.jpg`, `theme-export-desktop.jpg`,
+`theme-export-mobile-ending.jpg`, and `theme-export-midnight.html`.
+
+---
+
+
 Date: 2026-09-28
 
 ## Automated checks

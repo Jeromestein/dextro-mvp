@@ -3,6 +3,7 @@ import "@/app/globals.css";
 import "@/modules/workspace/styles.css";
 import "@xyflow/react/dist/style.css";
 import "@/modules/editor/styles.css";
+import "@/modules/player/themes.css";
 export const metadata: Metadata = {
   title: "Dextro — Every choice opens a world",
   description:

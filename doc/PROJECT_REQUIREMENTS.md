@@ -1,5 +1,16 @@
 # Project Requirements and Decisions
 
+## Story atmosphere decision — 2026-10-07
+
+Implement four story themes: Midnight, Starlight, Parchment, and Garden. Recommend
+a theme from mood and story content, allow author overrides beside previews,
+and persist the choice with the story. Apply the complete palette consistently
+to draft/editor previews, gameplay, and offline HTML. Keep the authoring workspace
+branding separate. One theme covers the entire story in this release; scene-level
+transitions and image backdrops are deferred. This supersedes the fixed warm/green
+player palette in the initial visual baseline below.
+See [Story atmosphere themes](STORY_THEMES_DESIGN.md).
+
 ## Storage design request — 2026-10-06
 
 Design for the practical hosted workflow: retain every received generated image

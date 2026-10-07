@@ -13,12 +13,12 @@ Object.defineProperty(globalThis,'FileReader',{value:Reader,configurable:true});
 test('cloud references round-trip graph, outline, layout and shared media into a fully embedded offline export',async t=>{
  clearUploadCache();
  const id=randomUUID(),bytes=Buffer.from('RIFF0000WEBPpreserved'),sha=createHash('sha256').update(bytes).digest('hex');
- const story=sampleStory();story.id=randomUUID();story.editor={positions:[{id:'arrival',x:81,y:42},{id:'keeper',x:640,y:260}],viewport:{x:12,y:34,zoom:0.9}};
+ const story=sampleStory();story.appearance={theme:"midnight",recommendation:"starlight"};story.id=randomUUID();story.editor={positions:[{id:'arrival',x:81,y:42},{id:'keeper',x:640,y:260}],viewport:{x:12,y:34,zoom:0.9}};
  story.assets=[{id:'local-image',name:'Snow cabin',kind:'image',source:'generated',credit:'OpenAI',data:`data:image/webp;base64,${bytes.toString('base64')}`,provenance:{provider:'openai',model:'test-model',prompt:'Private creative prompt',createdAt:new Date().toISOString()}}];
  story.passages[0].media.imageId='local-image';story.passages[1].media.imageId='local-image';
  story.mediaPlan={artBrief:'Soft lighting',scenes:[{id:'shared',description:'A quiet room',passageIds:['arrival','letter']}],cues:[]};
  const planned=bindMediaPlan(story);
- const document={startId:planned.startId,passages:planned.passages,editor:planned.editor,mediaPlan:planned.mediaPlan,assets:[{id:'local-image',assetId:id,name:'Snow cabin',credit:'OpenAI'}]};
+ const document={appearance:planned.appearance,startId:planned.startId,passages:planned.passages,editor:planned.editor,mediaPlan:planned.mediaPlan,assets:[{id:'local-image',assetId:id,name:'Snow cabin',credit:'OpenAI'}]};
  let saved:StoredStory|undefined,contentReads=0;
  t.mock.method(globalThis,'fetch',async(url:string,init?:RequestInit)=>{
    if(url===`/api/stories/${story.id}`&&init?.method==='PUT'){saved=JSON.parse(String(init.body)).story;return Response.json({revision:8,updatedAt:story.updatedAt});}
@@ -29,7 +29,7 @@ test('cloud references round-trip graph, outline, layout and shared media into a
    throw new Error(`Unexpected request ${url}`);
  });
  const loaded=await readCloudStory(story.id);assert.equal(loaded.revision,7);assert.equal(contentReads,1,'shared file downloaded once');
- assert.deepEqual(loaded.story.passages,planned.passages);assert.deepEqual(loaded.story.editor,planned.editor);assert.deepEqual(loaded.story.mediaPlan,planned.mediaPlan);assert.deepEqual(loaded.story.assets,planned.assets);
+ assert.deepEqual(loaded.story.appearance,planned.appearance);assert.deepEqual(loaded.story.passages,planned.passages);assert.deepEqual(loaded.story.editor,planned.editor);assert.deepEqual(loaded.story.mediaPlan,planned.mediaPlan);assert.deepEqual(loaded.story.assets,planned.assets);
  await writePreparedStory(story.id,await prepareCloudStory(loaded.story),7,randomUUID());assert.deepEqual(saved?.document,document);
  const html=buildGame(loaded.story);assert.ok(html.includes(story.assets[0].data));assert.ok(!html.includes('Private creative prompt'));assert.ok(!html.includes('/api/assets'));assert.ok(!html.includes('.supabase.co'));
  assert.ok(buildBackup(loaded.story).includes('Private creative prompt'),'editable backup retains authoring metadata');

@@ -5,6 +5,7 @@ import { ArrowUpRight, RotateCcw, Flag, ArrowRight } from "lucide-react";
 import SoundControls from "@/modules/media/audio/sound-controls";
 import { assignedAsset } from "@/modules/media/assets/operations";
 import { passageById, type Story } from "@/modules/story/model";
+import { resolveTheme, themeVariables } from "@/modules/story/themes";
 export type PlaybackProgress = { current: string; path: { passageId: string; choiceId: string; target: string }[] };
 export default function Player({
   story,
@@ -17,6 +18,7 @@ export default function Player({
   compact?: boolean;
   onProgress?: (progress: PlaybackProgress) => void;
 }) {
+  const theme = resolveTheme(story);
   const [current, setCurrent] = useState(startId || story.startId);
   const [path, setPath] = useState<PlaybackProgress["path"]>([]);
   const [steps, setSteps] = useState(0);
@@ -37,7 +39,7 @@ export default function Player({
     setSteps((s) => s + 1);
   };
   return (
-    <div className={`player ${compact ? "compact" : ""}`}>
+    <div className={`player ${compact ? "compact" : ""}`} data-story-theme={theme.id} style={themeVariables(theme)}>
       <div className="player-top">
         <span>{compact ? "READER VIEW" : story.genre.toUpperCase()}</span>
         <button

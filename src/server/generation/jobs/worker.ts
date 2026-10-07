@@ -46,9 +46,9 @@ async function generateStory(job:Job,db:Database){
    if(raw.status!=='completed')throw new ServiceError('The returned story is incomplete. Its raw output was retained in generation history.');
    const text=(raw.output||[]).flatMap((o:{content?:{type:string;text?:string}[]})=>o.content||[]).filter((c:{type:string})=>c.type==='output_text').map((c:{text:string})=>c.text).join('');
    let parsed;try{parsed=JSON.parse(text);}catch{parsed=null;}
-   const checked=checkDraft(parsed);
+   const checked=checkDraft(parsed, { premise: String(job.input.premise || ""), tone: String(job.input.tone || "") });
    if(checked.story){
-     const s=checked.story;const stored:StoredStory={title:s.title,description:s.description,genre:s.genre,document:{startId:s.startId,passages:s.passages,assets:[],mediaPlan:s.mediaPlan}};
+     const s=checked.story;const stored:StoredStory={title:s.title,description:s.description,genre:s.genre,document:{startId:s.startId,passages:s.passages,assets:[],mediaPlan:s.mediaPlan,appearance:s.appearance}};
      const r=await db.rpc('dextro_finish_story',{p_owner:job.owner_id,p_job:job.id,p_story:stored,p_repaired:n===2});storageError(r.error);return;
    }
    input=JSON.stringify({brief,task:'Repair the entire draft using these validation errors.',draft:text,validationErrors:checked.errors});

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowUpRight, Sparkles, PenLine, BookOpen, GitBranch, Flag, LoaderCircle, Settings2, Check, X } from "lucide-react";
 import { copyStory, newStory, storySchema, validateStory, type Story } from "@/modules/story/model";
 import AIDraftReview from "./draft-review";
+import { changeTheme, preserveAppearance } from "@/modules/story/themes";
 import { useLibrary } from "@/modules/workspace/library-provider";
 import { useConnection } from "@/modules/connections/provider";
 import { useGenerationDraft } from "./draft-provider";
@@ -31,6 +32,7 @@ export default function GameBuilder() {
   const [style, setStyle] = useState<VisualStyle>("storybook");
   const [mediaStatus, setMediaStatus] = useState("");
   const controller = useRef<AbortController | null>(null);
+  const latestDraft = useRef<Story | null>(null);
   const canGenerate = connection.aiReady && !connection.checking && library.available;
   useEffect(() => () => { controller.current?.abort(); }, []);
   useEffect(() => {
@@ -53,11 +55,17 @@ export default function GameBuilder() {
       const story = storySchema.parse(data.story);
       if (validateStory(story).length) throw new Error("The draft did not pass the story checks. Try again.");
       if (library.cloud) { await library.refreshLibrary(); await library.loadStory(story.id); }
+      latestDraft.current = story;
       draftState.setDraft({ story, repaired: data.repaired === true });
       if ((music || images) && story.mediaPlan) {
         const warnings = await enrichStoryMedia(story, { music, images, style, imageModel: connection.imageModel || undefined, scope: library.scope, signal: request.signal,
           onStatus: setMediaStatus,
-          onUpdate: (next) => { if (!request.signal.aborted) { draftState.setDraft((current) => current?.story.id === story.id ? { ...current, story: next } : current); if (library.cloud) library.persistStory(next, "draft"); } },
+          onUpdate: (next) => { if (!request.signal.aborted) {
+            const merged = latestDraft.current?.id === story.id ? preserveAppearance(latestDraft.current, next) : next;
+            latestDraft.current = merged;
+            draftState.setDraft((current) => current?.story.id === story.id ? { ...current, story: merged } : current);
+            if (library.cloud) library.persistStory(merged, "draft");
+          } },
         });
         if (!request.signal.aborted) setError(warnings.join(" "));
       } else if (data.mediaWarning) setError(data.mediaWarning);
@@ -73,7 +81,14 @@ export default function GameBuilder() {
     <div className="page-heading"><div><span className="kicker">CREATE / EXPLORE / PLAY</span><h1>Game Builder<span className="title-dot">.</span></h1><p>Your idea. A world of choices. A game worth playing.</p></div>
       <Link href="/library" className="button">My Games <ArrowUpRight size={16} /></Link></div>
     <ol className="builder-steps" aria-label="Creation steps"><li className={!draftState.draft ? "current" : "complete"}><span>{draftState.draft ? <Check size={13} /> : "01"}</span> Shape your idea</li><li className={draftState.draft ? "current" : ""}><span>02</span> Explore the draft</li><li><span>03</span> Edit & export</li></ol>
-    {draftState.draft ? <section className="builder-review">{(mediaStatus || generating || error) && <div className="media-batch" role="status"><p>{mediaStatus || "Story ready"}</p>{error && <p className="form-error">{error}</p>}{generating && <button className="button" onClick={cancel}>Stop remaining media</button>}<small>Keep & edit stops pending media and keeps everything ready so far.</small></div>}<AIDraftReview story={draftState.draft.story} repaired={draftState.draft.repaired} onDiscard={() => { controller.current?.abort(); controller.current = null; setGenerating(false); setMediaStatus(""); setError(""); draftState.setDraft(null); }} onKeep={() => openEditor(library.cloud ? draftState.draft!.story : copyStory(draftState.draft!.story))} /></section> :
+    {draftState.draft ? <section className="builder-review">{(mediaStatus || generating || error) && <div className="media-batch" role="status"><p>{mediaStatus || "Story ready"}</p>{error && <p className="form-error">{error}</p>}{generating && <button className="button" onClick={cancel}>Stop remaining media</button>}<small>Keep & edit stops pending media and keeps everything ready so far.</small></div>}<AIDraftReview story={draftState.draft.story} repaired={draftState.draft.repaired} onThemeChange={(theme) => {
+      const current = draftState.draft;
+      if (!current) return;
+      const story = changeTheme(current.story, theme);
+      latestDraft.current = story;
+      draftState.setDraft({ ...current, story });
+      if (library.cloud) library.persistStory(story, "draft");
+    }} onDiscard={() => { controller.current?.abort(); controller.current = null; setGenerating(false); setMediaStatus(""); setError(""); draftState.setDraft(null); }} onKeep={() => openEditor(library.cloud ? draftState.draft!.story : copyStory(draftState.draft!.story))} /></section> :
     <div className="builder-layout">
       <section className="creation-card">
         <div className="creation-tabs" aria-label="Creation method">

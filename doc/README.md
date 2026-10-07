@@ -8,6 +8,7 @@ The root [README](../README.md) covers running the app and the current module ma
 | [System design](SYSTEM_DESIGN.md) | Module responsibilities, dependency rules, state ownership, migration boundaries. | Current structure and explicit next steps |
 | [Workspace architecture](WORKSPACE_ARCHITECTURE.md) | Routes, providers, editor coordination, state lifetimes. | Implemented workspace |
 | [AI game design](AI_GAME_DESIGN.md) | Text generation and proposed targeted editing. | Implemented and proposed sections distinguished |
+| [Story atmosphere themes](STORY_THEMES_DESIGN.md) | Four story palettes, automatic recommendation, author overrides, and consistent export. | Implemented; desktop, mobile, persistence, and export verified 2026-10-07 |
 | [Graph media design](GRAPH_MEDIA_DESIGN.md) | Graph-integrated images, music, generation, and acceptance criteria. | Initial provider/catalog integration implemented; live image access unverified |
 | [Cloud storage design](CLOUD_STORAGE_DESIGN.md) | Private assets, story/outline persistence, ownership, revisions, recovery, and prioritized next work. | Internal adapter implemented; live connection/read checks passed; write/upload, provider jobs and hosted access unverified |
 | [AI setup and deployment](AI_SETUP.md) | Environment API key, model selection, deployment configuration. | Setup guide; live eligibility requires verification |

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { appearanceSchema } from "./themes";
 import { imageSchema } from "@/modules/media/images/schema";
 import { mediaPlanSchema } from "@/modules/media/generation/plan";
 import { assetSchema, emptyMedia, passageMediaSchema, type MediaAsset } from "@/modules/media/assets/model";
@@ -44,6 +45,7 @@ const commonStorySchema = z
     assets: z.array(assetSchema).max(300),
     editor: editorLayoutSchema.optional(),
     mediaPlan: mediaPlanSchema.optional(),
+    appearance: appearanceSchema.optional(),
   });
 export const currentStorySchema = commonStorySchema.superRefine((story, ctx) => {
     if (new Set(story.passages.map((p) => p.id)).size !== story.passages.length)
