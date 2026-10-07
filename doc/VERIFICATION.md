@@ -342,3 +342,26 @@ The existing working directory and local secret configuration were preserved.
 - All 64 tests, TypeScript, ESLint and whitespace checks passed for the cloud
   implementation. No production build, paid generation or deployment was run.
   The existing development server was reused without a restart.
+
+## Shared cloud access on deployed hosts — 2026-10-07
+
+- At the user's explicit request, removed the production-mode, protocol and
+  localhost/Host restrictions from the internal principal. No sign-in, access
+  code or replacement access gate was added. All callers use the server-configured
+  `INTERNAL_TEST_OWNER_ID`. This supersedes the localhost-only boundary in the
+  earlier implementation and verification entries.
+- Regression coverage exercises development and production modes with local,
+  Vercel and alternate HTTPS origins across reads and mutations. Requests resolve
+  to the configured owner even if they supply another owner ID. Missing/invalid
+  configuration still fails, and missing/cross-site Origin mutations are rejected.
+  These are request-handler tests, not a deployed Next.js execution check.
+- All 64 tests, TypeScript, ESLint and `git diff --check` passed. The existing local
+  `/api/storage` returned HTTP 200 with `mode: supabase` and `available: true`;
+  `/api/stories` returned HTTP 200 with a story list.
+- The Codex in-app browser verified the local `/builder` page after loading:
+  cloud readiness completed, the Generate game button was enabled, and the
+  localhost-only warning was absent. No generation was submitted. The temporary
+  browser tab was closed afterward.
+- No production build, push or deployment was performed in this change.
+  The deployed site needs the updated code before the warning can disappear
+  there. No Supabase credentials, records, grants or bucket settings were changed.

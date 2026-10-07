@@ -91,8 +91,9 @@ accepts version 1 backups, while new portable backups use version 2.
 
 Local games do not sync between origins/devices/profiles. Copy local games is an
 explicit operation that retains the source records. Cloud records are available
-through the configured internal owner, but the server accepts localhost
-development only. This is not verified per-person or hosted access. Cloud lists
+through the configured internal owner on local and deployed hosts without a
+sign-in gate. All visitors share that owner; per-person isolation and live hosted
+execution are not verified. Cloud lists
 refresh on load/explicit actions; no realtime editor collaboration is implemented.
 
 ## Provider and delivery boundaries

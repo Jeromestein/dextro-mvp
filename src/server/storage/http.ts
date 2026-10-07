@@ -4,7 +4,7 @@ import { requirePrincipal,type Principal } from '@/server/auth/principal';
 export const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store'}});
 export async function owned(request:Request,operation:(principal:Principal)=>Promise<Response>):Promise<Response> {
   try {
-    const principal=requirePrincipal(request);
+    const principal=requirePrincipal();
     if(!['GET','HEAD'].includes(request.method)&&!sameOrigin(request)) throw new ServiceError('Use this studio to change your workspace.',403);
     return await operation(principal);
   } catch(error) {

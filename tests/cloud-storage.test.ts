@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { randomUUID } from 'node:crypto';
 import { requirePrincipal } from '../src/server/auth/principal';
+import { owned } from '../src/server/storage/http';
 import type { StoredStory } from '../src/modules/storage/model';
 const owner='8dc1ba9a-adf2-48ff-8dec-c0b4152e326a';
 const example:StoredStory={title:'Saved story',description:'',genre:'Adventure',document:{startId:'start',passages:[{id:'start',title:'The beginning',text:'Hello',ending:true,choices:[],media:{imageId:'',audioId:''}}],assets:[]}};
@@ -37,11 +38,30 @@ test('persistent provider claims never repeat a paid attempt, and enforce daily 
  await assert.rejects(db.query("select dextro_claim_attempt($1,$2,1,'test-model','{}',1,2)",[owner,next]),/DAILY_LIMIT/);
  }finally{await db.close();}
 });
-test('fixed-owner cloud access rejects hosted, forged-host and missing-owner requests',t=>{
+test('shared cloud workspace supports deployed requests and retains server ownership and origin checks',async t=>{
  const saved={...process.env};t.after(()=>{for(const key of ['STORAGE_MODE','INTERNAL_TEST_OWNER_ID','NODE_ENV']){if(saved[key]===undefined)delete process.env[key];else process.env[key]=saved[key];}});
- Object.assign(process.env,{STORAGE_MODE:'supabase',INTERNAL_TEST_OWNER_ID:owner,NODE_ENV:'development'});
- assert.equal(requirePrincipal(new Request('http://localhost:3100/api/stories',{headers:{host:'localhost:3100'}})).ownerId,owner);
- assert.throws(()=>requirePrincipal(new Request('https://public.example/api/stories',{headers:{host:'public.example'}})),/only from the local/);
- assert.throws(()=>requirePrincipal(new Request('http://localhost:3100/api/stories',{headers:{host:'evil.example'}})),/only from the local/);
- Object.assign(process.env,{NODE_ENV:'production'});assert.throws(()=>requirePrincipal(new Request('http://localhost:3100/api/stories',{headers:{host:'localhost:3100'}})),/only from the local/);
+ Object.assign(process.env,{STORAGE_MODE:'supabase',INTERNAL_TEST_OWNER_ID:owner});
+ for(const mode of ['development','production']){
+  Object.assign(process.env,{NODE_ENV:mode});
+  for(const origin of ['http://localhost:3100','http://127.0.0.1:3100','https://dextro-mvp.vercel.app','https://preview.example']){
+   for(const method of ['GET','POST','PUT','DELETE']){
+    const request=new Request(`${origin}/api/stories?ownerId=${randomUUID()}`,{method,headers:{Origin:origin,'x-owner-id':randomUUID()}});
+    const response=await owned(request,async principal=>Response.json(principal));
+    assert.equal(response.status,200,`${mode} ${method} ${origin}`);
+    assert.deepEqual(await response.json(),{ownerId:owner});
+   }
+  }
+ }
+ let called=false;
+ for(const origin of ['', 'https://other.example']){
+  const denied=await owned(new Request('https://dextro-mvp.vercel.app/api/stories',{method:'PUT',headers:{Origin:origin}}),async()=>{called=true;return Response.json({});});
+  assert.equal(denied.status,403);
+ }
+ assert.equal(called,false);
+ delete process.env.INTERNAL_TEST_OWNER_ID;
+ assert.throws(()=>requirePrincipal(),/Configure the internal workspace owner/);
+ process.env.INTERNAL_TEST_OWNER_ID='invalid';
+ assert.throws(()=>requirePrincipal(),/Configure the internal workspace owner/);
+ process.env.INTERNAL_TEST_OWNER_ID=owner;process.env.STORAGE_MODE='local';
+ assert.throws(()=>requirePrincipal(),/Cloud storage is not enabled/);
 });

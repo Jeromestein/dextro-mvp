@@ -13,8 +13,10 @@ adapter from the broader target architecture. The user authorized creating the
 Everlove Foundation Supabase project and proceeding with integration. As of
 2026-10-07, the migration is applied and local application connection/read checks
 pass. Real write/upload round trips, provider jobs, and hosted execution still
-require verification. A single internal owner is available only through localhost
-development; user-facing accounts and per-person isolation remain deferred.
+require verification. On 2026-10-07, the user explicitly requested removing the
+localhost/production restrictions without adding another access gate. Local and
+deployed visitors now share one server-configured internal owner; user-facing
+accounts and per-person isolation remain deferred.
 
 ## Current provider decision — 2026-10-06
 

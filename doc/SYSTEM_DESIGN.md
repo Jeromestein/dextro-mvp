@@ -3,7 +3,8 @@
 Cloud implementation status (2026-10-07): an optional Supabase adapter now stores
 owned story documents, revisions, private assets and persistent generation jobs.
 Live connection/read checks pass; real save/upload and provider job checks remain
-pending. The fixed-owner adapter is restricted to localhost development. See
+pending. The fixed-owner adapter supports local and deployed environments without
+a sign-in gate; all visitors share the configured owner. See
 [CLOUD_STORAGE_DESIGN.md](CLOUD_STORAGE_DESIGN.md#implementation-status) for actual
 implemented behavior, verification and remaining hosted/auth work. Browser-local
 behavior described below remains the default when cloud mode is disabled.
@@ -11,8 +12,8 @@ behavior described below remains the default when cloud mode is disabled.
 
 Updated: 2026-10-07
 
-The cloud adapter extends the browser-local architecture described below. Hosted
-account access remains future work; it is not enabled by the internal adapter.
+The cloud adapter extends the browser-local architecture described below. Per-person
+account access remains future work; the internal adapter uses one shared owner.
 
 ## Architecture and implementation boundary
 
@@ -48,7 +49,7 @@ See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
 | `src/modules/connections/` | Browser-visible readiness, persisted model choices, settings UI. |
 | `src/modules/storage/` | Cloud document contracts, saved-media picker and generation history. |
 | `src/storage/` | Local IndexedDB repository, cloud hydration/upload adapter and durable pending-save outbox. |
-| `src/server/auth/` | Same-origin checks and localhost-only internal principal. |
+| `src/server/auth/` | Same-origin checks and shared server-configured internal principal. |
 | `src/server/storage/` | Owner-scoped stories/revisions, private asset uploads and verified downloads. |
 | `src/server/models.ts` | API configuration and allowed model selection. |
 | `src/server/generation/` | Local inference adapter plus persistent cloud jobs, attempt claims, output archiving and recovery. |

@@ -78,10 +78,12 @@ required. See the [library records](../public/media/library/README.md).
    its parent folder.
 2. Choose Next.js and Node.js 22 or later, satisfying `package.json`.
 3. Set `OPENAI_API_KEY` and, optionally, the two default-model variables.
-4. Before inviting testers, protect the deployed studio and its billable routes.
-   Verify generation on the deployed origin. Local configuration and mocked tests
-   do not verify deployed account access or execution limits. The cloud adapter
-   rejects production until a verified hosted access boundary is implemented.
+4. For cloud mode, also configure `STORAGE_MODE=supabase`, `SUPABASE_URL`,
+   `SUPABASE_SECRET_KEY`, and `INTERNAL_TEST_OWNER_ID` in the target deployment
+   environment, then deploy. `.env.local` is not uploaded. The cloud adapter
+   accepts deployed hosts without a sign-in or access-code gate; all visitors use
+   the same internal owner. Verify storage and generation on the deployed origin;
+   local configuration and mocked tests do not verify hosted execution.
 
 Vercel runs the configured build; do not run `pnpm build` locally under project
 instructions. Browser-local games do not migrate between origins automatically;
@@ -120,6 +122,8 @@ Status/history access can resume already archived output or queued work. No
 scheduled reconciler is configured. The local Workflow state directories are
 ignored by Git and are not production deployment evidence.
 
-The current internal cloud principal rejects production mode and non-loopback
-hosts. Do not turn this into a public fixed-owner service. Hosted cloud use needs
-verified identity/access protection and separate deployment verification.
+The internal cloud principal uses the configured owner in both development and
+production. It has no hostname, loopback, sign-in or access-code gate. Same-origin
+mutation checks, private buckets and server-side owner filters remain. These do
+not create separate identities for visitors. Actual hosted execution still needs
+verification after redeployment.

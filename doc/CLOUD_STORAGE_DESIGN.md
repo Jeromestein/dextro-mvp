@@ -38,12 +38,12 @@ Implemented behavior:
 - Embedded version-2 editable backups and standalone HTML. Playable exports omit
   provider prompts and editor-only metadata while preserving credits.
 
-The current boundary is **localhost development only**. Fixed-owner cloud APIs
-reject production mode and non-loopback hosts. This deliberately does not expose
-one shared internal identity as a public application. Verified sessions or a
-trusted private ingress must be implemented and tested before hosted cloud use.
-All local callers currently share the single internal owner; per-person account
-isolation is a future auth integration.
+Current access decision (2026-10-07): the user requested removing the localhost
+and production restrictions without adding an access gate. Cloud APIs now use
+the server-configured internal owner on local and deployed hosts without sign-in
+or an access code. All visitors share the same stories, media and jobs. Private
+buckets and server-side owner filters remain; per-person account isolation is a
+future auth integration. Removing the code gate does not verify live deployment.
 
 Differences from the target design below:
 
@@ -99,12 +99,12 @@ deploy or incur provider charges. Complete them in this order:
    per claimed request, raw output retention, independent image retention before
    Apply, saved drafts before Keep, and honest uncertain outcomes. Do not claim
    that every paid response is recoverable if receipt or archiving fails.
-4. **Prepare private deployment.** Keep the user-account UI deferred. Choose and
-   verify an access boundary for every hosted page/API/Workflow route before
-   allowing the internal owner outside localhost. Do not simply remove the
-   production guard. Verify Node.js 22+, hosted Workflow execution/recovery,
-   limits and monitoring, plus a backup/restore procedure for both database and
-   object storage. Test unauthenticated access rejection on all deployment URLs.
+4. **Verify the deployed shared workspace.** Keep the user-account UI deferred
+   and use the requested shared-owner access without adding a sign-in gate.
+   Configure the cloud environment variables and redeploy; check storage,
+   generation and export on the deployment URL. Verify Node.js 22+, hosted
+   Workflow execution/recovery, limits and monitoring, plus a backup/restore
+   procedure for both database and object storage.
 5. **Add operational controls, then accounts when needed.** Prioritize automatic
    stale-job reconciliation, actionable failure reporting, storage/usage
    visibility, and revision restore. For multiple independent users, replace the
@@ -153,14 +153,11 @@ The implementation status above identifies which gaps have been addressed.
 
 Create one `app_users` record of kind `internal`, with a random UUID and no linked
 login. Configure its ID on the server as `INTERNAL_TEST_OWNER_ID`. A single
-`requirePrincipal()` function resolves this owner only in explicitly enabled
-private-test mode. There is no fallback to this owner in public/account mode.
-
-The deployed test workspace must be protected at the deployment/access gateway,
-including API routes, production/custom domains, and alternate deployment URLs.
-Vercel provides deployment protection; its Standard Protection excludes production
-domains, so verify the actual protection scope rather than assuming a preview
-setting protects every URL. See [Vercel Deployment Protection](https://vercel.com/docs/deployment-protection).
+`requirePrincipal()` function resolves this owner whenever `STORAGE_MODE=supabase`,
+including production. The current user-approved test setup adds no sign-in,
+access-code or hostname gate. The earlier deployment-protection prerequisite is
+superseded by this decision. Account mode and verified session ownership remain
+future work.
 
 This creates **one shared internal workspace**, not separate identities for every
 tester. If testers need isolation from one another, verified per-tester identity
@@ -588,7 +585,7 @@ the same pending upload. This supports import retries without duplicate files.
 
 Suggested implementation locations:
 
-- `src/server/auth/principal.ts`: verified identity or gated internal test owner.
+- `src/server/auth/principal.ts`: shared internal test owner; verified session identity is future work.
 - `src/server/storage/`: owned story/asset repositories, transactions, private
   object operations, quotas, and reconciliation.
 - `src/server/generation/jobs/`: durable orchestration, attempt lifecycle, provider
@@ -604,7 +601,7 @@ media resolution can avoid loading every file when opening one story.
 
 ## 10. Existing data migration and rollout
 
-1. **Identity and storage foundation:** private deployment boundary, internal
+1. **Identity and storage foundation:** shared server-configured internal
    owner, RLS/grants, tables, private bucket, owned repositories, and restore plan.
 2. **Paid-result retention:** persistent jobs/attempts, worker/outbox recovery,
    original-image archive, generated draft persistence, and asset/job history.
@@ -612,7 +609,7 @@ media resolution can avoid loading every file when opening one story.
 3. **Cloud editing:** revision-checked saves, local cache/outbox, shared assets,
    revision restore, library pagination, and compatible exports.
 4. **Account access:** verified sessions, identity linkage, tested user-token RLS,
-   owner-scoped caches, and removal of the internal-mode fallback before public use.
+   owner-scoped caches, and replacement of shared internal ownership for per-user access.
 
 For migration, the browser sends its local stories and Blobs through the owned
 import API. Existing passage/choice IDs may be arbitrary strings and remain

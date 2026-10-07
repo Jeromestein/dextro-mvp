@@ -82,7 +82,7 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 
 ## Storage boundaries
 
-Storage defaults to browser-local. In that mode, drafts belong to the browser profile and exact origin; clearing site data removes them. `STORAGE_MODE=supabase` enables a private cloud workspace with owned media, revision-checked story saves, a local recovery outbox, generation history and reusable saved images. The current fixed-owner cloud mode accepts localhost development only and rejects hosted production access. It is one shared internal workspace, without a user-account UI.
+Storage defaults to browser-local. In that mode, drafts belong to the browser profile and exact origin; clearing site data removes them. `STORAGE_MODE=supabase` enables a private cloud workspace with owned media, revision-checked story saves, a local recovery outbox, generation history and reusable saved images. The fixed-owner cloud mode supports local and deployed environments without sign-in or an access code. All visitors use one shared internal workspace, without per-person account isolation.
 
 See [Cloud Storage implementation status and design](doc/CLOUD_STORAGE_DESIGN.md) for configuration boundaries and remaining deployment work. Set `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and `INTERNAL_TEST_OWNER_ID` on the server and apply `supabase/migrations/202610060001_cloud_storage.sql`. Never expose the secret with `NEXT_PUBLIC_`. The Everlove project migration is applied and local application connectivity was verified on 2026-10-07: seven readable tables and two private buckets. Live save/upload and generation round trips remain to be tested. Restart the development server after changing environment values.
 
@@ -121,7 +121,7 @@ src/
 │   └── connections/           # Browser connection state and settings
 ├── storage/                   # Local/cloud repositories and cloud recovery outbox
 ├── server/
-│   ├── auth/                  # Origin checks and internal localhost principal
+│   ├── auth/                  # Origin checks and shared internal principal
 │   ├── models.ts              # API defaults and allowed model selections
 │   ├── storage/               # Owned stories, revisions, and private assets
 │   └── generation/            # Story adapter and persistent generation jobs
