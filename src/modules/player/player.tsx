@@ -6,6 +6,7 @@ import SoundControls from "@/modules/media/audio/sound-controls";
 import { assignedAsset } from "@/modules/media/assets/operations";
 import { passageById, type Story } from "@/modules/story/model";
 import { resolveTheme, themeVariables } from "@/modules/story/themes";
+import SceneGlow from "./scene-glow";
 export type PlaybackProgress = { current: string; path: { passageId: string; choiceId: string; target: string }[] };
 export default function Player({
   story,
@@ -39,7 +40,8 @@ export default function Player({
     setSteps((s) => s + 1);
   };
   return (
-    <div className={`player ${compact ? "compact" : ""}`} data-story-theme={theme.id} style={themeVariables(theme)}>
+    <div className={`player scene-reading-surface ${compact ? "compact" : ""}`} data-story-theme={theme.id} style={themeVariables(theme)}>
+      <SceneGlow source={story.appearance?.sceneGlow === false ? "" : image?.data || ""} />
       <div className="player-top">
         <span>{compact ? "READER VIEW" : story.genre.toUpperCase()}</span>
         <button

@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { sampleStory } from "../src/modules/story/sample";
 import { copyStory, newStory, storySchema } from "../src/modules/story/model";
-import { changeTheme, preserveAppearance, recommendTheme, resolveTheme, storyThemes, themeDeclarations, themeIds } from "../src/modules/story/themes";
+import { changeSceneGlow, changeTheme, preserveAppearance, recommendTheme, resolveTheme, storyThemes, themeDeclarations, themeIds } from "../src/modules/story/themes";
 import { checkDraft } from "../src/modules/generation/story-schema";
 import { buildBackup, buildGame } from "../src/modules/export/standalone";
 import { storedStorySchema } from "../src/modules/storage/model";
@@ -31,13 +31,15 @@ test("generated recommendations remain stable and overrides survive later media 
   const checked = checkDraft(sampleStory(), { tone: "Hopeful", premise: "A haunted town in a nightmare." });
   assert.ok(checked.story);
   assert.deepEqual(checked.story.appearance, { theme: "auto", recommendation: "midnight" });
-  const manual = changeTheme(checked.story, "garden");
+  const manual = changeSceneGlow(changeTheme(checked.story, "garden"), false);
   assert.equal(resolveTheme(manual).id, "garden");
   const incoming = { ...checked.story, description: "New media result" };
   const merged = preserveAppearance(manual, incoming);
   assert.equal(merged.description, incoming.description);
   assert.equal(resolveTheme(merged).id, "garden");
   assert.equal(resolveTheme(changeTheme(merged, "auto")).id, "midnight");
+  assert.equal(changeTheme(merged, "auto").appearance?.sceneGlow, false);
+  assert.equal(changeSceneGlow(merged, true).appearance?.theme, "garden");
 });
 
 test("old stories import without themes and invalid styles cannot reach an export", () => {
@@ -46,14 +48,14 @@ test("old stories import without themes and invalid styles cannot reach an expor
   const legacy = { ...old, version: 1, assets: undefined, passages: old.passages.map(p => ({ ...p, media: undefined, image: "" })) };
   assert.equal(storySchema.parse(legacy).version, 2);
   assert.equal(resolveTheme(storySchema.parse(legacy)).id, "starlight");
-  for (const appearance of [{ theme: "unknown" }, { theme: "</style><script>alert(1)</script>" }, { theme: "auto", recommendation: "unknown" }]) {
+  for (const appearance of [{ theme: "unknown" }, { theme: "</style><script>alert(1)</script>" }, { theme: "auto", recommendation: "unknown" }, { theme: "auto", sceneGlow: "yes" }]) {
     assert.equal(storySchema.safeParse({ ...old, appearance }).success, false);
   }
 });
 
-test("theme selection survives local saves, backup import, copies, cloud documents, and undo/redo", async () => {
+test("theme and scene glow selections survive local saves, backups, copies, cloud documents, and undo/redo", async () => {
   const original = sampleStory(); original.id = crypto.randomUUID();
-  const story = changeTheme(original, "midnight");
+  const story = changeSceneGlow(changeTheme(original, "midnight"), false);
   await saveStory(story);
   assert.deepEqual((await loadStories()).find(s => s.id === story.id)?.appearance, story.appearance);
   assert.deepEqual(storySchema.parse(JSON.parse(buildBackup(story))).appearance, story.appearance);
@@ -70,7 +72,7 @@ test("theme selection survives local saves, backup import, copies, cloud documen
 
 test("standalone games embed the exact shared palette for all themes and Auto", () => {
   for (const theme of [...themeIds, "auto"] as const) {
-    const story = changeTheme(sampleStory(), theme);
+    const story = changeSceneGlow(changeTheme(sampleStory(), theme), false);
     const html = buildGame(story);
     const resolved = resolveTheme(story);
     assert.ok(html.includes(`data-story-theme="${resolved.id}"`));

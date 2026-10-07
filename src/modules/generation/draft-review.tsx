@@ -16,12 +16,14 @@ export default function AIDraftReview({
   onKeep,
   onDiscard,
   onThemeChange,
+  onSceneGlowChange,
 }: {
   story: Story;
   repaired: boolean;
   onKeep: () => void;
   onDiscard: () => void;
   onThemeChange: (theme: Appearance["theme"]) => void;
+  onSceneGlowChange: (enabled: boolean) => void;
 }) {
   const theme = resolveTheme(story);
   const [start, setStart] = useState(story.startId);
@@ -72,7 +74,7 @@ export default function AIDraftReview({
       <p className="quiet">
         Follow the choices, or jump to any passage to review every ending.
       </p>
-      <ThemePicker story={story} onChange={onThemeChange} />
+      <ThemePicker story={story} onChange={onThemeChange} onSceneGlowChange={onSceneGlowChange} />
       <div className="draft-player story-preview-stage" data-story-theme={theme.id} style={themeVariables(theme)}>
         <Player key={run} story={story} startId={start} compact />
       </div>

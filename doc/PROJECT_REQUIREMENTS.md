@@ -6,9 +6,11 @@ Implement four story themes: Midnight, Starlight, Parchment, and Garden. Recomme
 a theme from mood and story content, allow author overrides beside previews,
 and persist the choice with the story. Apply the complete palette consistently
 to draft/editor previews, gameplay, and offline HTML. Keep the authoring workspace
-branding separate. One theme covers the entire story in this release; scene-level
-transitions and image backdrops are deferred. This supersedes the fixed warm/green
-player palette in the initial visual baseline below.
+branding separate. One theme covers the entire story. The follow-up Scene glow
+prototype extends each passage image into a blurred backdrop with gentle scene
+transitions, an independent author switch, and a theme fallback without images.
+It reuses existing images without another generation request. This supersedes
+the fixed warm/green player palette in the initial visual baseline below.
 See [Story atmosphere themes](STORY_THEMES_DESIGN.md).
 
 ## Storage design request — 2026-10-06

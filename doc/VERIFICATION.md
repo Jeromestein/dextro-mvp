@@ -1,5 +1,33 @@
 # Verification Record
 
+## Scene glow prototype — 2026-10-07
+
+- `pnpm typecheck`, `pnpm lint`, and `git diff --check`: passed.
+- `pnpm test`: 77 passed, 0 failed in the current shared checkout. No build run.
+- Added controller checks for preloading, image reuse, crossfading, stale loads,
+  cancelled animation frames, image-less passages, failed loads, reduced motion,
+  disposal, and the self-contained function embedded in offline HTML.
+- Extended appearance checks to cover the glow switch through local/cloud
+  serialization, backups, copies, undo/redo, theme changes, and late media results.
+- In-app browser: inspected **The Letter from Tomorrow** using its existing
+  artwork, including branch navigation to **The Letter’s Light**, on desktop
+  and at 390 × 844. Background colors follow the scene while the reading surface
+  stays legible. Mobile document width matched the viewport with no overflow.
+- In the existing **The Last Light — Theme Demo**, toggled the editor switch off,
+  verified a completed cloud save, reloaded, and confirmed it remained off.
+  Restored it to on and verified another completed save. Its theme and content
+  were preserved; the original illustrated story was only played, not edited.
+- A temporary local draft-review fixture verified light/dark themes, mouse and
+  keyboard toggling, unchanged reading position, image-less fallback, and mobile
+  settings. The fixture did not save to cloud and was removed afterward.
+- Rendered a generated standalone HTML fixture through the existing local
+  server: desktop/mobile glow, image-less branch fallback, and restart passed;
+  no browser console errors. Removed the temporary public file. Network-disabled
+  and file-URL execution were not separately exercised.
+- Screenshots and the standalone fixture are ignored artifacts under
+  `output/playwright/scene-glow-*`. Temporary viewport overrides were reset.
+  No server restart, paid generation, deployment, or commit was performed.
+
 ## Story atmosphere themes — 2026-10-07
 
 - `pnpm typecheck`, `pnpm lint`, and `git diff --check`: passed.

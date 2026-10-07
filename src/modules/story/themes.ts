@@ -5,6 +5,7 @@ export type ThemeId = typeof themeIds[number];
 export const appearanceSchema = z.object({
   theme: z.enum(["auto", ...themeIds]),
   recommendation: z.enum(themeIds).optional(),
+  sceneGlow: z.boolean().optional(),
 });
 export type Appearance = z.infer<typeof appearanceSchema>;
 type ThemeColors = {
@@ -71,6 +72,10 @@ export function themeDeclarations(theme: StoryTheme): string {
 
 export function changeTheme<T extends ThemeStory>(story: T, theme: Appearance["theme"]): T {
   return { ...story, appearance: { ...story.appearance, theme } };
+}
+
+export function changeSceneGlow<T extends ThemeStory>(story: T, sceneGlow: boolean): T {
+  return { ...story, appearance: { theme: "auto", ...story.appearance, sceneGlow } };
 }
 
 // Media can finish after a draft theme has been edited. Preserve the latest choice.

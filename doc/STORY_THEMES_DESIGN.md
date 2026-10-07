@@ -43,6 +43,28 @@ HTML all consume one palette definition. Standalone export resolves Auto before
 embedding its colors and requires no network or generation service. No raw CSS
 or user-controlled style strings are accepted.
 
+## Scene glow prototype — 2026-10-07
+
+Extend the current passage image into a soft ambient backdrop. Reuse the assigned
+image, enlarge and blur it, then blend it with the story backdrop. Keep a nearly
+opaque reading surface and the theme's existing text and interaction colors.
+There is no image generation, palette extraction, additional provider request,
+or extra embedded asset in the exported file.
+
+- Enable the effect by default when a passage has an image. A separate **Scene
+  glow** switch below the theme swatches lets authors turn it off without changing
+  their theme or restarting the preview.
+- Persist optional `appearance.sceneGlow` with the story. Missing values mean
+  enabled, preserving compatibility with existing stories and backups.
+- Preload each new image before an approximately 800 ms crossfade. Reused images
+  stay steady; stale loads cannot replace the currently requested scene.
+- Passages without images and failed image loads fade back to the story theme.
+- Respect reduced-motion preferences, clip the blurred edges, ignore pointer
+  events, and keep decorative layers hidden from assistive technology.
+- Share the transition controller and effect styles between React previews,
+  gameplay, and standalone HTML. Theme and glow settings survive late media
+  updates, undo/redo, local/cloud saves, copies, and backups.
+
 ## Acceptance
 
 - All four themes have legible text, choices, focus rings, endings, and audio UI.
@@ -56,5 +78,6 @@ or user-controlled style strings are accepted.
 
 ## Deferred
 
-Per-passage theme changes, animated atmosphere, image-derived palettes, blurred
-scene-image backdrops, custom colors, and custom fonts are outside this release.
+Per-passage theme changes, continuous ambient animation, image-derived theme
+palettes, generated image extensions, custom colors, and custom fonts remain
+outside this release.

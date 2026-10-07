@@ -3,7 +3,7 @@ import { useId } from "react";
 import type { Story } from "@/modules/story/model";
 import { resolveTheme, storyThemes, themeIds, themeVariables, type Appearance } from "@/modules/story/themes";
 
-export default function ThemePicker({ story, onChange }: { story: Story; onChange: (theme: Appearance["theme"]) => void }) {
+export default function ThemePicker({ story, onChange, onSceneGlowChange }: { story: Story; onChange: (theme: Appearance["theme"]) => void; onSceneGlowChange: (enabled: boolean) => void }) {
   const id = useId();
   const selected = story.appearance?.theme || "auto";
   const recommended = resolveTheme({ ...story, appearance: { ...story.appearance, theme: "auto" } });
@@ -25,6 +25,10 @@ export default function ThemePicker({ story, onChange }: { story: Story; onChang
         </label>;
       })}
     </div>
-    <p>One atmosphere for every chapter. Saved with your story.</p>
+    <label className="scene-glow-toggle">
+      <span><strong>Scene glow</strong><small>Let each scene image softly color the background.</small></span>
+      <input type="checkbox" role="switch" aria-label="Scene glow" checked={story.appearance?.sceneGlow !== false} onChange={event => onSceneGlowChange(event.target.checked)} />
+    </label>
+    <p>Your theme stays consistent. Scenes add a touch of color.</p>
   </fieldset>;
 }
