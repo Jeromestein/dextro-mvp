@@ -20,6 +20,7 @@ import StoryOutline from "@/modules/editor/outline/story-outline";
 
 import PassageForm from "./text/passage-form";
 import InspectorDrawer from "./inspector-drawer";
+import { GraphSkeleton } from "./editor-skeleton";
 import PassageMedia from "./media-panel/passage-media";
 import { enrichStoryMedia } from "@/modules/media/generation/enrich";
 import { useConnection } from "@/modules/connections/provider";
@@ -31,7 +32,7 @@ import type { PlaybackProgress } from "@/modules/player/player";
 import { useEditorSession } from "./session/use-editor-session";
 
 const StoryGraph = dynamic(() => import("@/modules/editor/graph/story-graph"), {
-  ssr: false, loading: () => <div className="graph-loading"><LoaderCircle className="spin" size={22} /> Opening your story map…</div>,
+  ssr: false, loading: () => <GraphSkeleton />,
 });
 type Modal = "checks" | "delete" | "create" | "details" | null;
 export default function StoryEditor({ initialStory }: { initialStory: Story }) {

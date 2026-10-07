@@ -794,3 +794,27 @@ The existing working directory and local secret configuration were preserved.
   Type checking and lint passed again. Evidence:
   `output/playwright/media-tabs-prominent-desktop.jpg` and
   `output/playwright/media-tabs-prominent-mobile.jpg`.
+
+## Editor and cover skeletons — 2026-10-07
+
+- Story loading and the editor/graph lazy imports now use structural skeletons.
+  My Games cover images show a neutral animated placeholder until load, fade in
+  on success, and fall back to the existing text cover on failure. Image-free
+  stories keep their text covers. Loading does not disable the cover button.
+- Type checking, ESLint, whitespace checks, and all 12 targeted tests in
+  `tests/story-covers.test.ts` and `tests/editor.test.ts` passed. No production
+  build or dev-server restart was run.
+- Codex in-app browser verified the editor skeleton and its replacement by the
+  loaded editor on the existing localhost:3100 server, including 390 × 844 with
+  no horizontal overflow. My Games also returned to its loaded image covers.
+- Supplemental Playwright CLI checks held image requests to capture the loading
+  state, then released them to verify completion. Aborting image requests
+  produced text fallbacks with no stuck skeletons or broken images. The mobile
+  visible cover stayed exactly 352 × 205 px before and after load. Reduced-motion
+  settings disabled the shimmer. Offscreen lazy images retain their placeholder
+  until requested. Test network routes were removed and the test browser closed.
+- Screenshots: `output/playwright/editor-skeleton-in-app.png`,
+  `editor-skeleton-mobile.png`, `library-skeleton-desktop.png`,
+  `library-skeleton-mobile.png`, and `library-cover-fallback.png` (ignored local
+  evidence). Browser viewport overrides were restored. No story content or
+  cloud assets were changed by these checks.

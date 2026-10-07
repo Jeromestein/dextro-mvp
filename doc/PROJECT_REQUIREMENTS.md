@@ -1,5 +1,18 @@
 # Project Requirements and Decisions
 
+## Editor and cover loading skeletons — 2026-10-07
+
+While opening a story, preserve the editor's visual structure with skeletons for
+the heading, toolbar, graph nodes, and controls. Use the same graph skeleton
+while its lazy-loaded component is pending. Keep a loading announcement for
+assistive technology and replace the skeleton as soon as content is ready.
+
+In My Games, show a neutral image skeleton inside each cover until its image
+loads, then fade in the image without changing the cover's dimensions. Stories
+without an image, or whose image fails, use the existing text cover. Keep covers
+clickable while loading. Respect reduced-motion preferences and never delay
+loading intentionally to display the animation.
+
 ## Graph-first editing drawer — 2026-10-07
 
 The graph occupies the full workspace on entry. Selecting a passage in Graph or

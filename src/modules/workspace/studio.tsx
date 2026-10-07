@@ -36,8 +36,9 @@ import Player from "@/modules/player/player";
 import { resolveTheme, themeVariables } from "@/modules/story/themes";
 import { Lighthouse } from "@/shared/ui/lighthouse";
 import StoryCover from "@/modules/workspace/story-cover";
+import EditorSkeleton from "@/modules/editor/editor-skeleton";
 
-const StoryEditor = dynamic(() => import("@/modules/editor/story-editor"), { ssr: false, loading: () => <main className="route-message">Opening story editor…</main> });
+const StoryEditor = dynamic(() => import("@/modules/editor/story-editor"), { ssr: false, loading: () => <EditorSkeleton /> });
 
 type Modal = "delete-story" | null;
 type View = "home" | "editor" | "play";
@@ -52,8 +53,8 @@ export default function Studio({ view, storyId }: { view: View; storyId?: string
     return () => { cancelled = true; };
   }, [ready, storyId, view, loadStory]);
   const story = opened && opened.id === storyId ? opened.story : null;
-  if (view !== "home" && ready && opened?.id !== storyId) return <main className="route-message">Loading your story and checking its media…</main>;
-  if (!ready) return <main className="route-message"><LoaderCircle className="spin" /> Opening your workspace…</main>;
+  if (view !== "home" && ready && opened?.id !== storyId) return view === "editor" ? <EditorSkeleton /> : <main className="route-message">Loading your story and checking its media…</main>;
+  if (!ready) return view === "editor" ? <EditorSkeleton /> : <main className="route-message"><LoaderCircle className="spin" /> Opening your workspace…</main>;
   if (view !== "home" && !story) return <main className="route-message"><h1>Could not open this game.</h1><p>{opened?.error || "Import its JSON backup in My Games, or start a new game."}</p><Link href="/library" className="button">My Games</Link></main>;
   if (view === "editor" && story) return <StoryEditor key={story.id} initialStory={story} />;
   return <StudioContent key={`${view}-${storyId || "library"}`} view={view} initialStory={story || null} />;
