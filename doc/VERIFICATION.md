@@ -452,3 +452,119 @@ The existing working directory and local secret configuration were preserved.
 - No application code, build, local server startup/restart, deployment, or commit
   was performed by this verification task. Concurrent theme changes in the working
   tree were preserved.
+
+
+## Deployed backup recovery and mobile follow-up — 2026-10-07
+
+- Committed the preceding deployed round-trip record as `cbfb609` before these
+  follow-up checks. No push was requested or performed.
+- At 390 x 844, the live player displayed its scene image, text and music controls
+  correctly. The document width was 390px with no horizontal overflow. Selecting
+  **Open the envelope** reached **A familiar hand** with the reused scene image.
+  The temporary viewport override was reset. Evidence:
+  `output/playwright/deployment-player-mobile.jpg`.
+- Submitted a stale revision (current minus one) to the test story save endpoint.
+  It returned HTTP 409 with the conflict/recovery message. A subsequent read
+  matched the original record exactly, including revision 10 and updated time;
+  no content was overwritten. This verifies the deployed API guard, not the
+  complete two-editor conflict recovery UI.
+- Imported the previously downloaded editable backup through the live library's
+  **Import** control. The UI reported **Story imported as a new copy**. The new
+  cloud story is `f994b931-aa13-49a0-8f90-e4ea9fbecf08`, renamed **Deployment QA —
+  Backup restored 2026-10-07** for identification. Its passages, asset references,
+  credits and all 9 node positions match the original; it reuses the same cloud
+  asset IDs. The original remains at revision 10. Both media assignments and
+  credits were also verified visually in the imported editor. Evidence:
+  `output/playwright/deployment-backup-restored.jpg`.
+- Prepared a 264-character English story premise in the deployed builder with
+  images and music off, but did not submit a provider request while the requested
+  US$1 generation budget confirmation remained pending. No paid generation or
+  Workflow execution is claimed. Downloaded HTML offline playback remains
+  unverified, as reported previously.
+- These checks changed only QA cloud records and this verification document.
+  No application code, local dev server, production build or deployment changed.
+
+
+## Live paid story generation — 2026-10-07
+
+- With the user's explicit US$1 budget approval, submitted exactly one text-only
+  generation from the deployed builder. Temporarily selected GPT-6 Luna in the
+  browser, kept scene images and background music off, and restored the previous
+  GPT-6 Astra setting after submission. No image generation was requested.
+- Job `38e0d2f5-1ce6-4275-9da2-250beb6a4039` ran through a persisted Vercel Workflow
+  and succeeded in approximately 46 seconds (18:26:34 to 18:27:20 UTC). Navigated
+  away while it was running; **My Games / Generation history** subsequently showed
+  **Saved**, and **Open draft** opened the generated cloud story.
+- Supabase showed exactly one provider attempt, model `gpt-6-luna`, status
+  `persisted`, charge state `usage_reported`, and `repaired: false`. The retained
+  raw response in the private generation-output bucket was readable and completed;
+  its usage matched the attempt record. No second provider attempt was made.
+- Reported usage: 384 input tokens, 3,958 output tokens (including 1,965 reasoning
+  tokens), 4,342 total, with zero cached/cache-write tokens. At the published
+  standard rates of US$0.10 / 1M input and US$0.50 / 1M output, the estimate is
+  **US$0.0020174**, below the US$1 authorization. This is a usage-based estimate,
+  not an independently reconciled billing invoice. Price source:
+  https://developers.openai.com/api/docs/pricing (checked 2026-10-07).
+- Generated **The Letter from Tomorrow**, 10 passages and 2 endings, with no media.
+  The editor displayed **Saved to cloud**; **Check story** reported **All paths
+  look good**. Reloading recovered the story. Online playback followed the
+  river/bell/observatory-lens route to **The Way Through**, confirming a complete
+  playable ending. Evidence: `output/playwright/deployment-ai-ending.jpg`.
+- The actual export control downloaded `The Letter from Tomorrow.html` (13,342
+  bytes) to Downloads. Its embedded passages and start ID matched the cloud story.
+  Direct offline browser playback remains unverified.
+- This establishes deployed provider execution, retained output/usage, background
+  continuation after leaving the page, cloud persistence, reopening and HTML
+  download for a successful text generation. It does not exercise automatic
+  repair, interrupted-provider recovery, image generation, or another model.
+  No application code, build, deployment, commit or push was performed in this run.
+
+
+## Per-node live image generation — 2026-10-07
+
+- At the user's request, illustrated all 10 nodes of **The Letter from Tomorrow**
+  (`38e0d2f5-1ce6-4275-9da2-250beb6a4039`), including both endings. Used the deployed
+  GPT Image 2.5 Flare configuration: low quality, 1536 x 1024, WebP. Applied a
+  consistent teal/indigo/amber storybook direction and node-specific visible
+  scene descriptions, without changing the story text or choices.
+- The first node exercised the complete deployed editor UI: scene description,
+  **Generate scene**, candidate preview, **Apply image**, and cloud save. Remaining
+  nodes used the same deployed `/api/media/image` and generation-job endpoints;
+  assets were assigned with revision-checked story saves. Each request used a
+  persisted unique idempotency key. This was an integration test and data update,
+  not an implementation of automatic generation for every node in the product UI.
+- Initial visual review found extra characters in four solitary interior scenes:
+  East Window, Map Under Glass, Hidden Route, and Letter's Light. Generated one
+  explicitly solitary replacement for each and rechecked the resulting images.
+  All 14 original assets, including the four superseded candidates, remain ready
+  and undeleted in storage; the story references exactly 10 final images.
+- Verified 14 persisted provider attempts with recorded usage. Image cost estimate:
+  **US$0.083635**; combined with the earlier text generation: **US$0.0856524**, below
+  the previously approved US$1 budget. These are token-usage estimates, not an
+  invoice reconciliation. Rates: US$5 / 1M text input and US$30 / 1M image output;
+  no image inputs were supplied. Source checked 2026-10-07:
+  https://developers.openai.com/api/docs/guides/image-generation#cost-and-latency
+- After refresh, all 10 graph thumbnails decoded at 1536 x 1024. Each passage
+  references a distinct ready generated asset. All 10 content endpoints returned
+  valid WebP bytes with matching stored sizes and SHA-256 hashes. Final images
+  total 1,397,260 bytes, below the story and per-image limits. The editor's story
+  check passed. Inspected every scene in the deployed player and followed both
+  ending branches; revised interior images were also reviewed visually.
+- Evidence: `output/playwright/deployment-all-node-images.jpg`,
+  `output/playwright/node-image-verification.json`, and the initial/replacement
+  request manifests under `output/playwright/`. Generation helpers use the normal
+  deployed APIs; no server secret is written into artifacts or printed.
+- Export boundary: the UI showed its success notice, but no new illustrated HTML
+  or backup appeared in Downloads and the browser download event timed out.
+  Therefore actual browser download is not verified for this run. No console
+  errors were observed. Do not treat the toast as proof that the file was saved.
+- Independently hydrated the final live cloud story and invoked the repository's
+  `buildGame` and `buildBackup` functions. Generated
+  `output/playwright/The Letter from Tomorrow — illustrated.html` (1,880,451 bytes)
+  and its `.dextro.json` backup (1,886,827 bytes). The HTML embeds exactly 10 images,
+  all matching cloud hashes, has no external media/script source dependencies,
+  and omits OpenAI prompt provenance. Direct offline browser execution remains
+  unverified. This local export-function check is separate from the unsuccessful
+  browser download observation.
+- No application source, build, deployment, commit or push was changed by this
+  task. The verification document is updated; test helpers/artifacts are ignored.
