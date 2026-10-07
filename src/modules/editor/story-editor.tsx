@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, Check, CheckCircle2, ChevronDown, Download, Flag,
   GitBranch, ListTree, LoaderCircle, PanelRightClose, PanelRightOpen, PenLine,
-  Play, Plus, Redo2, Sparkles, Undo2, X, AlertCircle, Images } from "lucide-react";
+  Play, Plus, Redo2, Undo2, X, AlertCircle, Images } from "lucide-react";
 import { newPassage, uid, validateStory, type Story, type Passage } from "@/modules/story/model";
 import { appendPassage, changePassage, connectChoice, removePassage } from "./session/operations";
 import { autoLayout, layoutSignature, setPositions } from "./graph/layout";
@@ -47,13 +47,12 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const initialRef = useRef(initialStory);
   const [selection, setSelection] = useState(initialStory.startId);
   const [view, setView] = useState<"graph" | "outline">("graph");
+  const [graphToolbar, setGraphToolbar] = useState<HTMLDivElement | null>(null);
   const [panel, setPanel] = useState<"edit" | "media" | "preview">("edit");
   const [panelOpen, setPanelOpen] = useState(false);
   const [mediaKind, setMediaKind] = useState<MediaKind>("image");
   const [modal, setModal] = useState<Modal>(null);
   const [notice, setNotice] = useState("");
-  const [layoutBusy, setLayoutBusy] = useState(false);
-  const [layoutToken, setLayoutToken] = useState(0);
   const [focusToken, setFocusToken] = useState(0);
   const [mediaBusy, setMediaBusy] = useState(false);
   const mediaJob = useRef(0);
@@ -99,33 +98,29 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
     if (historyRef.current.present.passages.length <= 1) { setNotice("Keep at least one passage in your story."); return; }
     select(id); setModal("delete");
   }, [select, historyRef]);
-  const runLayout = useCallback(async (automatic = false) => {
+  const initializeLayout = useCallback(async () => {
     const job = ++layoutJob.current;
     const source = historyRef.current.present;
     const signature = layoutSignature(source);
-    setLayoutBusy(true);
     try {
       const positions = await autoLayout(source);
       if (job !== layoutJob.current) return;
       if (signature !== layoutSignature(historyRef.current.present)) {
-        setNotice("The story changed while arranging. Choose Auto layout to arrange the latest version."); return;
+        setNotice("The story changed while arranging. Your current passage positions are kept."); return;
       }
       commit((s) => setPositions(s, positions));
-      if (automatic) setFocusToken((n) => n + 1);
-      else setLayoutToken((n) => n + 1);
-      if (!automatic) setNotice("Story arranged. Undo restores your previous layout.");
+      setFocusToken((n) => n + 1);
     } catch { if (job === layoutJob.current) setNotice("Automatic layout is unavailable. You can still arrange passages by dragging them."); }
-    finally { if (job === layoutJob.current) setLayoutBusy(false); }
   }, [commit, historyRef]);
   const cancelLayouts = useCallback(() => { layoutJob.current++; }, []);
   useEffect(() => {
     const timer = setTimeout(() => {
       if (initialized.current) return;
       initialized.current = true;
-      if (!initialRef.current.editor?.positions.length) void runLayout(true);
+      if (!initialRef.current.editor?.positions.length) void initializeLayout();
     }, 0);
     return () => { clearTimeout(timer); cancelLayouts(); };
-  }, [runLayout, cancelLayouts]);
+  }, [initializeLayout, cancelLayouts]);
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(""), 5500); return () => clearTimeout(timer); }, [notice]);
   const undo = () => { batch.current?.abort(); mediaJob.current++; send({ type: "undo" }); setNotice("Change undone."); };
   const redo = () => { batch.current?.abort(); mediaJob.current++; send({ type: "redo" }); setNotice("Change restored."); };
@@ -186,14 +181,18 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
     <div className="workbench-toolbar">
       <div className="workbench-view-switch" role="group" aria-label="Story view"><button aria-pressed={view === "graph"} onClick={() => { setView("graph"); send({ type: "break-group" }); }}><GitBranch size={15} /> Graph</button><button aria-pressed={view === "outline"} onClick={() => { setView("outline"); send({ type: "break-group" }); }}><ListTree size={16} /> Outline</button></div>
       <div className="workbench-history"><button className="icon-button" aria-label="Undo" title="Undo (⌘Z outside a text field)" disabled={!history.past.length} onClick={undo}><Undo2 size={17} /></button><button className="icon-button" aria-label="Redo" title="Redo (⌘⇧Z outside a text field)" disabled={!history.future.length} onClick={redo}><Redo2 size={17} /></button></div>
-      <button className="workbench-layout" disabled={layoutBusy} onClick={() => void runLayout()}>{layoutBusy ? <LoaderCircle size={15} className="spin" /> : <Sparkles size={15} />}<span>{layoutBusy ? "Arranging…" : "Auto layout"}</span></button>
+      <div className="workbench-canvas-row" data-view={view}>
+        <div className="workbench-canvas-tools" hidden={view !== "graph"}>
+          <div ref={setGraphToolbar} />
+        </div>
+        <button className="icon-button workbench-panel-toggle" aria-label={panelOpen ? "Hide passage panel" : "Show passage panel"} title={panelOpen ? "Close passage editor" : "Show passage panel"} aria-expanded={panelOpen} aria-controls="passage-editor" onClick={() => panelOpen ? closePanel() : setPanelOpen(true)}>{panelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}</button>
+      </div>
       <div className="workbench-add"><button className="button" disabled={story.passages.length >= 150} onClick={() => addPassage()}><Plus size={15} /> Add passage</button><button className="button" disabled={story.passages.length >= 150} onClick={() => addPassage(true)}><Flag size={14} /> Add ending</button></div>
-      <button className="icon-button workbench-panel-toggle" aria-label={panelOpen ? "Hide passage panel" : "Show passage panel"} title={panelOpen ? "Close passage editor" : "Show passage panel"} aria-expanded={panelOpen} aria-controls="passage-editor" onClick={() => panelOpen ? closePanel() : setPanelOpen(true)}>{panelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}</button>
     </div>
     <div className="workbench-body">
       <section className="workbench-structure" aria-label="Story structure">
-        {view === "graph" ? <StoryGraph story={story} selected={selected} issues={issues} onMedia={(id) => { select(id); setMediaKind("image"); setPanel("media"); }} playback={panel === "preview" && panelOpen ? playback : undefined} onSelect={select} onMove={move} onViewport={saveViewport}
-          onConnect={link} onAddChoice={addChoice} onCreateAt={createAt} onDelete={requestDelete} focusToken={focusToken} layoutToken={layoutToken} /> :
+        {view === "graph" ? <StoryGraph toolbarHost={graphToolbar} story={story} selected={selected} issues={issues} onMedia={(id) => { select(id); setMediaKind("image"); setPanel("media"); }} playback={panel === "preview" && panelOpen ? playback : undefined} onSelect={select} onSelectEdge={closePanel} onMove={move} onViewport={saveViewport}
+          onConnect={link} onAddChoice={addChoice} onCreateAt={createAt} onDelete={requestDelete} focusToken={focusToken} /> :
           <StoryOutline story={story} selected={selected} issues={issues} playbackId={panel === "preview" && panelOpen ? playback.current : undefined} onSelect={select} />}
         <div className="workbench-structure-foot"><button onClick={() => setModal("details")}>Story details <ArrowUpRight size={12} /></button><span>{story.passages.length}/150 passages · {story.passages.filter((p) => p.ending).length} endings</span></div>
       </section>

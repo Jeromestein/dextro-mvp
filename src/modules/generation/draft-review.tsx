@@ -46,7 +46,7 @@ export default function AIDraftReview({
           We fixed a few connections before bringing you this draft.
         </p>
       )}
-      <div className="draft-graph"><StoryGraph readOnly story={story} selected={start} issues={[]} focusToken={0} layoutToken={0} onSelect={preview} onMedia={preview} onMove={noop} onViewport={noop} onConnect={noop} onAddChoice={noop} onCreateAt={noop} onDelete={noop} /></div>
+      <div className="draft-graph"><StoryGraph readOnly story={story} selected={start} issues={[]} focusToken={0} onSelect={preview} onMedia={preview} onMove={noop} onViewport={noop} onConnect={noop} onAddChoice={noop} onCreateAt={noop} onDelete={noop} /></div>
       <div className="draft-preview-tools">
         <label className="field-label">
           Preview from passage

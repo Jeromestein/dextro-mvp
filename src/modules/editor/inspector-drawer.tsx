@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, PanelRightClose } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 const WIDTH_KEY = "dextro:inspector-width";
 const DEFAULT_WIDTH = 2 / 3;
@@ -10,6 +10,7 @@ export default function InspectorDrawer({ open, title, onClose, children }: {
 }) {
   const drawer = useRef<HTMLElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   const drag = useRef<{ x: number; width: number; container: number } | null>(null);
   const [ratio, setRatio] = useState(DEFAULT_WIDTH);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -28,8 +29,8 @@ export default function InspectorDrawer({ open, title, onClose, children }: {
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
-    closeButton.current?.focus({ preventScroll: true });
     const mobile = window.matchMedia("(max-width:760px)");
+    (mobile.matches ? closeButton.current : heading.current)?.focus({ preventScroll: true });
     let restore = () => {};
     const protectBackground = () => {
       restore();
@@ -91,9 +92,9 @@ export default function InspectorDrawer({ open, title, onClose, children }: {
         if (event.key === "Enter") remember(DEFAULT_WIDTH);
         else resize(event.key === "Home" ? 380 : event.key === "End" ? container - 200 : drawer.current!.clientWidth + (event.key === "ArrowLeft" ? 32 : -32), container);
       }}><span /></div>
-    <div className="inspector-heading"><div><span className="kicker">PASSAGE EDITOR</span><h2>{title || "Untitled passage"}</h2></div>
+    <div className="inspector-heading"><div><span className="kicker">PASSAGE EDITOR</span><h2 ref={heading} tabIndex={-1}>{title || "Untitled passage"}</h2></div>
       <button ref={closeButton} type="button" className="button inspector-close" aria-label="Close passage editor" onClick={onClose}>
-        <ArrowLeft className="inspector-mobile-back" size={16} /><PanelRightClose className="inspector-desktop-close" size={16} /><span>Back to graph</span>
+        <ArrowLeft size={16} /><span>Back to graph</span>
       </button>
     </div>
     {children}

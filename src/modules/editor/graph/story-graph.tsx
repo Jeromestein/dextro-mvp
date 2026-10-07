@@ -3,10 +3,11 @@ import Image from "next/image";
 import { assignedAsset } from "@/modules/media/assets/operations";
 import type { PlaybackProgress } from "@/modules/player/player";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ReactFlow, ReactFlowProvider, Background, Controls, Handle, Position, MarkerType, Panel,
-  useReactFlow, useUpdateNodeInternals, type Node, type NodeProps, type NodeChange, type Edge,
+import { createPortal } from "react-dom";
+import { ReactFlow, ReactFlowProvider, Background, Handle, Position, MarkerType, Panel,
+  useReactFlow, useUpdateNodeInternals, useViewport, type Node, type NodeProps, type NodeChange, type Edge,
   type OnConnectEnd, type Viewport as FlowViewport } from "@xyflow/react";
-import { AlertCircle, ArrowUpRight, Flag, Link2, Plus, Unlink, X, Focus, ImagePlus, Music2 } from "lucide-react";
+import { AlertCircle, ArrowUpRight, Flag, Link2, Plus, Minus, Unlink, X, Focus, ImagePlus, Music2, MousePointer2, Move, PenLine } from "lucide-react";
 import { GRAPH_COORDINATE_LIMIT, type Issue, type Passage, type Story } from "@/modules/story/model";
 import { NODE_WIDTH, positionsFor } from "./layout";
 import type { Point, Positions, ChoiceRef, Viewport } from "../session/types";
@@ -42,9 +43,11 @@ const PassageCard = memo(function PassageCard({ id, data, selected }: NodeProps<
 const nodeTypes = { passage: PassageCard };
 type Props = {
   readOnly?: boolean;
+  toolbarHost?: HTMLDivElement | null;
   playback?: PlaybackProgress; onMedia: (id: string) => void;
-  story: Story; selected: string; issues: Issue[]; focusToken: number; layoutToken: number;
-  onSelect: (id: string) => void; onMove: (positions: Positions) => void; onViewport: (v: Viewport) => void;
+  story: Story; selected: string; issues: Issue[]; focusToken: number;
+  onSelect: (id: string) => void; onSelectEdge?: () => void;
+  onMove: (positions: Positions) => void; onViewport: (v: Viewport) => void;
   onConnect: (ref: ChoiceRef, target: string) => void; onAddChoice: (id: string) => void;
   onCreateAt: (position: Point, from?: ChoiceRef) => void; onDelete: (id: string) => void;
 };
@@ -53,6 +56,7 @@ function Graph(props: Props) {
   const readOnly = props.readOnly === true;
   const playingId = playback?.current;
   const flow = useReactFlow<PassageNode>();
+  const { zoom } = useViewport();
   const [showThumbnails, setShowThumbnails] = useState(true);
   const [dragPositions, setDragPositions] = useState<Record<string, Point>>({});
   const [measurements, setMeasurements] = useState<Record<string, { width: number; height: number }>>({});
@@ -105,11 +109,6 @@ function Graph(props: Props) {
   }, [onMove]);
   const fit = useCallback(() => { void flow.fitView({ padding: .18, minZoom: .2, maxZoom: 1, duration: 250 }); }, [flow]);
   useEffect(() => {
-    if (!props.layoutToken) return;
-    const frame = requestAnimationFrame(() => { void flow.fitView({ padding: .18, minZoom: .2, maxZoom: .9, duration: 250 }); });
-    return () => cancelAnimationFrame(frame);
-  }, [props.layoutToken, flow]);
-  useEffect(() => {
     if (!props.focusToken) return;
     const current = latest.current;
     const position = positionsFor(current.story).find((p) => p.id === current.selected);
@@ -128,14 +127,25 @@ function Graph(props: Props) {
     props.onCreateAt(flow.screenToFlowPosition({ x: point.clientX, y: point.clientY }), { passageId: state.fromNode.id, choiceId: state.fromHandle.id });
   };
   const edgeChoice = selectedEdge && story.passages.find((p) => p.id === selectedEdge.passageId)?.choices.find((c) => c.id === selectedEdge.choiceId);
+  const pendingChoice = pending && story.passages.find((p) => p.id === pending.passageId)?.choices.find((c) => c.id === pending.choiceId);
+  const canvasControls = <div className="graph-canvas-controls" role="group" aria-label="Canvas view">
+    <div className="graph-zoom-controls">
+      <button aria-label="Zoom out" title="Zoom out" disabled={zoom <= .2} onClick={() => void flow.zoomOut()}><Minus size={15} /></button>
+      <span className="graph-zoom-level" aria-label={`Zoom ${Math.round(zoom * 100)} percent`}>{Math.round(zoom * 100)}%</span>
+      <button aria-label="Zoom in" title="Zoom in" disabled={zoom >= 2} onClick={() => void flow.zoomIn()}><Plus size={15} /></button>
+    </div>
+    <button title="Fit all passages without moving them" onClick={fit}><Focus size={15} /> Fit view</button>
+    <button aria-pressed={showThumbnails} title="Show or hide scene images on the map" onClick={() => setShowThumbnails(show => !show)}><ImagePlus size={15} /> Images</button>
+  </div>;
   return <div className="story-graph" ref={graphRef} aria-label="Story graph" onKeyDown={(e) => {
     if (readOnly) return;
-    if ((e.target as HTMLElement).closest("input,textarea,select,[contenteditable=true]")) return;
+    if ((e.target as HTMLElement).closest("input,textarea,select,[contenteditable=true],.graph-canvas-controls")) return;
     if (e.key === "Escape") { setPending(null); setSelectedEdge(null); }
     if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); if (selectedEdge) { onConnect(selectedEdge, ""); setSelectedEdge(null); } else props.onDelete(selected); }
   }}>
+    {props.toolbarHost ? createPortal(canvasControls, props.toolbarHost) : <div className="graph-inline-toolbar">{canvasControls}</div>}
     <ReactFlow<PassageNode> nodesDraggable={!readOnly} nodesConnectable={!readOnly} edgesReconnectable={!readOnly} nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange}
-      onNodeClick={(_, n) => select(n.id)} onEdgeClick={(_, e) => { setPending(null); setSelectedEdge({ passageId: e.source, choiceId: e.sourceHandle! }); onSelect(e.source); }}
+      onNodeClick={(_, n) => select(n.id)} onEdgeClick={(_, e) => { setPending(null); setSelectedEdge({ passageId: e.source, choiceId: e.sourceHandle! }); props.onSelectEdge?.(); }}
       onPaneClick={() => { setPending(null); setSelectedEdge(null); }}
       onNodeDragStart={() => { dragging.current = true; }}
       onNodeDragStop={(_, n, moved) => { onMove((moved.length ? moved : [n]).map((n) => ({ id: n.id, ...n.position }))); dragging.current = false; setDragPositions({}); }}
@@ -151,12 +161,26 @@ function Graph(props: Props) {
       snapToGrid snapGrid={[10, 10]} panOnScroll zoomOnDoubleClick={false} elevateEdgesOnSelect
       onNodeDoubleClick={(_, n) => onSelect(n.id)}>
       <Background color="var(--line)" gap={22} size={1} />
-      <Controls showInteractive={false} fitViewOptions={{ padding: .18, minZoom: .2, maxZoom: 1 }} />
       <Panel position="top-left"><div className="graph-caption"><span className="graph-caption-dot" /> YOUR STORY MAP <small>{story.passages.length} passages · {story.passages.filter((p) => p.ending).length} endings</small></div></Panel>
-      <Panel position="top-right"><div className="graph-view-tools"><button className="graph-fit" aria-pressed={showThumbnails} onClick={() => setShowThumbnails((show) => !show)}><ImagePlus size={14} />{showThumbnails ? "Hide images" : "Show images"}</button><button className="graph-fit" onClick={fit}><Focus size={14} /> Fit story</button></div></Panel>
-      <Panel position="bottom-center"><div className="graph-hint" role="status">
-        {pending ? <><Link2 size={14} /><span>Select a destination for “{story.passages.find((p) => p.id === pending.passageId)?.choices.find((c) => c.id === pending.choiceId)?.text || "Untitled choice"}”.</span><button aria-label="Cancel connection" onClick={() => setPending(null)}><X size={15} /></button></> : !readOnly && selectedEdge && edgeChoice ? <><Link2 size={14} /><span>{edgeChoice.text || "Untitled choice"}</span><button onClick={() => { onConnect(selectedEdge, ""); setSelectedEdge(null); }}><Unlink size={14} /> Disconnect</button></> : <span>{readOnly ? "Select a passage to preview · Scroll to pan" : "Drag a heading to arrange · Connect from a choice · Scroll to pan"}</span>}
-      </div></Panel>
+      <Panel position="bottom-left" className="graph-tools-panel">
+        <aside className="graph-tools" aria-label="Story map tools" aria-live="polite">
+          <div className="graph-tools-heading"><PenLine size={15} /><span>{pending ? "Connect choice" : !readOnly && selectedEdge && edgeChoice ? "Connection" : readOnly ? "Preview story" : "Edit story"}</span></div>
+          {pending ? <div className="graph-tools-body">
+            <p className="graph-tools-choice" title={pendingChoice?.text}>{pendingChoice?.text || "Untitled choice"}</p>
+            <p className="graph-tools-help">Click a passage to connect this choice.</p>
+            <button className="graph-tools-action" onClick={() => setPending(null)}><X size={15} /> Cancel connection</button>
+          </div> : !readOnly && selectedEdge && edgeChoice ? <div className="graph-tools-body">
+            <p className="graph-tools-choice" title={edgeChoice.text}>{edgeChoice.text || "Untitled choice"}</p>
+            <p className="graph-tools-help">Disconnect the link to change where this choice leads.</p>
+            <button className="graph-tools-action" onClick={() => { onConnect(selectedEdge, ""); setSelectedEdge(null); }}><Unlink size={15} /> Disconnect</button>
+          </div> : <ul className="graph-tools-guide">
+            <li><MousePointer2 size={17} /><span><strong>Click a passage</strong><small>{readOnly ? "Preview its scene" : "Edit text & media"}</small></span></li>
+            {!readOnly && <li><Move size={17} /><span><strong>Drag a heading</strong><small>Move the passage</small></span></li>}
+            {!readOnly && <li><Link2 size={17} /><span><strong>Click a connection</strong><small>Manage its link</small></span></li>}
+            {readOnly && <li><Move size={17} /><span><strong>Scroll to pan</strong><small>Explore the map</small></span></li>}
+          </ul>}
+        </aside>
+      </Panel>
     </ReactFlow>
   </div>;
 }
