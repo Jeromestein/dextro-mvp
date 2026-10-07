@@ -6,7 +6,7 @@ import { sceneRevision, type VisualStyle } from "./plan";
 
 export type EnrichmentOptions = {
   music: boolean; images: boolean; style: VisualStyle; imageModel?: string;
-  signal: AbortSignal;
+  scope?: string; signal: AbortSignal;
   onUpdate: (story: Story) => void; onStatus: (status: string) => void;
 };
 // Work is sequential and bounded to four images. Cancellation never retries billing.
@@ -41,7 +41,7 @@ export async function enrichStoryMedia(source: Story, options: EnrichmentOptions
       }
       options.onStatus(`Generating scenes · ${completed}/${scenes.length} ready`);
       try {
-        const asset = await requestSceneImage({ title: story.title, artBrief: plan.artBrief, scene: scene.description, style: options.style, model: options.imageModel }, options.signal);
+        const asset = await requestSceneImage({ title: story.title, artBrief: plan.artBrief, scene: scene.description, style: options.style, model: options.imageModel }, options.signal, options.scope);
         options.signal.throwIfAborted();
         let next = story;
         for (const id of scene.passageIds) {

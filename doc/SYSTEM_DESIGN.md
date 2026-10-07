@@ -1,6 +1,18 @@
 # Dextro System Design
 
-Updated: 2026-10-06
+Cloud implementation status (2026-10-07): an optional Supabase adapter now stores
+owned story documents, revisions, private assets and persistent generation jobs.
+Live connection/read checks pass; real save/upload and provider job checks remain
+pending. The fixed-owner adapter is restricted to localhost development. See
+[CLOUD_STORAGE_DESIGN.md](CLOUD_STORAGE_DESIGN.md#implementation-status) for actual
+implemented behavior, verification and remaining hosted/auth work. Browser-local
+behavior described below remains the default when cloud mode is disabled.
+
+
+Updated: 2026-10-07
+
+The cloud adapter extends the browser-local architecture described below. Hosted
+account access remains future work; it is not enabled by the internal adapter.
 
 ## Architecture and implementation boundary
 
@@ -34,10 +46,12 @@ See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
 | `src/modules/export/` | Download helpers and standalone HTML template. |
 | `src/modules/workspace/` | Saved library, provider composition, shell, route integration. |
 | `src/modules/connections/` | Browser-visible readiness, persisted model choices, settings UI. |
-| `src/storage/` | Atomic IndexedDB story metadata and media Blob repository. |
-| `src/server/auth/` | Same-origin request checks. |
+| `src/modules/storage/` | Cloud document contracts, saved-media picker and generation history. |
+| `src/storage/` | Local IndexedDB repository, cloud hydration/upload adapter and durable pending-save outbox. |
+| `src/server/auth/` | Same-origin checks and localhost-only internal principal. |
+| `src/server/storage/` | Owner-scoped stories/revisions, private asset uploads and verified downloads. |
 | `src/server/models.ts` | API configuration and allowed model selection. |
-| `src/server/generation/` | Authorized inference orchestration, deadlines, validation and repair. |
+| `src/server/generation/` | Local inference adapter plus persistent cloud jobs, attempt claims, output archiving and recovery. |
 | `src/shared/ui/` | Generic dialog and original lighthouse artwork. |
 
 ## Dependency rules
@@ -63,15 +77,15 @@ check transitive server isolation, and enforce the pure story/media boundary.
 
 | State | Owner | Lifetime |
 | --- | --- | --- |
-| Saved library, save queue, storage errors | `LibraryProvider` | Workspace lifetime; IndexedDB writes are asynchronous. |
+| Saved library, save queue, storage errors | `LibraryProvider` | Workspace state; local IndexedDB or cloud summaries/hydrated stories. Cloud pending saves persist in an owner/project-scoped IndexedDB outbox. |
 | Readiness, story/image model choices | `ConnectionProvider` | Readiness in memory; model preferences in browser storage, never story content. |
-| Brief and unaccepted draft | `GenerationDraftProvider` | Survives internal navigation; reload clears it and warns for a draft. |
+| Brief and review state | `GenerationDraftProvider` | Survives internal navigation; reload clears transient state. Completed cloud drafts remain saved independently. |
 | Current edited story, undo/redo | `useEditorSession` | Mounted editor; commits use the supplied library save function. |
 | Selection, panels, layout jobs, preview start | `StoryEditor` | Current editing view. |
 | Drag and connection gestures | `StoryGraph` | Graph-local presentation state. |
 | Expanded outline branches | `StoryOutline` | Outline-local presentation state. |
 | Current player passage and steps | `Player` | Player instance. |
-| In-flight generation | Builder and server generation service | Bounded cancellable request. |
+| In-flight generation | Builder and server generation service | Local: bounded request. Cloud: persistent job/attempt records and Workflow; stopping browser polling does not cancel dispatched calls. |
 
 `WorkspaceProviders` composes the independent providers and remains mounted
 across workspace navigation. Settings does not own the library; saving a story
@@ -81,7 +95,7 @@ the playhead and traversed choices. Closing preview releases its audio.
 
 ## Main flows
 
-An edit follows:
+In local mode, an edit follows:
 
 `Graph / Outline / Text / Media input → editor command → history → library save queue → IndexedDB`
 
@@ -89,7 +103,7 @@ Layout and viewport remain editor metadata in editable backups. Viewport changes
 do not create history entries. Automatic layout checks the current graph and
 positions before applying asynchronous results.
 
-Text generation follows:
+In local mode, text generation follows:
 
 `Builder → /api/generate → server authorization → provider → validation → review → Keep & edit`
 
@@ -98,6 +112,18 @@ draft, and leaving the builder cancels its active request. Manual editing and
 the sample remain available without a provider. Runtime/duration configuration
 remains in the thin API route; orchestration lives under `server/generation/`.
 
+In cloud mode, edits enter the recovery outbox, upload/verify required assets,
+then atomically save the reference-only story, revision and asset references in
+PostgreSQL. Outline derives from the stored passage/choice graph. Opening a story
+hydrates its private media with checksum checks into the portable editor model.
+
+Cloud generation first persists an idempotent job, then dispatches Workflow.
+An atomic attempt claim gates each paid call. Raw output is archived before
+parsing; images become independent media records and validated stories become
+saved drafts before review. Keep opens the same saved draft. Status/history
+reads can recover archived output or dispatch queued work; there is no scheduled
+reconciler. Actual hosted Workflow execution is not yet verified.
+
 ## Media and persistence
 
 Version 2 passages use `media.imageId` and `media.audioId`; an empty audio ID
@@ -105,17 +131,20 @@ means Silence. A story has up to 300 immutable asset records with kind, ID, name
 embedded data, source, and credit. Identical uploads reuse a file; replacements
 only change the selected passage. Credit edits apply to the shared file.
 
-The in-memory editor holds media strings once per asset. IndexedDB keeps story
+The in-memory editor holds media strings once per asset. In local mode, IndexedDB keeps story
 metadata in `stories` and file Blobs in `media`, keyed by story and asset ID. The
 existing `dextro-studio-v1` database upgrades to schema version 2 without changing
 old records. Reading version 1 deduplicates passage images in memory. A save
 writes files and metadata in one transaction; failure preserves the old record.
 Unchanged files are not rewritten on text edits. Copies own separate stored files.
 
-Unassigned assets remain reusable until Remove unused files. That action is
+In local mode, unassigned assets remain reusable until Remove unused files. That action is
 undoable: session history retains the original bytes and saving an undo restores
 them to storage. Deleting a story removes its metadata and files atomically.
 Uploads that finish after undo, deletion, or a target-passage edit cannot apply.
+In cloud mode, soft-deleting a story or removing a file from its document retains
+saved revisions and independently stored assets. No object garbage collector or
+trash/restore UI is implemented yet.
 
 The shared 24 MB compact serialized-story limit includes encoded media; uploads
 allow 2 MB images and 6 MB audio. Import retains its 25 MB file cap and must pass

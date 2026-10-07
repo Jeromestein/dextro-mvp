@@ -9,6 +9,7 @@ import { useLibrary } from "@/modules/workspace/library-provider";
 import { useConnection } from "@/modules/connections/provider";
 import { useGenerationDraft } from "./draft-provider";
 import { enrichStoryMedia } from "@/modules/media/generation/enrich";
+import { requestGeneration } from "@/modules/media/generation/job-client";
 import type { VisualStyle } from "@/modules/media/generation/plan";
 
 const ideas = [
@@ -30,7 +31,7 @@ export default function GameBuilder() {
   const [style, setStyle] = useState<VisualStyle>("storybook");
   const [mediaStatus, setMediaStatus] = useState("");
   const controller = useRef<AbortController | null>(null);
-  const canGenerate = connection.aiReady && !connection.checking;
+  const canGenerate = connection.aiReady && !connection.checking && library.available;
   useEffect(() => () => { controller.current?.abort(); }, []);
   useEffect(() => {
     const guard = (event: BeforeUnloadEvent) => { if (controller.current) { event.preventDefault(); event.returnValue = ""; } };
@@ -47,21 +48,16 @@ export default function GameBuilder() {
     controller.current = request;
     setGenerating(true); setError(""); setMediaStatus("");
     try {
-      const response = await fetch("/api/generate", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draftState.brief, includeMedia: music || images, model: connection.model || undefined }),
-        signal: AbortSignal.any([request.signal, AbortSignal.timeout(170_000)]),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not generate this game. Please try again.");
+      const data = await requestGeneration("/api/generate", { ...draftState.brief, includeMedia: music || images, model: connection.model || undefined }, request.signal, library.scope);
       if (request.signal.aborted || controller.current !== request) return;
       const story = storySchema.parse(data.story);
       if (validateStory(story).length) throw new Error("The draft did not pass the story checks. Try again.");
+      if (library.cloud) { await library.refreshLibrary(); await library.loadStory(story.id); }
       draftState.setDraft({ story, repaired: data.repaired === true });
       if ((music || images) && story.mediaPlan) {
-        const warnings = await enrichStoryMedia(story, { music, images, style, imageModel: connection.imageModel || undefined, signal: request.signal,
+        const warnings = await enrichStoryMedia(story, { music, images, style, imageModel: connection.imageModel || undefined, scope: library.scope, signal: request.signal,
           onStatus: setMediaStatus,
-          onUpdate: (next) => { if (!request.signal.aborted) draftState.setDraft((current) => current?.story.id === story.id ? { ...current, story: next } : current); },
+          onUpdate: (next) => { if (!request.signal.aborted) { draftState.setDraft((current) => current?.story.id === story.id ? { ...current, story: next } : current); if (library.cloud) library.persistStory(next, "draft"); } },
         });
         if (!request.signal.aborted) setError(warnings.join(" "));
       } else if (data.mediaWarning) setError(data.mediaWarning);
@@ -72,12 +68,12 @@ export default function GameBuilder() {
       if (controller.current === request) { controller.current = null; setGenerating(false); }
     }
   };
-  const cancel = () => { controller.current?.abort(); controller.current = null; setGenerating(false); setError(draftState.draft ? "Remaining media cancelled. Completed text and media are kept for review." : "Generation cancelled. Your idea is ready whenever you are."); };
+  const cancel = () => { controller.current?.abort(); controller.current = null; setGenerating(false); setError(library.cloud ? "Stopped waiting. Submitted generations continue saving to My Games and Saved media." : draftState.draft ? "Remaining media cancelled. Completed text and media are kept for review." : "Generation cancelled. Your idea is ready whenever you are."); };
   return <main className="builder-page product-page">
     <div className="page-heading"><div><span className="kicker">CREATE / EXPLORE / PLAY</span><h1>Game Builder<span className="title-dot">.</span></h1><p>Your idea. A world of choices. A game worth playing.</p></div>
       <Link href="/library" className="button">My Games <ArrowUpRight size={16} /></Link></div>
     <ol className="builder-steps" aria-label="Creation steps"><li className={!draftState.draft ? "current" : "complete"}><span>{draftState.draft ? <Check size={13} /> : "01"}</span> Shape your idea</li><li className={draftState.draft ? "current" : ""}><span>02</span> Explore the draft</li><li><span>03</span> Edit & export</li></ol>
-    {draftState.draft ? <section className="builder-review">{(mediaStatus || generating || error) && <div className="media-batch" role="status"><p>{mediaStatus || "Story ready"}</p>{error && <p className="form-error">{error}</p>}{generating && <button className="button" onClick={cancel}>Stop remaining media</button>}<small>Keep & edit stops pending media and keeps everything ready so far.</small></div>}<AIDraftReview story={draftState.draft.story} repaired={draftState.draft.repaired} onDiscard={() => { controller.current?.abort(); controller.current = null; setGenerating(false); setMediaStatus(""); setError(""); draftState.setDraft(null); }} onKeep={() => openEditor(copyStory(draftState.draft!.story))} /></section> :
+    {draftState.draft ? <section className="builder-review">{(mediaStatus || generating || error) && <div className="media-batch" role="status"><p>{mediaStatus || "Story ready"}</p>{error && <p className="form-error">{error}</p>}{generating && <button className="button" onClick={cancel}>Stop remaining media</button>}<small>Keep & edit stops pending media and keeps everything ready so far.</small></div>}<AIDraftReview story={draftState.draft.story} repaired={draftState.draft.repaired} onDiscard={() => { controller.current?.abort(); controller.current = null; setGenerating(false); setMediaStatus(""); setError(""); draftState.setDraft(null); }} onKeep={() => openEditor(library.cloud ? draftState.draft!.story : copyStory(draftState.draft!.story))} /></section> :
     <div className="builder-layout">
       <section className="creation-card">
         <div className="creation-tabs" aria-label="Creation method">
@@ -97,9 +93,9 @@ export default function GameBuilder() {
           {!connection.imagesReady ? <p className="generation-footnote">Check image availability in <Link href="/settings">Settings</Link>. Free music works without an image connection.</p> : null}
           <div className="builder-connection"><span className={canGenerate ? "status-dot ready" : "status-dot"} /><span>{connection.checking ? "Checking AI connection…" : canGenerate ? "AI is ready" : "Check AI setup in Settings"}</span><Link href="/settings" aria-label="AI connection settings"><Settings2 size={14} /> Settings</Link></div>
           {error && <p className="form-error" role="alert">{error}</p>}
-          <div className="generate-actions"><button className="button primary generate-button" type="submit" disabled={!library.ready || !canGenerate || generating}>{generating ? <><LoaderCircle size={17} className="spin" /> Building your game…</> : <><Sparkles size={17} /> Generate game <ArrowRight size={17} /></>}</button>{generating && <button className="button" type="button" onClick={cancel}><X size={15} /> Cancel</button>}</div>
-          <p className="generation-footnote" role={generating ? "status" : undefined}>{generating ? "Writing passages and checking every path. You can cancel at any time. Leaving this page stops generation." : "Review the complete draft before adding it to your games."}</p>
-        </form> : <form className="blank-form" onSubmit={(event) => { event.preventDefault(); openEditor(newStory(title.trim() || "Untitled game")); }}><div className="creation-intro"><span className="section-number">01 / A BLANK CANVAS</span><h2>Write it your way.</h2><p>Start with one passage. Add choices and see your world take shape.</p></div><label className="field-label">Game title<input autoFocus maxLength={200} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Give your world a name" /></label><button className="button primary" disabled={!library.ready} type="submit">Open editor <ArrowRight size={17} /></button><p className="generation-footnote">No AI connection needed. Your game saves in this browser.</p></form>}
+          <div className="generate-actions"><button className="button primary generate-button" type="submit" disabled={!library.ready || !canGenerate || generating}>{generating ? <><LoaderCircle size={17} className="spin" /> Building your game…</> : <><Sparkles size={17} /> Generate game <ArrowRight size={17} /></>}</button>{generating && <button className="button" type="button" onClick={cancel}><X size={15} /> {library.cloud ? "Stop waiting" : "Cancel"}</button>}</div>
+          <p className="generation-footnote" role={generating ? "status" : undefined}>{generating ? (library.cloud ? "Your draft saves to My Games. Leaving this page stops waiting; submitted generations continue." : "Writing passages and checking every path. You can cancel at any time. Leaving this page stops generation.") : "Review the complete draft before adding it to your games."}</p>
+        </form> : <form className="blank-form" onSubmit={(event) => { event.preventDefault(); openEditor(newStory(title.trim() || "Untitled game")); }}><div className="creation-intro"><span className="section-number">01 / A BLANK CANVAS</span><h2>Write it your way.</h2><p>Start with one passage. Add choices and see your world take shape.</p></div><label className="field-label">Game title<input autoFocus maxLength={200} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Give your world a name" /></label><button className="button primary" disabled={!library.ready || !library.available} type="submit">Open editor <ArrowRight size={17} /></button><p className="generation-footnote">{library.cloud ? "No AI connection needed. Your game saves to your private cloud workspace." : "No AI connection needed. Your game saves in this browser."}</p></form>}
       </section>
       <aside className="blueprint-card"><div className="blueprint-heading"><GitBranch size={19} /><span>SMALL GAME. MANY PATHS.</span></div><h2>One beginning.<br />More than one ending.</h2><p>Every choice takes your reader somewhere new.</p>
         <div className="branch-diagram" aria-label="A beginning branches into choices and different endings"><div className="branch-start"><span /> The beginning</div><div className="branch-stem" /><div className="branch-fork"><span>Take a chance</span><span>Walk away</span></div><div className="branch-ends"><span><Flag size={13} /> Ending A</span><span><Flag size={13} /> Ending B</span><span><Flag size={13} /> Ending C</span></div></div>
@@ -107,6 +103,6 @@ export default function GameBuilder() {
         <Link href="/play/sample-last-light" className="sample-link">Play a sample game <ArrowUpRight size={16} /></Link>
       </aside>
     </div>}
-    <section className="recent-section"><div><h2>Pick up where you left off</h2><Link href="/library">All games <ArrowRight size={14} /></Link></div>{!library.ready ? <p className="quiet">Opening your workspace…</p> : library.stories.length ? <div className="recent-games">{library.stories.slice(0, 3).map((story) => <Link href={`/builder/${encodeURIComponent(story.id)}`} key={story.id}><span className="recent-icon"><GitBranch size={19} /></span><span><strong>{story.title || "Untitled game"}</strong><small>{story.passages.length} passages · {story.passages.filter((p) => p.ending).length} endings</small></span><ArrowUpRight size={17} /></Link>)}</div> : <div className="recent-empty"><BookOpen size={18} /><span>Your games will appear here. Start with an idea or a blank page.</span></div>}</section>
+    <section className="recent-section"><div><h2>Pick up where you left off</h2><Link href="/library">All games <ArrowRight size={14} /></Link></div>{!library.ready ? <p className="quiet">Opening your workspace…</p> : library.stories.length ? <div className="recent-games">{library.stories.slice(0, 3).map((story) => <Link href={`/builder/${encodeURIComponent(story.id)}`} key={story.id}><span className="recent-icon"><GitBranch size={19} /></span><span><strong>{story.title || "Untitled game"}</strong><small>{story.passageCount} passages · {story.endingCount} endings</small></span><ArrowUpRight size={17} /></Link>)}</div> : <div className="recent-empty"><BookOpen size={18} /><span>Your games will appear here. Start with an idea or a blank page.</span></div>}</section>
   </main>;
 }

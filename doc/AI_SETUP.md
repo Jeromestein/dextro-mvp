@@ -5,7 +5,7 @@ There is no sign-in or access-code step. Settings contains two model selectors.
 
 ## Environment
 
-Run commands from the `dextro-mvp` project root. Copy `.env.example` to
+Use Node.js 22+ and run commands from the `dextro-mvp` project root. Copy `.env.example` to
 `.env.local` only if the latter does not exist, then set:
 
 - `OPENAI_API_KEY`: required for AI generation, with API billing/model access.
@@ -76,11 +76,50 @@ required. See the [library records](../public/media/library/README.md).
 
 1. Import the repository; use `dextro-mvp` as Root Directory only when importing
    its parent folder.
-2. Choose Next.js and a supported Node.js version satisfying `package.json`.
+2. Choose Next.js and Node.js 22 or later, satisfying `package.json`.
 3. Set `OPENAI_API_KEY` and, optionally, the two default-model variables.
-4. Deploy and verify generation on the deployed origin. Local configuration and
-   mocked tests do not verify deployed account access or execution limits.
+4. Before inviting testers, protect the deployed studio and its billable routes.
+   Verify generation on the deployed origin. Local configuration and mocked tests
+   do not verify deployed account access or execution limits. The cloud adapter
+   rejects production until a verified hosted access boundary is implemented.
 
 Vercel runs the configured build; do not run `pnpm build` locally under project
 instructions. Browser-local games do not migrate between origins automatically;
 use JSON export/import. See [verification](VERIFICATION.md) for actual checks.
+
+
+## Private cloud generation
+
+With `STORAGE_MODE=supabase`, story/image POSTs return a persisted job ID and the
+browser polls `/api/generation-jobs/:id`. The Workflow SDK runs the server work.
+Provider output is archived before it becomes a Story or media asset. A completed
+story is a saved draft even before Keep; an unused generated image stays in Saved
+images. Stop waiting only stops browser polling and future optional media submits.
+
+Set `SUPABASE_URL`, server-only `SUPABASE_SECRET_KEY`, and `INTERNAL_TEST_OWNER_ID`;
+the latter must match the internal `app_users` record seeded by the migration.
+`GENERATION_DAILY_LIMIT` defaults to 20 provider attempts per UTC day (maximum
+100); a structural repair counts as another attempt. Two dispatched attempts may
+run concurrently. These are attempt caps, not dollar-cost estimates.
+
+Find the Supabase secret under **Project Settings → API Keys → Secret keys**.
+Use an `sb_secret_` value on the server, not the publishable key. Apply the migration
+once to a new project, configure the internal owner, and restart your development
+server. Verify `/api/storage` reports `mode: supabase` and `available: true` before
+testing saves. The Everlove `dextro-mvp` project already has the migration and passed
+this connection check on 2026-10-07. Do not commit `.env.local` or paste keys into
+documentation. A successful connection check does not verify uploads or generation.
+
+The cloud worker has a 150-second deadline per provider call and at most one
+separate structural repair. The local adapter's shared request deadline described
+above is not a cloud end-to-end duration guarantee.
+
+A lost provider response can still mean a charge without recoverable bytes. Such
+jobs are marked outcome uncertain and are not automatically generated again.
+Status/history access can resume already archived output or queued work. No
+scheduled reconciler is configured. The local Workflow state directories are
+ignored by Git and are not production deployment evidence.
+
+The current internal cloud principal rejects production mode and non-loopback
+hosts. Do not turn this into a public fixed-owner service. Hosted cloud use needs
+verified identity/access protection and separate deployment verification.

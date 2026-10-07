@@ -2,9 +2,11 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useConnection } from "./provider";
+import { useLibrary } from "@/modules/workspace/library-provider";
 
 export default function ConnectionSettings() {
   const w = useConnection();
+  const storage = useLibrary();
   return <main className="settings-page product-page">
     <Link href="/builder" className="back-link"><ArrowLeft size={15} /> Back to builder</Link>
     <div className="page-heading"><div><span className="kicker">WORKSPACE</span><h1>Settings</h1><p>Choose the models that bring your stories to life.</p></div></div>
@@ -26,6 +28,6 @@ export default function ConnectionSettings() {
         <div className="settings-foot"><p>Model choices are remembered in this browser. Availability depends on the studio’s OpenAI account.</p><Link className="button primary" href="/builder">Return to builder <ArrowRight size={16} /></Link></div>
       </div>
     </div>
-    <div className="settings-layout storage-explainer"><aside><h2>Game storage</h2></aside><div><h3>Saved on this browser</h3><p>Games do not sync across browsers or devices. Export a JSON backup from the editor to keep an editable copy.</p><Link href="/library">Go to My Games <ArrowRight size={14} /></Link></div></div>
+    <div className="settings-layout storage-explainer"><aside><h2>Game storage</h2></aside><div><h3>{!storage.ready ? "Checking game storage…" : !storage.available ? "Storage unavailable" : storage.cloud ? "Saved to your private cloud workspace" : "Saved in this browser"}</h3><p>{storage.cloud ? "Games and media are stored in your private cloud workspace. Export a JSON backup from the editor to keep an editable copy." : "Browser-local games do not sync across browsers or devices. Export a JSON backup from the editor to keep an editable copy."}</p>{storage.storageError && <p role="alert">{storage.storageError}</p>}<Link href="/library">Go to My Games <ArrowRight size={14} /></Link></div></div>
   </main>;
 }

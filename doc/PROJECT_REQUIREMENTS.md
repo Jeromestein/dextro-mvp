@@ -1,5 +1,21 @@
 # Project Requirements and Decisions
 
+## Storage design request — 2026-10-06
+
+Design for the practical hosted workflow: retain every received generated image
+independently of story assignment, associate private data with an owner, prevent
+cross-user access when accounts are introduced, and persist stories and their
+outline structure. A full user-facing account system is deferred while the team
+tests its own workflow.
+
+[Cloud storage design](CLOUD_STORAGE_DESIGN.md) separates the implemented internal
+adapter from the broader target architecture. The user authorized creating the
+Everlove Foundation Supabase project and proceeding with integration. As of
+2026-10-07, the migration is applied and local application connection/read checks
+pass. Real write/upload round trips, provider jobs, and hosted execution still
+require verification. A single internal owner is available only through localhost
+development; user-facing accounts and per-person isolation remain deferred.
+
 ## Current provider decision — 2026-10-06
 
 Use the server environment OpenAI API key for all story and image generation.
@@ -8,7 +24,7 @@ should contain only story/image model selectors, with remembered browser choices
 This decision supersedes earlier authentication/provider decisions below.
 
 
-Last updated: 2026-10-06
+Last updated: 2026-10-07
 
 This document records confirmed requirements from project discussions. Proposals and open questions are listed separately and must not be treated as approved scope. Update this document as further decisions are confirmed.
 

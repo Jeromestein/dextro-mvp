@@ -1,7 +1,7 @@
 # Dextro Workspace Architecture
 
-Updated: 2026-10-06. This document describes the implemented workspace after the
-module restructuring. See [system design](SYSTEM_DESIGN.md) for dependency rules
+Updated: 2026-10-07. This document describes the implemented local workspace and
+optional internal cloud adapter. See [system design](SYSTEM_DESIGN.md) for dependency rules
 and [Graph media design](GRAPH_MEDIA_DESIGN.md) for current media scope and planned generation.
 
 ## Routes
@@ -15,21 +15,25 @@ and [Graph media design](GRAPH_MEDIA_DESIGN.md) for current media scope and plan
 | `/play/[storyId]` | Focused story playback; `sample-last-light` is the bundled sample. |
 | `/settings` | Story and image model selection. |
 
-Editor and player wait for local storage before resolving a story ID. Unknown
-IDs show recovery guidance. These routes refer to games in the current browser;
-they are not public share links. Creation and draft review use page content.
+Editor and player wait for storage readiness, then load the requested story and
+its verified media. Unknown IDs and load failures show recovery guidance. These
+routes identify games in the active local or private cloud workspace, not public
+share links. Creation and draft review use page content.
 
 ## Composition and providers
 
 The workspace layout mounts `modules/workspace/providers.tsx` and `shell.tsx`.
 Providers stay mounted during internal navigation, with separate ownership:
 
-- `LibraryProvider`: saved stories, initial loading, serialized saves, deletion,
-  errors, and pending/failed-save unload protection.
+- `LibraryProvider`: storage-mode readiness, story summaries, lazy story loading,
+  serialized saves, deletion, errors and pending/failed-save unload protection.
+  Cloud mode adds a durable recovery outbox, retry, conflict recovery as a new
+  game, and explicit copying of existing browser-local games.
 - `ConnectionProvider`: readiness, story/image model preferences, and refresh on focus.
   Preferences persist in browser storage; the API key remains server-side.
-- `GenerationDraftProvider`: creation brief, unsaved draft, and draft unload
-  protection. The builder owns its active request and cancels it on unmount.
+- `GenerationDraftProvider`: creation brief, review draft and unload protection.
+  The builder aborts its local request or cloud polling on unmount. Submitted
+  cloud jobs continue independently; completed drafts are already saved.
 - `GameplayAudioProvider`: audio started by Play, retained through navigation
   into that game and released when leaving its route. Preview and audition keep
   their own mounted controllers and share exclusive audio ownership.
@@ -71,28 +75,39 @@ File completion does not move manually positioned nodes.
 
 | State | Lifetime |
 | --- | --- |
-| Accepted games | Existing IndexedDB `dextro-studio-v1` database; schema version 2 with `stories` metadata and `media` Blobs. |
-| Pending saves | Shared serialized queue across workspace navigation. |
-| Brief and unaccepted draft | Workspace memory; cleared on reload. |
-| Workshop code and model selection | Workspace memory; cleared on reload. |
+| Saved games | Local: IndexedDB `dextro-studio-v1`, schema version 2. Cloud: owned PostgreSQL documents/revisions and private media objects. |
+| Pending saves | Serialized queue; cloud outbox also survives reload in owner/project-scoped IndexedDB. Conflicts retain local changes. |
+| Brief and draft review | Workspace memory; cleared on reload. Completed cloud-generated drafts remain in My Games. |
+| Model selection | Browser-local preferences, restored on reload. No workshop code. |
 | Graph positions and viewport | Optional `editor` metadata and JSON backups. |
 | Selection and undo/redo | Mounted editor session. |
 | Playback position | Player instance, independent of editor selection; highlighted on Graph. |
-| Provider tokens | Protected local server storage, never story state. |
+| Provider/storage secrets | Server environment only, never browser or story state. |
 
-Keep creates a new story. Storage and provider failures are explicit. The
-media reader accepts version 1 backups, while new writes use version 2. Saves
-atomically persist metadata and changed files. Games do not migrate between
-origins, devices, profiles, or tabs.
+In local mode, Keep creates a new story and saves metadata/files atomically in
+IndexedDB. Cloud Keep opens the already saved draft; story saves use revision
+checks and atomic database snapshots after asset verification. The media reader
+accepts version 1 backups, while new portable backups use version 2.
+
+Local games do not sync between origins/devices/profiles. Copy local games is an
+explicit operation that retains the source records. Cloud records are available
+through the configured internal owner, but the server accepts localhost
+development only. This is not verified per-person or hosted access. Cloud lists
+refresh on load/explicit actions; no realtime editor collaboration is implemented.
 
 ## Provider and delivery boundaries
 
-`/api/generate` delegates to `server/generation/story.ts` and retains its Node
-runtime and duration configuration. `/api/media/image` delegates to the server's
-image adapter. Both use the environment API key and same-origin checks without
+In local mode, `/api/generate` delegates to `server/generation/story.ts` and
+`/api/media/image` to the server image adapter. In cloud mode, both persist jobs
+and return a job ID; the client polls owner-scoped job routes. Both modes use
+the environment API key and same-origin checks without
 sign-in or an access code. `server/models.ts` validates requested models against
 the offered list, including environment defaults. Browser modules use HTTP and
 never import server credentials or implementation files.
+
+Saved media and generation history are cloud-only views. Storage failure is
+visible and does not silently switch to a browser-local workspace. Local recovery
+copies remain accessible when a known cloud scope is temporarily unavailable.
 
 The React player is shared by preview and the play route. Offline exports retain
 the self-contained HTML player. See [AI setup](AI_SETUP.md) for configuration and

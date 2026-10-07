@@ -25,6 +25,13 @@ export function buildGame(raw: Story): string {
   // Layout belongs to the authoring workspace, not the standalone player.
   delete story.editor;
   delete story.mediaPlan;
+  // Provider prompts are authoring metadata, not part of a public playable file.
+  story.assets = story.assets.map(asset => {
+    if (asset.provenance?.provider !== "openai") return asset;
+    const exported = { ...asset };
+    delete exported.provenance;
+    return exported;
+  });
   if (validateStory(story).some((i) => i.level === "error"))
     throw new Error("Fix the story checks before exporting a playable game.");
   const data = JSON.stringify(story)

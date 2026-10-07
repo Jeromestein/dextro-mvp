@@ -24,7 +24,7 @@ separate providers for the saved-game library, AI connection, and unsaved draft.
 | Player | Shared reading and choice UI for preview and the play route. |
 | Export | Editable backup helpers and standalone HTML generation. |
 | Workspace / Connections | Library state, shell/routing composition, and separate AI settings. |
-| Storage / Server | IndexedDB repository; server-side authorization, providers, and generation. |
+| Storage / Server | Browser-local or private Supabase repositories, recovery outbox, owned media and persistent generation jobs. |
 
 Stories now use version 2 with shared image and audio assets. Version 1 stories
 and backups remain readable; files move into a separate IndexedDB media store
@@ -36,7 +36,7 @@ See [Graph media design](doc/GRAPH_MEDIA_DESIGN.md) for remaining target feature
 
 ## Run locally
 
-Requirements: Node.js 20.9+ and pnpm 9.7.1 (pinned in `package.json`).
+Requirements: Node.js 22+ and pnpm 9.7.1 (pinned in `package.json`). The Supabase client requires Node.js 22 or later.
 
 ```sh
 pnpm install
@@ -78,11 +78,15 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 | `/play/[storyId]` | Play one game in a focused reading view. |
 | `/settings` | Choose story and image models; view API configuration readiness. |
 
-`/` redirects to `/builder`. Games are browser-local, so editor/player URLs are workspace navigation, not public share links. The brief and unsaved generated draft survive internal navigation to Settings; full reloads clear transient state. See [WORKSPACE_ARCHITECTURE.md](doc/WORKSPACE_ARCHITECTURE.md) for responsibility and state boundaries.
+`/` redirects to `/builder`. Editor/player URLs identify games in the active local or private cloud workspace; they are not public share links. The brief and review state survive internal navigation to Settings. Full reloads clear transient state; completed cloud-generated drafts remain in My Games. See [WORKSPACE_ARCHITECTURE.md](doc/WORKSPACE_ARCHITECTURE.md) for responsibility and state boundaries.
 
 ## Storage boundaries
 
-This release is a local workspace, not a cloud account. Drafts are specific to the browser profile and exact origin (including port). They do not sync between devices, browsers, deployments, or tabs. Clearing site data removes drafts. Export editable backups regularly. A playable HTML file is for playing; use the JSON backup to continue editing.
+Storage defaults to browser-local. In that mode, drafts belong to the browser profile and exact origin; clearing site data removes them. `STORAGE_MODE=supabase` enables a private cloud workspace with owned media, revision-checked story saves, a local recovery outbox, generation history and reusable saved images. The current fixed-owner cloud mode accepts localhost development only and rejects hosted production access. It is one shared internal workspace, without a user-account UI.
+
+See [Cloud Storage implementation status and design](doc/CLOUD_STORAGE_DESIGN.md) for configuration boundaries and remaining deployment work. Set `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and `INTERNAL_TEST_OWNER_ID` on the server and apply `supabase/migrations/202610060001_cloud_storage.sql`. Never expose the secret with `NEXT_PUBLIC_`. The Everlove project migration is applied and local application connectivity was verified on 2026-10-07: seven readable tables and two private buckets. Live save/upload and generation round trips remain to be tested. Restart the development server after changing environment values.
+
+Cloud saves preserve Graph/Outline source data, layout, shared assets and media plans. Conflicts keep a recovery copy instead of overwriting another revision. The media library keeps generated images even if a preview is dismissed. HTML exports embed media bytes and work independently of signed URLs; editable backups remain embedded version 2. Use editable backups to continue authoring.
 
 There is no public publishing service, cloud user account system, analytics, payment system, free-form player input, inventory system, or Blender integration. AI generation uses the server environment API key with no sign-in or access code.
 
@@ -115,11 +119,12 @@ src/
 │   ├── export/                # Downloads and standalone HTML
 │   ├── workspace/             # Library, provider composition, shell
 │   └── connections/           # Browser connection state and settings
-├── storage/                   # Browser-local story repository
+├── storage/                   # Local/cloud repositories and cloud recovery outbox
 ├── server/
-│   ├── auth/                  # Same-origin request checks
+│   ├── auth/                  # Origin checks and internal localhost principal
 │   ├── models.ts              # API defaults and allowed model selections
-│   └── generation/            # Authorized story-generation orchestration
+│   ├── storage/               # Owned stories, revisions, and private assets
+│   └── generation/            # Story adapter and persistent generation jobs
 └── shared/ui/                 # Generic dialog and original artwork
 
 public/media/demo/             # Placeholder image and four chime samples

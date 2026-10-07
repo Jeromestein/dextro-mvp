@@ -4,7 +4,7 @@
 - Use pnpm. Do not run `pnpm build`; Vercel runs the deployment build.
 - Preserve the existing reference HTML files in the parent directory.
 - Keep the MVP limited to choice-based text adventures. No Blender or free-form AI play.
-- Drafts are browser-local. Do not describe local persistence as cloud backup or synchronization.
+- Default storage is browser-local; optional Supabase storage is an internal localhost-only workspace. Describe the active mode accurately. Do not claim hosted cloud access or per-person isolation before verified authentication is implemented.
 - AI generation must stay server-side and report unavailable configuration honestly. Use the environment OpenAI API key without sign-in or access codes. Settings selects story/image models; retain same-origin request checks.
 - Prefer the user's existing dev server. Start a local server only when requested or needed to unblock verification.
 - Verify frontend changes in the Codex in-app browser, including the affected interactions and mobile layout.

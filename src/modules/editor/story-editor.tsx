@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, Check, CheckCircle2, ChevronDown, Download, Flag,
   GitBranch, ListTree, LoaderCircle, PanelRightClose, PanelRightOpen, PenLine,
   Play, Plus, Redo2, Sparkles, Undo2, X, AlertCircle, Images } from "lucide-react";
@@ -31,7 +32,8 @@ const StoryGraph = dynamic(() => import("@/modules/editor/graph/story-graph"), {
 });
 type Modal = "checks" | "delete" | "create" | "details" | null;
 export default function StoryEditor({ initialStory }: { initialStory: Story }) {
-  const { persistStory, saving, storageError } = useLibrary();
+  const { persistStory, saving, storageError, cloud, retrySync, scope, recovery, saveRecoveryAsCopy } = useLibrary();
+  const router = useRouter();
   const gameplayAudio = useGameplayAudio();
   const connection = useConnection();
   const batch = useRef<AbortController | null>(null);
@@ -133,7 +135,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
     const source = historyRef.current.present;
     setBatchBusy(true); setBatchStatus("Preparing media…");
     try {
-      const warnings = await enrichStoryMedia(source, { images, music: !images, style: "storybook", imageModel: connection.imageModel || undefined, signal: request.signal,
+      const warnings = await enrichStoryMedia(source, { images, music: !images, style: "storybook", imageModel: connection.imageModel || undefined, scope, signal: request.signal,
         onStatus: setBatchStatus,
         onUpdate: (result) => {
           if (request.signal.aborted) return;
@@ -168,10 +170,10 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
   }}>
     <header className="workbench-header">
-      <div className="workbench-identity"><Link href="/library" className="icon-button" aria-label="Back to My Games"><ArrowLeft size={19} /></Link><div><span className="kicker">STORY WORKSPACE</span><input aria-label="Story title" maxLength={200} value={story.title} onChange={(e) => commit((s) => ({ ...s, title: e.target.value }), "story-title")} /><span className={`workbench-save ${storageError ? "failed" : ""}`} role="status">{storageError ? <><AlertCircle size={12} /> Not saved</> : saving ? <><LoaderCircle size={12} className="spin" /> Saving…</> : <><Check size={12} /> Saved in this browser</>}</span></div></div>
+      <div className="workbench-identity"><Link href="/library" className="icon-button" aria-label="Back to My Games"><ArrowLeft size={19} /></Link><div><span className="kicker">STORY WORKSPACE</span><input aria-label="Story title" maxLength={200} value={story.title} onChange={(e) => commit((s) => ({ ...s, title: e.target.value }), "story-title")} /><span className={`workbench-save ${storageError ? "failed" : ""}`} role="status">{storageError ? <><AlertCircle size={12} /> Not saved</> : saving ? <><LoaderCircle size={12} className="spin" /> Saving…</> : <><Check size={12} /> {cloud ? "Saved to cloud" : "Saved in this browser"}</>}</span></div></div>
       <div className="workbench-actions"><button className={`button ${errors.length ? "needs-attention" : ""}`} onClick={() => setModal("checks")}>{errors.length ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />} Check story{issues.length > 0 && <span className="workbench-count">{issues.length}</span>}</button><Link href={`/play/${encodeURIComponent(story.id)}`} className="button" onNavigate={() => gameplayAudio.start(story.id, assignedAsset(story, story.passages.find((p) => p.id === story.startId), "audio")?.data || "")}><Play size={15} /> Play</Link><details className="export-menu"><summary className="button primary"><Download size={15} /> Export <ChevronDown size={13} /></summary><div><button onClick={exportHTML}>Playable HTML <ArrowUpRight size={14} /></button><button onClick={exportJSON}>Editable backup <Download size={14} /></button></div></details></div>
     </header>
-    {storageError && <div className="storage-warning" role="alert"><AlertCircle size={17} />{storageError}<button onClick={exportJSON}>Download backup</button></div>}
+    {storageError && <div className="storage-warning" role="alert"><AlertCircle size={17} />{storageError}<button onClick={() => void retrySync()}>Retry sync</button><button onClick={exportJSON}>Download backup</button>{cloud && recovery.some(item=>item.id===story.id) && <button onClick={()=>void saveRecoveryAsCopy(story.id).then(id=>{ router.push(`/builder/${encodeURIComponent(id)}`); }).catch(error=>setNotice(error.message))}>Save as new game</button>}</div>}
     <div className="workbench-toolbar">
       <div className="workbench-view-switch" role="group" aria-label="Story view"><button aria-pressed={view === "graph"} onClick={() => { setView("graph"); send({ type: "break-group" }); }}><GitBranch size={15} /> Graph</button><button aria-pressed={view === "outline"} onClick={() => { setView("outline"); send({ type: "break-group" }); }}><ListTree size={16} /> Outline</button></div>
       <div className="workbench-history"><button className="icon-button" aria-label="Undo" title="Undo (⌘Z outside a text field)" disabled={!history.past.length} onClick={undo}><Undo2 size={17} /></button><button className="icon-button" aria-label="Redo" title="Redo (⌘⇧Z outside a text field)" disabled={!history.future.length} onClick={redo}><Redo2 size={17} /></button></div>

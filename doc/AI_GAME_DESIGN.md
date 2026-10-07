@@ -12,6 +12,14 @@ The dedicated `/builder` page accepts a premise, mood, and language, provides a 
 
 ## Code ownership
 
+Cloud mode changes draft retention and execution: the same endpoint persists a
+job, archives provider output, and saves a completed draft before review. Keep
+opens that saved story; leaving the page only stops polling and future optional
+media submissions. See [cloud implementation and next work](CLOUD_STORAGE_DESIGN.md)
+for recovery guarantees and verification limits. Local request behavior remains
+as described above. Earlier ChatGPT verification is historical; that integration
+has been removed.
+
 Creation UI, shared generation schema, and draft state live in `src/modules/generation/`.
 The thin `/api/generate` route delegates to `src/server/generation/story.ts`;
 origin checks live in `src/server/auth/`, and allowed model selection lives in

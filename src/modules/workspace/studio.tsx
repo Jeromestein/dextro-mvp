@@ -31,6 +31,7 @@ import { assignedAsset } from "@/modules/media/assets/operations";
 import { useGameplayAudio } from "@/modules/media/audio/gameplay-provider";
 import { sampleStory } from "@/modules/story/sample";
 import { buildBackup, download, filename } from "@/modules/export/standalone";
+import GenerationHistory from "@/modules/storage/generation-history";
 import Player from "@/modules/player/player";
 import { Lighthouse } from "@/shared/ui/lighthouse";
 
@@ -39,17 +40,26 @@ const StoryEditor = dynamic(() => import("@/modules/editor/story-editor"), { ssr
 type Modal = "delete-story" | null;
 type View = "home" | "editor" | "play";
 export default function Studio({ view, storyId }: { view: View; storyId?: string }) {
-  const { ready, stories } = useLibrary();
-  const story = storyId === "sample-last-light" && view === "play" ? sampleStory() : stories.find((s) => s.id === storyId);
+  const { ready, loadStory } = useLibrary();
+  const [opened, setOpened] = useState<{id:string;story:Story|null;error:string}|null>(null);
+  useEffect(() => {
+    if (!ready || !storyId || view === "home") return;
+    let cancelled = false;
+    const result = storyId === "sample-last-light" && view === "play" ? Promise.resolve(sampleStory()) : loadStory(storyId);
+    void result.then(story => { if (!cancelled) setOpened({id:storyId,story,error:""}); }).catch(error => { if (!cancelled) setOpened({id:storyId,story:null,error:error.message}); });
+    return () => { cancelled = true; };
+  }, [ready, storyId, view, loadStory]);
+  const story = opened && opened.id === storyId ? opened.story : null;
+  if (view !== "home" && ready && opened?.id !== storyId) return <main className="route-message">Loading your story and checking its media…</main>;
   if (!ready) return <main className="route-message"><LoaderCircle className="spin" /> Opening your workspace…</main>;
-  if (view !== "home" && !story) return <main className="route-message"><h1>Game not found in this browser.</h1><p>Import its JSON backup in My Games, or start a new game.</p><Link href="/library" className="button">My Games</Link></main>;
+  if (view !== "home" && !story) return <main className="route-message"><h1>Could not open this game.</h1><p>{opened?.error || "Import its JSON backup in My Games, or start a new game."}</p><Link href="/library" className="button">My Games</Link></main>;
   if (view === "editor" && story) return <StoryEditor key={story.id} initialStory={story} />;
   return <StudioContent key={`${view}-${storyId || "library"}`} view={view} initialStory={story || null} />;
 }
 function StudioContent({ view, initialStory }: { view: View; initialStory: Story | null }) {
   const router = useRouter();
   const gameplayAudio = useGameplayAudio();
-  const { stories, ready, storageError, persistStory, deleteSavedStory } = useLibrary();
+  const { stories, ready, available, cloud, storageError, recovery, persistStory, deleteSavedStory, loadStory, retrySync, migrateLocalStories } = useLibrary();
   const [active, setActive] = useState<Story | null>(initialStory);
   const [modal, setModal] = useState<Modal>(null);
   const [search, setSearch] = useState("");
@@ -68,7 +78,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
     setActive(story);
     return true;
   };
-  const edit = (story: Story) => router.push(`/builder/${encodeURIComponent(story.id)}`);
+  const edit = (story: {id:string}) => router.push(`/builder/${encodeURIComponent(story.id)}`);
   const create = (story: Story) => {
     if (!persist(story)) return false;
     edit(story);
@@ -115,7 +125,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
       setActive(null);
       router.push("/library");
       setModal(null);
-      setNotice("Story deleted from this browser.");
+      setNotice(cloud ? "Story removed from My Games. Saved versions and media are retained." : "Story deleted from this browser.");
     } catch (e) {
       setNotice((e as Error).message);
     }
@@ -138,6 +148,8 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
           <div className="storage-warning" role="alert">
             <AlertCircle size={17} />
             {storageError}
+            <button onClick={() => void retrySync()}>Retry connection</button>
+            {recovery.map(story => <button key={story.id} onClick={() => download(`${filename(story)}-recovery.dextro.json`, buildBackup(story), "application/json")}>Backup: {story.title}</button>)}
             {active && <button onClick={exportJSON}>Download backup</button>}
           </div>
         )}
@@ -148,13 +160,14 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
               <div className="section-heading">
                 <div>
                   <div className="eyebrow muted">
-                    SAVED IN THIS BROWSER
+                    {cloud ? "PRIVATE CLOUD WORKSPACE" : available ? "SAVED IN THIS BROWSER" : "STORAGE UNAVAILABLE"}
                   </div>
                   <h2>
                     Games <span>{stories.length}</span>
                   </h2>
                 </div>
                 <div className="library-tools">
+                  {cloud && <button className="button subtle" disabled={!available} onClick={() => { if (window.confirm("Copy games from this browser into your cloud workspace? The original local games will stay in this browser.")) void migrateLocalStories().then(count => setNotice(`${count} local games queued for cloud saving.`)).catch(error => setNotice(error.message)); }}>Copy local games</button>}
                   <label className="search-box">
                     <Search size={16} />
                     <input
@@ -166,7 +179,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
                   </label>
                   <button
                     className="button subtle"
-                    disabled={!ready}
+                    disabled={!ready || !available}
                     onClick={() => importRef.current?.click()}
                   >
                     <Upload size={16} /> Import
@@ -250,15 +263,15 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
                         <div className="card-footer">
                           <span>
                             <GitBranch size={14} />
-                            {s.passages.length} passages ·{" "}
-                            {s.passages.filter((p) => p.ending).length} endings
+                            {s.passageCount} passages ·{" "}
+                            {s.endingCount} endings
                           </span>
                           <div>
                             <button
                               className="icon-button"
                               title="Play story"
                               aria-label={`Play ${s.title}`}
-                              onClick={() => play(s)}
+                              onClick={() => void loadStory(s.id).then(play).catch(error => setNotice(error.message))}
                             >
                               <Play size={16} />
                             </button>
@@ -267,8 +280,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
                               title="Delete story"
                               aria-label={`Delete ${s.title}`}
                               onClick={() => {
-                                setActive(s);
-                                setModal("delete-story");
+                                void loadStory(s.id).then(story => { setActive(story); setModal("delete-story"); }).catch(error => setNotice(error.message));
                               }}
                             >
                               <Trash2 size={15} />
@@ -304,10 +316,11 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
                 </div>
               )}
             </section>
+            {cloud && available && <GenerationHistory />}
             <footer className="library-footer">
               <span>Made for the stories only you can tell.</span>
               <span>
-                Drafts stay in this browser. Export a backup to keep them safe.{" "}
+                {cloud ? "Games and media save privately to the cloud. Exports work offline." : "Drafts stay in this browser. Export a backup to keep them safe."}{" "}
                 <ArrowDownIcon />
               </span>
             </footer>
@@ -353,8 +366,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
       {modal === "delete-story" && active && (
         <Dialog title="Delete this story?" onClose={closeModal}>
           <p className="modal-description">
-            “{active.title}” will be removed from this browser. Download a
-            backup first if you want to keep it.
+            “{active.title}” {cloud ? "will be removed from My Games. Its saved versions and media remain in private storage." : "will be removed from this browser. Download a backup first if you want to keep it."}
           </p>
           <div className="dialog-actions">
             <button className="button" onClick={exportJSON}>

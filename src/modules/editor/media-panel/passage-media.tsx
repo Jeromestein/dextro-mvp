@@ -5,6 +5,8 @@ import { ImagePlus, Music2, Sparkles, Upload } from "lucide-react";
 import type { Passage, Story } from "@/modules/story/model";
 import type { MediaKind, MediaAsset } from "@/modules/media/assets/model";
 import ImageGeneration from "@/modules/media/generation/image-generation";
+import { useLibrary } from "@/modules/workspace/library-provider";
+import SavedMedia from "@/modules/storage/saved-media";
 import CatalogPicker from "@/modules/media/catalog/catalog-picker";
 import { assignedAsset, usedAssets, storyByteSize } from "@/modules/media/assets/operations";
 import SoundControls from "@/modules/media/audio/sound-controls";
@@ -19,6 +21,8 @@ type Props = {
   batchControls?: ReactNode;
 };
 export default function PassageMedia({ story, passage, busy, onUpload, onAssign, onCredit, onPrune, onApply, batchControls }: Props) {
+  const { cloud } = useLibrary();
+  const [saved, setSaved] = useState<MediaKind | null>(null);
   const imageInput = useRef<HTMLInputElement>(null);
   const audioInput = useRef<HTMLInputElement>(null);
   const optionsId = useId();
@@ -40,6 +44,7 @@ export default function PassageMedia({ story, passage, busy, onUpload, onAssign,
         <button className="button" disabled={busy} onClick={() => (kind === "image" ? imageInput : audioInput).current?.click()}><Upload size={14} /><span>{busy ? "Reading file…" : kind === "image" ? "Upload image" : "Upload music"}</span></button>
         <button className="button" aria-expanded={expanded === kind} aria-controls={`${optionsId}-${kind}`} onClick={() => setExpanded(expanded === kind ? null : kind)}>{kind === "image" ? <Sparkles size={14} /> : <Music2 size={14} />}<span>{kind === "image" ? "Create a scene image with AI" : "Choose from library"}</span></button>
       </div>
+      <div>{cloud && <button className="button" aria-expanded={saved===kind} onClick={()=>setSaved(saved===kind?null:kind)}>Saved {kind==="image"?"images":"music"}</button>}{saved===kind && <SavedMedia key={kind} kind={kind} onApply={onApply}/>}</div>
       <small className="media-file-hint">{kind === "image" ? "PNG, JPEG or WebP · up to 2 MB" : "MP3, M4A, OGG, WAV or WebM · up to 6 MB"}</small>
       <div id={`${optionsId}-${kind}`} hidden={expanded !== kind}>
         {expanded === kind && (kind === "image" ? <ImageGeneration story={story} passage={passage} onApply={onApply} /> : <CatalogPicker assignedId={audio?.id} onApply={onApply} />)}

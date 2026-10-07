@@ -1,3 +1,4 @@
+import { withWorkflow } from "workflow/next";
 import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -6,4 +7,4 @@ const nextConfig: NextConfig = {
   turbopack: { root: process.cwd() },
   outputFileTracingRoot: process.cwd(),
 };
-export default nextConfig;
+export default withWorkflow(nextConfig);

@@ -195,3 +195,20 @@
 
 .model-settings { display:grid; gap:20px; }
 .settings-card .model-settings>p { margin:0; }
+
+.generation-history { margin-top:44px; border-top:1px solid var(--line); padding-top:24px; }
+.generation-history>p { color:var(--muted); font-size:13px; }
+.generation-record { display:flex; flex-wrap:wrap; align-items:center; gap:12px 24px; padding:14px 0; border-bottom:1px solid var(--line); font-size:13px; }
+.generation-record>div { flex:1; min-width:180px; display:grid; gap:4px; }
+.generation-record small { color:var(--muted); }
+.generation-record>p { width:100%; margin:0; line-height:1.5; }
+.saved-media { padding:14px 0; }
+.saved-media-row { width:100%; display:grid; gap:5px; padding:12px; margin:6px 0; text-align:left; background:var(--paper); border:1px solid var(--line); border-radius:8px; overflow-wrap:anywhere; }
+.saved-media-row small { opacity:.7; }
+.library-tools { flex-wrap:wrap; }
+.storage-warning { flex-wrap:wrap; overflow-wrap:anywhere; }
+@media (max-width:600px) {
+  .studio-main .library-tools { width:100%; gap:8px; }
+  .studio-main .library-tools .search-box { order:-1; flex:1 0 100%; width:100%; }
+  .studio-main .library-tools .search-box input { width:100%; }
+}

@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.7.1",
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "dev": "next dev --port 3100",
@@ -15,15 +15,18 @@
     "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "@xyflow/react": "^12.12.0",
     "elkjs": "^0.12.0",
     "lucide-react": "^0.468.0",
     "next": "16.3.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "workflow": "^5.1.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

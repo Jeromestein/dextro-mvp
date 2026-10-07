@@ -278,3 +278,67 @@ No real OpenAI request was made: the local key and workshop code are not configu
 The API-only change was reconstructed as a separate review snapshot, without the
 cloud adapter. All 56 tests, TypeScript and ESLint passed against that snapshot.
 The existing working directory and local secret configuration were preserved.
+
+
+## Cloud storage integration — 2026-10-07
+
+- Applied the migration to Everlove Foundation / dextro-mvp. Supabase SQL checks:
+  7 RLS-enabled application tables, 2 private buckets, 1 internal owner, and
+  0 anon/authenticated application-table grants.
+- Added tests for atomic revision saves, idempotent replay, stale-revision and
+  cross-owner asset rejection, function/table permissions, persistent paid-call
+  claims, global daily limits, loopback identity gating, output recovery after a
+  storage interruption, explicit uncertain outcomes, graph/media/layout round
+  trips, embedded exports and owner/project-scoped local recovery storage.
+- In-app browser, isolated fixture at port 3101: saved a changed title, reopened
+  it, switched Graph/Outline, previewed and reused a stored image in another
+  passage, recovered unsynced edits from a new tab, saved them as a new game, and
+  checked desktop / 390 x 844 layout. The fixture never calls Supabase or OpenAI.
+- Used the Playable HTML button to download a real 3,306,224-byte export. Static
+  inspection found 9 passages, 2 valid embedded media payloads and no external
+  media/script references. Browser local-file navigation was denied by the URL
+  policy, so offline file playback is not claimed as visually verified.
+- At the time of the fixture checks, SUPABASE_SECRET_KEY was not configured.
+  The connection check below supersedes that configuration gap; real application
+  save/upload round trips and provider jobs remain unverified. No deployment or
+  paid generation was performed. The production principal intentionally fails closed.
+- Final checks passed: `pnpm typecheck`, `pnpm lint`, all 64 tests, and
+  `git diff --check`. No `pnpm build` was run. The temporary fixture server
+  (`pnpm exec tsx output/playwright/cloud-ui-server.mts`) was stopped after checks.
+  The existing development server was not started or restarted by this task.
+
+## Supabase connection verification — 2026-10-07
+
+- The user populated `SUPABASE_SECRET_KEY` in the ignored `.env.local`. Checks
+  confirmed the expected project URL, `STORAGE_MODE=supabase`, a nonempty secret
+  key with the expected prefix and no surrounding whitespace, and an internal
+  owner configuration. No secret value was printed or committed.
+- The existing server at `http://localhost:3100/api/storage` returned HTTP 200,
+  `mode: supabase`, and `available: true`. This route successfully reads the
+  configured owner's `app_users` record; it is more than a key-presence check.
+- Authenticated read checks returned HTTP 200 for `app_users`, `stories`,
+  `media_assets`, `story_versions`, `story_asset_refs`, `generation_jobs`, and
+  `generation_attempts`. Both `user-media` and `generation-output` were listed
+  with `public: false`.
+- These checks were read-only. They do not establish successful story mutations,
+  signed uploads/downloads, complete export/playback, paid model access, Workflow
+  execution, or hosted/user-account isolation. No provider request was made.
+- A supplemental check under Node.js 20 failed before connecting because the
+  installed Supabase client requires native WebSocket support and Node.js 22+.
+  Repeating under the shell's Node.js 25.6.1 passed. The project's declared
+  minimum and setup guidance now require Node.js 22+; this was not a key failure.
+
+## Cloud commit preparation — 2026-10-07
+
+- Updated setup, requirements, module/state documentation, and the documentation
+  index to distinguish implemented cloud behavior, verified connectivity, and
+  outstanding live save/upload/provider/deployment checks. Prioritized the next
+  work in `CLOUD_STORAGE_DESIGN.md`.
+- Corrected Settings' storage description to reflect the active mode. The Codex
+  in-app browser verified the actual connected `/settings` page on desktop and
+  at 390 × 844: **Saved to your private cloud workspace** is visible, and page
+  width remains 390px on mobile. Model selections were not changed. The temporary
+  tab was closed and the viewport override reset.
+- All 64 tests, TypeScript, ESLint and whitespace checks passed for the cloud
+  implementation. No production build, paid generation or deployment was run.
+  The existing development server was reused without a restart.
