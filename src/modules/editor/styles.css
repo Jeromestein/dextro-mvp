@@ -61,9 +61,17 @@
 .graph-tools-action:hover { background:color-mix(in srgb,var(--ink) 85%,white); }
 .graph-tools-action:focus-visible { outline:2px solid var(--ink); outline-offset:3px; }
 .story-graph .react-flow__attribution { font-size:11px; background:transparent; color:var(--muted); }
-.story-graph .react-flow__edge.selected .react-flow__edge-path { stroke:var(--orange)!important; stroke-width:2.5!important; }
+.story-graph .react-flow__edge .story-edge-flow { stroke-dasharray:none; }
+@media (prefers-reduced-motion:no-preference) {
+  .story-graph .react-flow__edge .story-edge-flow { --edge-draw-start:1; stroke-dasharray:1; animation:story-edge-grow 4.8s linear infinite; }
+  .story-graph .react-flow__edge .story-edge-flow[data-reverse] { --edge-draw-start:-1; }
+}
+@keyframes story-edge-grow {
+  0%,4% { stroke-dashoffset:var(--edge-draw-start); opacity:1; }
+  60%,78% { stroke-dashoffset:0; opacity:1; }
+  92%,100% { stroke-dashoffset:0; opacity:0; }
+}
 .map-node { width:250px; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 4px 14px color-mix(in srgb, var(--ink) 3%, transparent); overflow:visible; }
-.map-node.selected { border-color:var(--ink); box-shadow:0 0 0 2px color-mix(in srgb, var(--ink) 16%, transparent),0 5px 18px #2527230a; }
 .map-node.connect-target { outline:1px dashed var(--line-strong); outline-offset:5px; }
 .map-node-heading { height:90px; padding:15px 17px 12px; position:relative; cursor:grab; }
 .map-node-heading:active { cursor:grabbing; }
@@ -74,6 +82,9 @@
 .map-node-problem.error { color:var(--danger); }
 .map-node.ending { border-color:#ddd3bd; }
 .map-node.ending .map-node-type { color:var(--warning); }
+.map-node.selected { border-color:transparent; background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(90deg,color-mix(in srgb,var(--orange) 45%,var(--surface)),var(--orange)) border-box; box-shadow:0 0 0 2px color-mix(in srgb,var(--orange) 18%,transparent),0 5px 18px #2527230a; }
+.map-node.selected .map-node-heading { border-radius:9px 9px 0 0; background:linear-gradient(90deg,transparent,var(--accent-soft)); }
+.map-node.selected .opening-dot { background:var(--orange); }
 .map-choice { height:38px; position:relative; display:flex; align-items:center; gap:8px; padding:7px 14px 7px 16px; border-top:1px solid var(--line); font-size:12px; }
 .map-choice-number { color:var(--muted); font-size:11px; }
 .map-choice-label { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); }
@@ -82,6 +93,7 @@
 .map-choice.unconnected .map-choice-label { color:var(--warning); }
 .map-choice .react-flow__handle { right:-6px; }
 .map-node .react-flow__handle { width:11px; height:11px; border:2px solid #fff; background:var(--ink); box-shadow:0 0 0 1px var(--line-strong); }
+.map-node.selected .react-flow__handle { background:var(--orange); box-shadow:0 0 0 1px var(--orange); }
 .map-node .react-flow__handle-left { left:-6px; top:44px; }
 .map-node .react-flow__handle.connectingto { background:var(--orange); }
 .map-add-choice { height:38px; border-top:1px solid var(--line); width:100%; display:flex; justify-content:center; align-items:center; gap:5px; font-size:11px; color:var(--muted); border-radius:0 0 10px 10px; }

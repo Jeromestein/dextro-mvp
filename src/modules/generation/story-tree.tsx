@@ -1,5 +1,5 @@
-function Leaf({ x, y, angle = 0, accent = false }: { x: number; y: number; angle?: number; accent?: boolean }) {
-  return <path className={`story-tree-leaf${accent ? " accent" : ""}`} transform={`translate(${x} ${y}) rotate(${angle})`} d="M0 0C-2-9 2-18 11-23C14-12 10-3 0 0Z" />;
+function Leaf({ x, y, angle = 0, growth }: { x: number; y: number; angle?: number; growth?: "lower" | "middle" | "upper" }) {
+  return <path className={`story-tree-leaf${growth ? " accent" : ""}`} data-growth={growth} transform={`translate(${x} ${y}) rotate(${angle})`} d="M0 0C-2-9 2-18 11-23C14-12 10-3 0 0Z" />;
 }
 
 export default function StoryTree() {
@@ -16,7 +16,8 @@ export default function StoryTree() {
           <path strokeWidth="1.5" d="M147 98C132 86 118 81 116 64M150 65C163 61 177 51 181 39M220 133C211 117 211 102 218 85M243 112C258 116 272 110 279 99" />
           <path strokeWidth="1.2" d="M94 92Q77 90 73 77M123 83Q122 96 127 102M217 94Q234 84 236 70M257 96Q248 87 247 76" />
         </g>
-        <path className="story-tree-route" strokeWidth="2.2" d="M161 228C164 207 164 190 155 171C148 155 148 140 152 127C155 108 143 95 145 78C146 62 157 51 160 37" />
+        <path className="story-tree-route" pathLength={1} strokeWidth="2.2" d="M158 241L161 228C164 207 164 190 155 171C148 155 148 140 152 127C155 108 143 95 145 78C146 62 157 51 160 37" />
+        <path className="story-tree-route story-tree-route-branch" pathLength={1} strokeWidth="1.5" d="M150 65C163 61 177 51 181 39" />
       </g>
       <g>
         <Leaf x={46} y={106} angle={-85} />
@@ -26,10 +27,10 @@ export default function StoryTree() {
         <Leaf x={101} y={110} angle={28} />
         <Leaf x={117} y={68} angle={-53} />
         <Leaf x={124} y={94} angle={-100} />
-        <Leaf x={143} y={84} angle={-44} accent />
-        <Leaf x={150} y={64} angle={-53} accent />
-        <Leaf x={172} y={53} angle={15} accent />
-        <Leaf x={151} y={113} angle={42} accent />
+        <Leaf x={143} y={84} angle={-44} growth="middle" />
+        <Leaf x={150} y={64} angle={-53} growth="upper" />
+        <Leaf x={172} y={53} angle={15} growth="upper" />
+        <Leaf x={151} y={113} angle={42} growth="lower" />
         <Leaf x={213} y={116} angle={-48} />
         <Leaf x={220} y={89} angle={-22} />
         <Leaf x={237} y={73} angle={8} />

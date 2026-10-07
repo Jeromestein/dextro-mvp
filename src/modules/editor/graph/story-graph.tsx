@@ -5,11 +5,12 @@ import type { PlaybackProgress } from "@/modules/player/player";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ReactFlow, ReactFlowProvider, Background, Handle, Position, MarkerType, Panel,
-  useReactFlow, useUpdateNodeInternals, useViewport, type Node, type NodeProps, type NodeChange, type Edge,
+  useReactFlow, useUpdateNodeInternals, useViewport, type Node, type NodeProps, type NodeChange,
   type OnConnectEnd, type Viewport as FlowViewport } from "@xyflow/react";
 import { AlertCircle, ArrowUpRight, Flag, Link2, Plus, Minus, Unlink, X, Focus, ImagePlus, Music2, MousePointer2, Move, PenLine } from "lucide-react";
 import { GRAPH_COORDINATE_LIMIT, type Issue, type Passage, type Story } from "@/modules/story/model";
 import { NODE_WIDTH, positionsFor } from "./layout";
+import StoryEdge, { type ChoiceEdge } from "./story-edge";
 import type { Point, Positions, ChoiceRef, Viewport } from "../session/types";
 
 type PassageNode = Node<{
@@ -41,6 +42,7 @@ const PassageCard = memo(function PassageCard({ id, data, selected }: NodeProps<
   </div>;
 });
 const nodeTypes = { passage: PassageCard };
+const edgeTypes = { choice: StoryEdge };
 type Props = {
   readOnly?: boolean;
   toolbarHost?: HTMLDivElement | null;
@@ -80,16 +82,19 @@ function Graph(props: Props) {
       showThumbnails, playing: playingId === p.id, onMedia, passage: p, opening: story.startId === p.id, issues: issues.filter((i) => i.passageId === p.id),
       connecting: !!pending, onSelect: select, onChoice: onAddChoice, onConnect: setPending },
   })), [story, dragPositions, measurements, positions, selected, issues, pending, select, onAddChoice, onMedia, playingId, showThumbnails, readOnly]);
-  const edges: Edge[] = useMemo(() => story.passages.flatMap((p) => p.ending ? [] : p.choices.flatMap((c) => {
+  const edges: ChoiceEdge[] = useMemo(() => story.passages.flatMap((p) => p.ending ? [] : p.choices.flatMap((c) => {
     if (!story.passages.some((p) => p.id === c.target)) return [];
     const visited = playback?.path.some((step) => step.passageId === p.id && step.choiceId === c.id && step.target === c.target);
     const active = p.id === selected || c.target === selected;
+    const edgeSelected = selectedEdge?.passageId === p.id && selectedEdge.choiceId === c.id;
+    const highlighted = active || edgeSelected;
     return [{ id: JSON.stringify([p.id, c.id]), source: p.id, sourceHandle: c.id, target: c.target, targetHandle: "in",
       animated: !!visited,
-      reconnectable: readOnly ? false : "target" as const, type: "default", selected: selectedEdge?.passageId === p.id && selectedEdge.choiceId === c.id,
+      reconnectable: readOnly ? false : "target" as const, type: "choice" as const, selected: edgeSelected,
+      data: { highlighted, highlightKey: edgeSelected ? JSON.stringify([p.id, c.id]) : selected },
       ariaLabel: `${c.text || "Untitled choice"} from ${p.title} to ${story.passages.find((p) => p.id === c.target)?.title}`,
-      markerEnd: { type: MarkerType.ArrowClosed, color: visited ? "var(--orange)" : active ? "var(--ink)" : "var(--graph-edge)" },
-      style: { stroke: visited ? "var(--orange)" : active ? "var(--ink)" : "var(--graph-edge)", strokeWidth: visited ? 3 : active ? 2 : 1.5 } }];
+      markerEnd: { type: MarkerType.ArrowClosed, color: visited || highlighted ? "var(--orange)" : "var(--graph-edge)" },
+      style: { stroke: visited || highlighted ? "var(--orange)" : "var(--graph-edge)", strokeWidth: visited ? 3 : edgeSelected ? 2.5 : active ? 2 : 1.5 } }];
   })), [story, selected, selectedEdge, playback, readOnly]);
 
   const onNodesChange = useCallback((changes: NodeChange<PassageNode>[]) => {
@@ -144,7 +149,7 @@ function Graph(props: Props) {
     if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); if (selectedEdge) { onConnect(selectedEdge, ""); setSelectedEdge(null); } else props.onDelete(selected); }
   }}>
     {props.toolbarHost ? createPortal(canvasControls, props.toolbarHost) : <div className="graph-inline-toolbar">{canvasControls}</div>}
-    <ReactFlow<PassageNode> nodesDraggable={!readOnly} nodesConnectable={!readOnly} edgesReconnectable={!readOnly} nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange}
+    <ReactFlow<PassageNode, ChoiceEdge> nodesDraggable={!readOnly} nodesConnectable={!readOnly} edgesReconnectable={!readOnly} nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodesChange={onNodesChange}
       onNodeClick={(_, n) => select(n.id)} onEdgeClick={(_, e) => { setPending(null); setSelectedEdge({ passageId: e.source, choiceId: e.sourceHandle! }); props.onSelectEdge?.(); }}
       onPaneClick={() => { setPending(null); setSelectedEdge(null); }}
       onNodeDragStart={() => { dragging.current = true; }}
