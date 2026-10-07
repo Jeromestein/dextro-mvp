@@ -11,8 +11,7 @@ catalog described below are implemented. These decisions supersede the broader
 provider candidates discussed earlier.
 
 - Generate images through a server-side OpenAI adapter using a separately billed
-  API key. Keep image readiness independent of the existing text-provider mode;
-  local ChatGPT text authorization does not enable paid image requests.
+  API key. Use the same environment API key for stories and images, with separate model selections.
 - Curate Kenney short effects and Freesound music loops, ambience, and effects.
   Accept only assets whose individual source/license records establish CC0.
   Do not include CC BY, CC BY-NC, or unspecified-license downloads in this catalog.
@@ -46,8 +45,7 @@ enable, mute/volume, same-track continuity, fades, Silence, and offline exports.
 
 ### Initial provider/catalog integration — 2026-10-06
 
-Implemented: a server-only OpenAI image endpoint with an independent workshop-code
-guard; a six-track Freesound CC0 catalog with local bytes and source/license
+Implemented: a server-only OpenAI image endpoint with same-origin checks; a six-track Freesound CC0 catalog with local bytes and source/license
 records; per-passage image candidates and music audition/assignment in Media;
 optional structured scene grouping/music cues alongside generated stories;
 sequential image enrichment (up to four), deterministic music matching, and
@@ -453,9 +451,7 @@ evidence that the proposed product features are implemented.
 
 Before enabling automatic images, verify the selected OpenAI model, API-key
 authorization, reference-image behavior, generation latency, output format,
-pricing, and allowed usage. Keep the workshop-code guard on billable API requests.
-Do not change the text provider or silently route local subscription requests to
-API billing. `OPENAI_IMAGE_MODEL` now selects the image model (default
+pricing, and allowed usage. Requests use the environment API key without a sign-in or access-code step. `OPENAI_IMAGE_MODEL` now selects the image model (default
 `gpt-image-2.5-flare`). See [AI setup](AI_SETUP.md) for credentials and UI steps.
 
 Choose and audition the actual Kenney/Freesound CC0 files, normalize playback

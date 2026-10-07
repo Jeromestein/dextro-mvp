@@ -9,7 +9,7 @@ The root [README](../README.md) covers running the app and the current module ma
 | [Workspace architecture](WORKSPACE_ARCHITECTURE.md) | Routes, providers, editor coordination, state lifetimes. | Implemented workspace |
 | [AI game design](AI_GAME_DESIGN.md) | Text generation and proposed targeted editing. | Implemented and proposed sections distinguished |
 | [Graph media design](GRAPH_MEDIA_DESIGN.md) | Graph-integrated images, music, generation, and acceptance criteria. | Initial provider/catalog integration implemented; live image access unverified |
-| [AI setup and deployment](AI_SETUP.md) | Local ChatGPT mode, API-key mode, deployment configuration. | Setup guide; live eligibility requires verification |
+| [AI setup and deployment](AI_SETUP.md) | Environment API key, model selection, deployment configuration. | Setup guide; live eligibility requires verification |
 | [Verification record](VERIFICATION.md) | Dated checks and their limits. | Historical evidence, not a claim about every current environment |
 
 Read requirements first, then system and workspace architecture. Use feature

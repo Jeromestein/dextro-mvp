@@ -29,6 +29,7 @@ export function validMediaPlan(raw: unknown, passageIds: string[]): MediaPlan | 
 }
 export const imageRequestSchema = z.object({
   requestId: z.string().uuid(),
+  model: z.string().min(1).max(100).optional(),
   title: z.string().max(200),
   artBrief: z.string().max(1500),
   scene: z.string().trim().min(10).max(4000),

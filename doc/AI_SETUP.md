@@ -1,98 +1,86 @@
-# AI Provider Setup and Deployment
+# AI Setup and Deployment
 
-Run commands from the `dextro-mvp` project root. This guide preserves the existing
-text-generation setup and documents the independent image and audio integrations.
-See [system design](SYSTEM_DESIGN.md) for implementation boundaries.
+Dextro uses one server-side OpenAI API key for stories and scene images.
+There is no sign-in or access-code step. Settings contains two model selectors.
 
-## Scene images and the CC0 audio library
+## Environment
 
-Scene images use the OpenAI Images API independently of the text-provider mode.
-Set these server-side values in `.env.local` (or the deployment environment):
+Run commands from the `dextro-mvp` project root. Copy `.env.example` to
+`.env.local` only if the latter does not exist, then set:
 
-- `OPENAI_API_KEY`: an API key with image-model access and API billing enabled.
-- `OPENAI_IMAGE_MODEL`: optional; defaults to `gpt-image-2.5-flare`.
-- `AI_ACCESS_CODE`: the same private workshop code used by API text generation.
+- `OPENAI_API_KEY`: required for AI generation, with API billing/model access.
+- `OPENAI_MODEL`: optional story default, otherwise `gpt-5.6-luna`.
+- `OPENAI_IMAGE_MODEL`: optional image default, otherwise `gpt-image-2.5-flare`.
 
-Keep `AI_PROVIDER=chatgpt` if text should continue using the local plan. Image
-requests always use the separate API key and workshop-code guard. Neither the
-ChatGPT session nor an image configuration check verifies image API eligibility.
-Never put the API key into the browser or a `NEXT_PUBLIC_` variable.
-
-After changing the environment, restart the development server from your terminal.
-Open **Settings**, choose **Check image configuration**, and enter the workshop
-code (the image-specific field is also available in ChatGPT text mode). The
-image model and configuration state are shown independently of text readiness.
-
-In **Game Builder**, background music defaults to Auto. Enable scene images
-explicitly to request up to four images with the story; choose Storybook or
-Cinematic. Text becomes available for review before media completes. Keeping or
-leaving the draft stops remaining requests and retains completed media.
-
-In the editor, select a Graph node and open **Media**. **Generate scene** produces
-one preview; **Apply image** commits it and **Discard** keeps the original. A
-story with a media plan also offers **Match missing music** and **Generate missing
-images**. Existing assignments are preserved; changed scene facts require a
-new per-passage preview. Single-image actions use the selected visual style;
-bulk recovery currently uses Storybook. Undo stops pending recovery work.
-
-Each image request asks for one economy-quality (`low`) 1536 × 1024 WebP at compression
-80. There are at most two active image requests per server process; the client
-batch runs sequentially. Requests have a 150-second server deadline and are not
-automatically retried. Duplicate request IDs are rejected for ten minutes in the
-local process, including uncertain failures. This is not a distributed quota or
-durable queue. Cancellation cannot reverse provider charges already started.
-
-**Free music library** offers six bundled Freesound CC0 tracks. Load a preview,
-listen, and choose **Use this music**. Source/credit metadata, bytes, and assignment
-are saved with the story and travel with backups and offline games. No Freesound
-API key or network search is required. Three Kenney CC0 jingles are reserved in
-`public/media/library/effects/`; one-shot playback is not implemented, so they are
-not automatically assigned as looping music. See the [library records](../public/media/library/README.md).
-
-The image request contract follows the [official OpenAI image API](https://developers.openai.com/api/reference/resources/images/methods/generate).
-Local mocked tests verify the request and UI flow; a live image call is still
-required to confirm credentials, account access, output quality, and hosting
-latency. See [verification](VERIFICATION.md).
-
-## Local ChatGPT plan testing
-
-Set `AI_PROVIDER=chatgpt` in `.env.local`. This local mode needs neither an API key nor a workshop access code. Run the local server on the IPv4 loopback address:
+Restart your development server after changing environment variables:
 
 ```sh
-WATCHPACK_POLLING=true pnpm dev --webpack --hostname 127.0.0.1 --port 3100
+pnpm dev
 ```
 
-Open http://localhost:3100/settings (or http://127.0.0.1:3100/settings) and choose **Continue with ChatGPT** directly. Sign in to an eligible Plus or Pro account, review the requested plan-use permission, then use **Return to settings** on the callback page. Use **Load available models** to choose a model from that account's live catalog, then choose **Return to builder** to write an idea and generate a game. Without an explicit choice, generation uses GPT-5.6 Luna (`gpt-5.6-luna`), including after a full reload. Loading the catalog does not change the selection. If Luna is unavailable for the account, choose an available model in Settings; Dextro does not silently switch to another model. Manual selections last until a full reload. Existing drafts remain in browser-local storage. `localhost` and `127.0.0.1` have separate browser storage and sign-in cookies; use the address where your games were created, or move a game with a JSON export/import. This change does not migrate games between origins.
+Open http://localhost:3100/settings. If native file watching is unavailable, use
+`WATCHPACK_POLLING=true pnpm dev --webpack`.
 
-**Cost control:** This shares the user's ChatGPT plan allowance and may use credits if the user permits that in ChatGPT settings. In **Manage usage**, disable using credits after the plan limit to stay within the subscription. Dextro cannot enforce or change that account setting. It never falls back to API-key billing automatically. Provider/account eligibility is only confirmed by a completed live generation.
+The key stays on the server, never in browser storage or a `NEXT_PUBLIC_` variable.
+All visitors who can reach the studio can generate using that key. The same-origin
+request check is retained; it is not a user identity or quota system.
+`AI_PROVIDER` and `AI_ACCESS_CODE` are no longer used, even if left in an old env file.
+The ChatGPT/OpenID routes and token-handling implementation have been removed.
+Legacy `.dextro-chatgpt/` files are unused and remain ignored/excluded from deployment.
 
-The local OAuth integration follows [OpenAI registration and sign-in](https://developers.openai.com/siwc/token-sharing-open-source/sign-in), [accounts and sessions](https://developers.openai.com/siwc/token-sharing-open-source/profiles-and-sessions), and [preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations). OpenAI requires the provider callback to use `127.0.0.1`. When sign-in starts on `localhost`, Dextro relays the callback to the initiating localhost origin on the same port before verifying its browser cookie, exchanging the code, and setting the signed-in session. The token exchange retains the exact registered IPv4 redirect URI. Return destinations come from short-lived server state, never a request-supplied return URL. Callback responses disable caching and referrers. It uses dynamic client registration, a stable per-installation host ID, PKCE, browser-bound one-time state, and verified ID-token signatures, issuer, audience, expiry, and nonce. Separate account/workspace registrations can be selected or reauthorized. Sign-out attempts remote revocation, clears local tokens, and preserves the client mapping for later sign-in.
+## Models
 
-Credentials live only in `.dextro-chatgpt/accounts.json`, with owner-only file/directory permissions and atomic writes. The directory is gitignored and excluded from deployment tracing. Do not copy it to Vercel, browser storage, logs, or support messages. Next development request logging excludes the callback URL. The browser receives only an HttpOnly local session cookie and account labels, never provider tokens. A filesystem lock serializes registration and refresh writes. Run one local Next server per credential directory. If a process is forcibly killed while holding the lock, stop all Dextro servers before removing only `.dextro-chatgpt/lock` and restarting; do not delete `accounts.json` to resolve a lock issue.
+Choose **Story model** and **Image model** in Settings. Choices are remembered
+in this browser and apply to future requests, including story repair, individual
+scene previews, new-story images, and missing-image recovery. The configured
+environment default is also listed when it is outside the built-in model list.
+The server rejects arbitrary models not in that list or its configured default.
 
-ChatGPT mode is rejected on Vercel, production runtimes, non-loopback hosts, and mutation requests with a missing or mismatched Origin. In this local mode, the origin guard and authorized browser session replace manual workshop-code entry; the server never sends the environment code to the browser. It is a local test integration, not a hosted multi-user authentication service. Remotely hosted apps require their own eligible OpenAI integration. Authentication and inference are server-side; account changes/sign-out cancel in-flight generation in the local process. Streaming output is accepted only after `response.completed`, then passes the same structural story checks and one-repair limit. This plan route requires `stream: true`, array input, and `store: false`, and does not support `max_output_tokens`; the API route below retains its output-token cap. Both routes keep the shared deadline and bounded response sizes.
+Settings checks configuration presence, not live account eligibility. An unavailable
+model produces an error; Dextro never silently substitutes another model. The API
+key pays for all AI usage. Music remains a bundled free CC0 selection.
 
-## Optional API-key setup
+## Generate and review
 
-Set `AI_PROVIDER=api` (or leave it unset) to use the separately billed API route.
+In **Game Builder**, background music defaults to Auto. Enable **Scene images**
+explicitly for up to four shared scene images. Text is available before media
+finishes; keeping or leaving the draft stops pending work.
 
-Copy `.env.example` to `.env.local`, then supply:
+In the editor, select a Graph node and open **Media**. Beside **Upload image**,
+click **Create a scene image with AI** to reveal the scene description and style.
+Generate a preview, then choose **Apply image** or **Discard**. For music, click
+**Choose from library**, load a preview, listen, and choose **Use this music**.
 
-- `OPENAI_API_KEY`: server-side provider credential; never prefix it with `NEXT_PUBLIC_`.
-- `OPENAI_MODEL`: a Responses API model supporting strict structured outputs. The example uses `gpt-5.6-luna`; availability depends on your account.
-- `AI_ACCESS_CODE`: a private ASCII workshop code that authorized testers enter in Settings before generating a draft. This is separate from the API key. All three variables are required to enable generation. Use non-whitespace printable ASCII characters for the workshop code.
+Stories with a media plan can **Match missing music** or **Generate missing
+images**. Existing assignments are preserved. Changed scene facts require a new
+per-passage preview. Bulk recovery uses Storybook; individual images use the
+selected visual style. Undo stops pending recovery.
 
-Restart the development server after changing environment variables, then open **Settings** and click **Check connection**. This checks configuration presence; a successful live generation is still required to confirm account access and credentials. No credentials are included in this project, and AI is visibly unavailable until configured. Generation and its optional repair share one 150-second deadline. Each request is limited to two provider calls (one generation plus at most one repair), with at most 8,000 output tokens per call in API-key mode, bounded input/response sizes, strict output parsing, and graph validation. Refusals, incomplete output, provider failures, and timeouts are not automatically retried. Authors can cancel; late responses cannot replace a newer draft. It never replaces an existing story automatically.
+Images use fixed `low` quality, 1536 × 1024 WebP, compression 80. At most two image
+requests run per server process, and client batches run sequentially. The server
+uses a 150-second deadline. Image calls are not automatically retried, and duplicate
+request IDs are rejected for ten minutes in the process. Cancellation cannot
+reverse charges for provider work already started.
 
-In API-key mode, the workshop code gates billable requests, but it is not a user account system or a distributed quota. For public AI access, add authenticated users and durable per-user quotas before distributing access. Generation errors do not expose provider credentials or raw upstream responses. Aborting a request does not guarantee that the provider has stopped billing work already started.
+Story generation and at most one structural repair share a 150-second deadline.
+Each provider call is limited to 8,000 output tokens; input/response sizes are
+bounded. Refusals, incomplete output, provider failures, and timeouts are not
+retried. Provider errors do not expose credentials or raw upstream responses.
+
+The library contains six Freesound CC0 tracks. Selected bytes and source credits
+travel with stories, backups, and offline exports. Three Kenney jingles are
+reserved for future one-shot support. No runtime Freesound search or API key is
+required. See the [library records](../public/media/library/README.md).
 
 ## Vercel
 
-1. Import the repository containing this project.
-2. Set **Root Directory** to `dextro-mvp` if deploying the parent folder; leave it at the repository root if this folder is its own repository.
-3. Choose the **Next.js** framework preset. `vercel.json` specifies `pnpm install --frozen-lockfile` and `pnpm build` for Vercel's build service.
-4. Use a supported Node.js version satisfying `package.json` (22.x is a suitable target).
-5. For hosted API generation, set `AI_PROVIDER=api` and the three API configuration variables. Local ChatGPT credentials must not be uploaded to Vercel. Then deploy.
-6. Verify the deployed story workflow and restore a JSON backup if moving existing local drafts to the new origin.
+1. Import the repository; use `dextro-mvp` as Root Directory only when importing
+   its parent folder.
+2. Choose Next.js and a supported Node.js version satisfying `package.json`.
+3. Set `OPENAI_API_KEY` and, optionally, the two default-model variables.
+4. Deploy and verify generation on the deployed origin. Local configuration and
+   mocked tests do not verify deployed account access or execution limits.
 
-No Vercel deployment has been created as part of the initial local implementation. The deployment build command is configured, but `pnpm build` must not be run by Codex under this project's instructions.
+Vercel runs the configured build; do not run `pnpm build` locally under project
+instructions. Browser-local games do not migrate between origins automatically;
+use JSON export/import. See [verification](VERIFICATION.md) for actual checks.

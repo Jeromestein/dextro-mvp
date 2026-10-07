@@ -8,14 +8,14 @@ An author describes an idea and receives a complete, editable choice-based text 
 
 ## Existing foundation
 
-The dedicated `/builder` page accepts a premise, mood, and language, provides a complete playable preview with passage/ending selection, and saves an accepted draft as a new story. Structural failures get at most one repair within a shared deadline. Cancellation prevents late results from replacing a newer draft. The server uses the OpenAI Responses API with strict structured output, provider-specific authorization, and graph validation. API-key mode requires a workshop code; local ChatGPT mode uses strict loopback/same-origin checks and an authorized browser session. Drafts target 8–12 passages and 2–3 endings. Local ChatGPT authorization, model discovery, and generation were verified on 2026-10-01; hosted API-key generation remains unverified. Local editing, playing, and export are already implemented. Account, model, usage, and workshop-code controls live on `/settings`; the builder only shows a compact connection status and a Settings link. Creation and review are page content, not dialogs.
+The dedicated `/builder` page accepts a premise, mood, and language, provides a complete playable preview with passage/ending selection, and saves an accepted draft as a new story. Structural failures get at most one repair within a shared deadline. Cancellation prevents late results from replacing a newer draft. The server uses the OpenAI Responses API with strict structured output, same-origin request checks, and graph validation. The server environment supplies the API key; no sign-in or access code is required. Drafts target 8–12 passages and 2–3 endings. Local ChatGPT authorization, model discovery, and generation were verified on 2026-10-01; hosted API-key generation remains unverified. Local editing, playing, and export are already implemented. Story and image model selectors live on `/settings`; the builder only shows a compact connection status and a Settings link. Creation and review are page content, not dialogs.
 
 ## Code ownership
 
 Creation UI, shared generation schema, and draft state live in `src/modules/generation/`.
 The thin `/api/generate` route delegates to `src/server/generation/story.ts`;
-authorization and provider response handling live in `src/server/auth/` and
-`src/server/providers/`. Connection UI/state live in `src/modules/connections/`.
+origin checks live in `src/server/auth/`, and allowed model selection lives in
+`src/server/models.ts`. Connection UI/state live in `src/modules/connections/`.
 See [system design](SYSTEM_DESIGN.md) and [provider setup](AI_SETUP.md).
 
 Automatic images and music are specified separately in [Graph media design](GRAPH_MEDIA_DESIGN.md)
@@ -40,7 +40,7 @@ Add actions to rewrite the selected passage, revise its choices, or create an al
 
 Requests flow from the browser to a Next.js server route on Vercel, then to OpenAI. Keep provider credentials in server environment variables. Use a configurable model verified against actual account access and structured-output support; do not promise access based on a model name in an example file.
 
-Private testing can retain the existing workshop code. Add durable per-user quotas, request deduplication, concurrency limits, and usage tracking before public AI access. Bound output size and repair attempts. Preserve current drafts during failures. If measured generation duration becomes unreliable within hosting limits, introduce durable jobs and status polling; do not assume in-memory jobs survive a serverless request.
+The current studio deliberately permits generation without an access code. Add durable per-user quotas, request deduplication, concurrency limits, and usage tracking before public AI access. Bound output size and repair attempts. Preserve current drafts during failures. If measured generation duration becomes unreliable within hosting limits, introduce durable jobs and status polling; do not assume in-memory jobs survive a serverless request.
 
 ## Assets and scope
 
@@ -55,14 +55,10 @@ Test live generation across Chinese and English premises and several genres. Eve
 [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs) describes schema-constrained responses and the need to handle refusals and semantic mistakes. The product workflow and limits above are project design proposals.
 
 
-## Local subscription provider (2026-10-01)
+## Provider simplification (2026-10-06)
 
-`AI_PROVIDER=chatgpt` selects a local-only OAuth provider. `/api/chatgpt` handles account status, sign-in initiation, model discovery, explicit account selection, the first-use notice, and sign-out. `/api/chatgpt/callback` consumes browser-bound state, exchanges the code with PKCE, validates the ID token with OpenAI JWKS, and rotates the local session. Initial registration uses `dynamic_agent_client`; reauthorization and refresh use the issued client ID. No existing Codex credentials are read or reused.
-
-`/api/generate` uses the selected account's live model catalog and OAuth token with the public Responses API. It defaults to GPT-5.6 Luna (`gpt-5.6-luna`), while honoring an explicit model selection from Settings. The selected or default model must appear in the visible account catalog; an unavailable model produces an actionable error without silently switching models. It requests streaming, `store: false`, and array input, omits unsupported output-token caps, and requires a completed terminal event before parsing a draft. A stream error, incomplete event, or interrupted response fails without saving or switching to API billing. The same draft schema, graph checks, language selection, preview, and single repair apply to both providers. Both retain one 150-second deadline. A one-megabyte stream bound prevents unbounded accumulation but is not a billing/token cap.
-
-Credential files are private, atomic, gitignored, and excluded from deployment tracing. Expiry refresh is serialized by a filesystem lock; unusable refresh tokens are cleared while preserving the account/client mapping. Sign-out revokes the renewable session when possible and always clears tokens locally. The UI reports when revocation was not confirmed. No OpenAI conversation history is requested.
-
-Local development only: explicitly reject production/Vercel and requests whose actual Host is neither `localhost` nor `127.0.0.1` at the request port. Next.js may normalize the internal request URL, so derive the browser origin from the exact allowed Host. Keep the OAuth redirect at `127.0.0.1`, as required by OpenAI. For localhost-initiated sign-in, relay the callback to the stored same-port localhost origin; validate its browser-bound state/cookie there before code exchange and session rotation. Never accept a caller-provided return destination. Mutation requests with a missing or mismatched Origin are rejected before provider calls. Local ChatGPT sign-in, model discovery, and generation require no manual workshop code. Generation still requires the signed-in browser session and plan permission. API-key mode retains its workshop-code check, including during local development.
-
-No subscription-only guarantee can be made by the app itself: the user must disable credit spillover in ChatGPT Settings. Live account eligibility and generation must be verified separately from mocked contract tests.
+The local ChatGPT/OpenID integration has been removed. Both story and image
+requests now use the environment API key without an access code. Settings
+contains two model selectors; choices persist in this browser. The server keeps
+same-origin validation, bounded requests, deadlines, structural checks, and the
+single repair limit. Historical ChatGPT verification remains in VERIFICATION.md.

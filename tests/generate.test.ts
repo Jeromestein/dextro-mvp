@@ -11,12 +11,11 @@ const brief = {
 };
 const request = (
   body: unknown = brief,
-  code = "test-code",
   extra: RequestInit = {},
 ) =>
   new Request("http://localhost:3100/api/generate", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Workshop-Code": code },
+    headers: { "Content-Type": "application/json", Origin: "http://localhost:3100" },
     body: JSON.stringify(body),
     ...extra,
   });
@@ -30,12 +29,13 @@ const completed = (draft: unknown) =>
   });
 
 test("AI generation pipeline", async (t) => {
-  const keys = ["OPENAI_API_KEY", "OPENAI_MODEL", "AI_ACCESS_CODE"] as const;
+  const keys = ["OPENAI_API_KEY", "OPENAI_MODEL", "AI_ACCESS_CODE", "AI_PROVIDER"] as const;
   const original = keys.map((k) => process.env[k]);
   const originalFetch = global.fetch;
   process.env.OPENAI_API_KEY = "fake-test-key";
   process.env.OPENAI_MODEL = "test-model";
-  process.env.AI_ACCESS_CODE = "test-code";
+  delete process.env.AI_ACCESS_CODE;
+  process.env.AI_PROVIDER = "chatgpt"; // Legacy settings must no longer select OAuth.
   try {
     await t.test(
       "configuration, authorization and input checks never call the provider",
@@ -44,12 +44,12 @@ test("AI generation pipeline", async (t) => {
           throw new Error("Unexpected provider call");
         };
         delete process.env.OPENAI_API_KEY;
-        assert.deepEqual(await (await GET(new Request("http://localhost:3100/api/generate"))).json(), { available: false });
+        assert.equal((await (await GET()).json()).available, false);
         assert.equal((await POST(request())).status, 503);
         process.env.OPENAI_API_KEY = "fake-test-key";
-        assert.equal((await POST(request(brief, "wrong"))).status, 401);
-        assert.equal((await POST(request(brief, ""))).status, 401);
-        assert.equal((await POST(request(brief, "", { headers: { host: "127.0.0.1:3100", origin: "http://127.0.0.1:3100", "Content-Type": "application/json" } }))).status, 401);
+        assert.equal((await POST(request(brief, { headers: { Origin: "https://other.test" } }))).status, 403);
+        assert.equal((await POST(request(brief, { headers: {} }))).status, 403);
+        assert.equal((await POST(request({ ...brief, model: "not-allowed" }))).status, 400);
         assert.equal(
           (await POST(request({ ...brief, premise: "short" }))).status,
           400,
@@ -59,13 +59,13 @@ test("AI generation pipeline", async (t) => {
           400,
         );
         assert.equal(
-          (await POST(request(brief, "test-code", { body: "{" }))).status,
+          (await POST(request(brief, { body: "{" }))).status,
           400,
         );
         assert.equal(
           (
             await POST(
-              request(brief, "test-code", { body: "x".repeat(10_001) }),
+              request(brief, { body: "x".repeat(10_001) }),
             )
           ).status,
           413,
@@ -73,9 +73,8 @@ test("AI generation pipeline", async (t) => {
         assert.equal(
           (
             await POST(
-              request(brief, "test-code", {
+              request(brief, {
                 headers: {
-                  "X-Workshop-Code": "test-code",
                   origin: "https://other.test",
                 },
               }),
@@ -94,6 +93,9 @@ test("AI generation pipeline", async (t) => {
           assert.equal(url, "https://api.openai.com/v1/responses");
           const body = JSON.parse(String(options?.body));
           assert.equal(body.store, false);
+          assert.equal(body.model, "test-model");
+          assert.equal(new Headers(options?.headers).get("Authorization"), "Bearer fake-test-key");
+          assert.equal(new Headers(options?.headers).has("X-Workshop-Code"), false);
           assert.equal(body.text.format.strict, true);
           assert.equal(body.text.format.schema.additionalProperties, false);
           assert.equal(
@@ -111,6 +113,23 @@ test("AI generation pipeline", async (t) => {
         assert.equal(calls, 1);
       },
     );
+    await t.test("selected story model is used for generation and repair without exposing the key", async () => {
+      const status = await (await GET()).json();
+      assert.equal(status.model, "test-model");
+      assert.ok(status.models.some((model: { id: string }) => model.id === "gpt-6-luna"));
+      assert.ok(!JSON.stringify(status).includes("fake-test-key"));
+      let calls = 0;
+      const broken = sampleStory(); broken.passages[0].choices[0].target = "missing";
+      global.fetch = async (_url, options) => {
+        assert.equal(JSON.parse(String(options?.body)).model, "gpt-6-luna");
+        return completed(++calls === 1 ? broken : sampleStory());
+      };
+      assert.equal((await POST(request({ ...brief, model: "gpt-6-luna" }))).status, 200);
+      assert.equal(calls, 2);
+      delete process.env.OPENAI_MODEL;
+      assert.equal((await (await GET()).json()).model, "gpt-5.6-luna");
+      process.env.OPENAI_MODEL = "test-model";
+    });
     await t.test(
       "broken connections are repaired once with the original brief and shared deadline",
       async () => {
@@ -238,7 +257,7 @@ test("AI generation pipeline", async (t) => {
           return completed(sampleStory());
         };
         const res = await POST(
-          request(brief, "test-code", { signal: controller.signal }),
+          request(brief, { signal: controller.signal }),
         );
         assert.equal(res.status, 499);
         assert.equal((await res.json()).story, undefined);

@@ -10,7 +10,7 @@ offline export. Graph and Outline are views of the same passages and choices.
 
 The media foundation adds version 2 shared image/audio assets, Graph media,
 passage assignments, explicit audio playback, and portable exports. It retains
-version 1 reads, existing routes, and authorization. The initial OpenAI image adapter, bundled CC0 catalog, media planning, and draft
+version 1 reads, existing story routes. The initial OpenAI image adapter, bundled CC0 catalog, media planning, and draft
 enrichment are now implemented; live image access remains unverified.
 
 See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
@@ -33,10 +33,10 @@ See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
 | `src/modules/player/` | Shared React preview/player and choice progression. |
 | `src/modules/export/` | Download helpers and standalone HTML template. |
 | `src/modules/workspace/` | Saved library, provider composition, shell, route integration. |
-| `src/modules/connections/` | Browser-visible provider readiness, model/access state, settings UI. |
+| `src/modules/connections/` | Browser-visible readiness, persisted model choices, settings UI. |
 | `src/storage/` | Atomic IndexedDB story metadata and media Blob repository. |
-| `src/server/auth/` | OAuth credentials, origin/workshop checks, session cancellation. |
-| `src/server/providers/` | Provider model and streaming-response handling. |
+| `src/server/auth/` | Same-origin request checks. |
+| `src/server/models.ts` | API configuration and allowed model selection. |
 | `src/server/generation/` | Authorized inference orchestration, deadlines, validation and repair. |
 | `src/shared/ui/` | Generic dialog and original lighthouse artwork. |
 
@@ -64,7 +64,7 @@ check transitive server isolation, and enforce the pure story/media boundary.
 | State | Owner | Lifetime |
 | --- | --- | --- |
 | Saved library, save queue, storage errors | `LibraryProvider` | Workspace lifetime; IndexedDB writes are asynchronous. |
-| Readiness, selected model, workshop code | `ConnectionProvider` | Workspace memory, never story content. |
+| Readiness, story/image model choices | `ConnectionProvider` | Readiness in memory; model preferences in browser storage, never story content. |
 | Brief and unaccepted draft | `GenerationDraftProvider` | Survives internal navigation; reload clears it and warns for a draft. |
 | Current edited story, undo/redo | `useEditorSession` | Mounted editor; commits use the supplied library save function. |
 | Selection, panels, layout jobs, preview start | `StoryEditor` | Current editing view. |
@@ -161,10 +161,10 @@ provider, deployment, or media behavior.
 
 ## Media providers and catalog — 2026-10-06
 
-- `src/server/media/image.ts` owns OpenAI credentials, workshop authorization,
+- `src/server/media/image.ts` owns OpenAI credentials, same-origin checks and model selection,
   request bounds, process-local concurrency/duplicate guards, and image validation.
   `/api/media/image` exposes configuration status and generation independently of
-  text-provider mode.
+  story generation.
 - `src/modules/media/generation/` owns validated scene/music plans, stale-plan
   detection, client requests, per-passage candidates, and incremental enrichment.
 - `src/modules/media/catalog/` owns curated metadata, deterministic mood matching,

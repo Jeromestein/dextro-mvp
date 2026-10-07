@@ -248,3 +248,33 @@ No real OpenAI request was made: the local key and workshop code are not configu
   Screenshot: ignored `output/playwright/media-panel-simplified-mobile.png`.
 - `pnpm dev` defaults to port 3100. TypeScript, ESLint, all 70 tests, and
   `git diff --check` passed after the final UI changes. No production build ran.
+
+## 2026-10-06 — API-only generation and model settings
+
+- Removed ChatGPT/OpenID UI, routes, credential/session implementation, provider
+  stream handling, and the unused `jose` dependency. Removed workshop-code gates.
+  Legacy provider/code environment variables no longer affect generation.
+- `OPENAI_API_KEY` alone enables story/image requests. Same-origin checks remain.
+  Settings exposes separate story/image selectors, includes environment defaults,
+  and remembers selections in browser storage. Requested models are validated on
+  the server and passed through story repair and all image-generation paths.
+- TypeScript, ESLint, all 56 current tests, and `git diff --check` passed. Obsolete
+  OAuth tests were removed. New coverage checks no-code requests, model overrides,
+  server defaults, invalid-model rejection, image provenance, batch model
+  propagation, secret-free status responses, and loopback/hosted origin checks.
+- In-app browser verified `/settings` on desktop and at 390 × 844: two selectors,
+  no login/code controls, choices retained after reload, and no mobile horizontal
+  overflow. Restored original model choices after testing. Builder and the
+  separate **CC0 media verification** story offer generation without entering a
+  code. Both removed `/api/chatgpt` routes returned 404 on the existing server.
+- No paid provider request was made in this change. Model access, real generation,
+  billing, and deployment behavior were not revalidated. No build or commit ran.
+  The user's server was reused; restart it after the backend route removal.
+- Screenshots: ignored `output/playwright/api-model-settings-mobile.png` and
+  `api-model-settings-desktop.png`.
+
+### Commit preparation — 2026-10-07
+
+The API-only change was reconstructed as a separate review snapshot, without the
+cloud adapter. All 56 tests, TypeScript and ESLint passed against that snapshot.
+The existing working directory and local secret configuration were preserved.

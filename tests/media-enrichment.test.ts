@@ -14,10 +14,15 @@ function planned() {
 }
 test("one generated scene serves linked passages without replacing manual assets", async () => {
   const original = globalThis.fetch; let calls = 0;
-  globalThis.fetch = async () => { calls++; return Response.json({ asset: image }); };
+  globalThis.fetch = async (_url, init) => {
+    calls++;
+    assert.equal(JSON.parse(String(init?.body)).model, "gpt-image-2.5-sunburst");
+    assert.equal(new Headers(init?.headers).has("X-Workshop-Code"), false);
+    return Response.json({ asset: image });
+  };
   try {
     const source = planned(); const updates: Story[] = [];
-    await enrichStoryMedia(source, { images: true, music: false, style: "storybook", accessCode: "test", signal: new AbortController().signal, onUpdate: (s) => updates.push(s), onStatus: () => {} });
+    await enrichStoryMedia(source, { images: true, music: false, style: "storybook", imageModel: "gpt-image-2.5-sunburst", signal: new AbortController().signal, onUpdate: (s) => updates.push(s), onStatus: () => {} });
     const result = updates.at(-1)!;
     assert.equal(calls, 1); assert.equal(result.assets.length, 1);
     assert.equal(result.passages[0].media.imageId, result.passages[1].media.imageId);
@@ -32,10 +37,10 @@ test("cancelled image results never reach the draft and failed requests are not 
   const original = globalThis.fetch; const cancel = new AbortController(); let updates = 0, calls = 0;
   try {
     globalThis.fetch = async () => { calls++; cancel.abort(); return Response.json({ asset: image }); };
-    await assert.rejects(enrichStoryMedia(planned(), { images: true, music: false, style: "storybook", accessCode: "test", signal: cancel.signal, onUpdate: () => updates++, onStatus: () => {} }));
+    await assert.rejects(enrichStoryMedia(planned(), { images: true, music: false, style: "storybook", imageModel: "gpt-image-2.5-sunburst", signal: cancel.signal, onUpdate: () => updates++, onStatus: () => {} }));
     assert.equal(updates, 0); assert.equal(calls, 1);
     globalThis.fetch = async () => { calls++; return Response.json({ error: "Unavailable" }, { status: 502 }); };
-    const warnings = await enrichStoryMedia(planned(), { images: true, music: false, style: "storybook", accessCode: "test", signal: new AbortController().signal, onUpdate: () => updates++, onStatus: () => {} });
+    const warnings = await enrichStoryMedia(planned(), { images: true, music: false, style: "storybook", imageModel: "gpt-image-2.5-sunburst", signal: new AbortController().signal, onUpdate: () => updates++, onStatus: () => {} });
     assert.deepEqual(warnings, ["Unavailable"]); assert.equal(calls, 2); assert.equal(updates, 0);
   } finally { globalThis.fetch = original; }
 });
@@ -46,9 +51,14 @@ test("edited scene facts invalidate old plans and async results preserve live ed
   const merged = mergeMediaResults(changed, source, result);
   assert.equal(merged.passages[0].media.imageId, ""); assert.deepEqual(merged.editor, changed.editor);
   const original = globalThis.fetch; let calls = 0;
-  globalThis.fetch = async () => { calls++; return Response.json({ asset: image }); };
+  globalThis.fetch = async (_url, init) => {
+    calls++;
+    assert.equal(JSON.parse(String(init?.body)).model, "gpt-image-2.5-sunburst");
+    assert.equal(new Headers(init?.headers).has("X-Workshop-Code"), false);
+    return Response.json({ asset: image });
+  };
   try {
-    const warnings = await enrichStoryMedia(changed, { images: true, music: false, style: "storybook", accessCode: "test", signal: new AbortController().signal, onUpdate: () => {}, onStatus: () => {} });
+    const warnings = await enrichStoryMedia(changed, { images: true, music: false, style: "storybook", imageModel: "gpt-image-2.5-sunburst", signal: new AbortController().signal, onUpdate: () => {}, onStatus: () => {} });
     assert.equal(calls, 0); assert.equal(warnings.length, 1);
   } finally { globalThis.fetch = original; }
 });

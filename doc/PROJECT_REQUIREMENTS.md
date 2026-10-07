@@ -1,5 +1,13 @@
 # Project Requirements and Decisions
 
+## Current provider decision — 2026-10-06
+
+Use the server environment OpenAI API key for all story and image generation.
+Remove ChatGPT/OpenID sign-in and the workshop access-code requirement. Settings
+should contain only story/image model selectors, with remembered browser choices.
+This decision supersedes earlier authentication/provider decisions below.
+
+
 Last updated: 2026-10-06
 
 This document records confirmed requirements from project discussions. Proposals and open questions are listed separately and must not be treated as approved scope. Update this document as further decisions are confirmed.

@@ -6,12 +6,12 @@ import { assetSchema } from "../src/modules/media/assets/model";
 const WEBP = Buffer.from("RIFF0000WEBPtest").toString("base64");
 const body = () => ({ requestId: crypto.randomUUID(), title: "The lighthouse", artBrief: "Muted blue palette", scene: "A deserted lighthouse beside a calm sea at dusk.", style: "storybook" });
 function request(data: unknown = body(), headers: Record<string, string> = {}) {
-  return new Request("http://localhost:3100/api/media/image", { method: "POST", headers: { Origin: "http://localhost:3100", "X-Workshop-Code": "test-workshop", "Content-Type": "application/json", ...headers }, body: JSON.stringify(data) });
+  return new Request("http://localhost:3100/api/media/image", { method: "POST", headers: { Origin: "http://localhost:3100", "Content-Type": "application/json", ...headers }, body: JSON.stringify(data) });
 }
 test("image API guards billing, bounds output, sanitizes failures and blocks duplicate requests", async (t) => {
   const old = { key: process.env.OPENAI_API_KEY, code: process.env.AI_ACCESS_CODE, model: process.env.OPENAI_IMAGE_MODEL, provider: process.env.AI_PROVIDER };
   const original = globalThis.fetch;
-  process.env.OPENAI_API_KEY = "test-image-secret"; process.env.AI_ACCESS_CODE = "test-workshop";
+  process.env.OPENAI_API_KEY = "test-image-secret"; delete process.env.AI_ACCESS_CODE;
   process.env.OPENAI_IMAGE_MODEL = "gpt-image-2.5-flare"; process.env.AI_PROVIDER = "chatgpt";
   let calls = 0;
   globalThis.fetch = async (_url, init) => {
@@ -24,10 +24,9 @@ test("image API guards billing, bounds output, sanitizes failures and blocks dup
     return Response.json({ data: [{ b64_json: WEBP }] });
   };
   try {
-    await t.test("missing origin and wrong workshop code cannot call the provider, including ChatGPT text mode", async () => {
+    await t.test("missing or cross-site origin cannot call the provider", async () => {
       assert.equal((await generateImage(request(body(), { Origin: "https://other.example" }))).status, 403);
       assert.equal((await generateImage(request(body(), { Origin: "" }))).status, 403);
-      assert.equal((await generateImage(request(body(), { "X-Workshop-Code": "wrong" }))).status, 401);
       assert.equal(calls, 0);
     });
     await t.test("configuration status is independent from text provider and exposes no secrets", async () => {
@@ -41,6 +40,7 @@ test("image API guards billing, bounds output, sanitizes failures and blocks dup
       const before = calls;
       assert.equal((await generateImage(request({ ...body(), scene: "tiny" }))).status, 400);
       assert.equal((await generateImage(request({ ...body(), scene: "x".repeat(30000) }))).status, 413);
+      assert.equal((await generateImage(request({ ...body(), model: "gpt-6-luna" }))).status, 400);
       assert.equal(calls, before);
     });
     await t.test("one image returns embedded bytes and portable provenance; repeats are rejected", async () => {
@@ -52,6 +52,19 @@ test("image API guards billing, bounds output, sanitizes failures and blocks dup
       assert.ok(!JSON.stringify(asset).includes("test-image-secret"));
       const before = calls;
       assert.equal((await generateImage(request(input))).status, 409); assert.equal(calls, before);
+    });
+    await t.test("selected image model reaches the provider and saved provenance without a code", async () => {
+      const previous = globalThis.fetch;
+      globalThis.fetch = async (_url, init) => {
+        assert.equal(JSON.parse(String(init?.body)).model, "gpt-image-2.5-sunburst");
+        assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-image-secret");
+        return Response.json({ data: [{ b64_json: WEBP }] });
+      };
+      try {
+        const response = await generateImage(request({ ...body(), model: "gpt-image-2.5-sunburst" }));
+        assert.equal(response.status, 200);
+        assert.equal((await response.json()).asset.provenance.model, "gpt-image-2.5-sunburst");
+      } finally { globalThis.fetch = previous; }
     });
     await t.test("upstream errors are not retried or exposed", async () => {
       let attempted = 0;

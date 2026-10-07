@@ -13,7 +13,7 @@ and [Graph media design](GRAPH_MEDIA_DESIGN.md) for current media scope and plan
 | `/builder/[storyId]` | Graph/Outline authoring, text/media editing, preview, validation, export. |
 | `/library` | Find, import, copy, and manage saved games. |
 | `/play/[storyId]` | Focused story playback; `sample-last-light` is the bundled sample. |
-| `/settings` | ChatGPT account/model selection or API workshop access. |
+| `/settings` | Story and image model selection. |
 
 Editor and player wait for local storage before resolving a story ID. Unknown
 IDs show recovery guidance. These routes refer to games in the current browser;
@@ -26,8 +26,8 @@ Providers stay mounted during internal navigation, with separate ownership:
 
 - `LibraryProvider`: saved stories, initial loading, serialized saves, deletion,
   errors, and pending/failed-save unload protection.
-- `ConnectionProvider`: readiness, provider mode, model, workshop code, and
-  refresh on focus. Actual credentials remain server-side.
+- `ConnectionProvider`: readiness, story/image model preferences, and refresh on focus.
+  Preferences persist in browser storage; the API key remains server-side.
 - `GenerationDraftProvider`: creation brief, unsaved draft, and draft unload
   protection. The builder owns its active request and cancels it on unmount.
 - `GameplayAudioProvider`: audio started by Play, retained through navigation
@@ -88,13 +88,11 @@ origins, devices, profiles, or tabs.
 ## Provider and delivery boundaries
 
 `/api/generate` delegates to `server/generation/story.ts` and retains its Node
-runtime and duration configuration. OAuth endpoints use `server/auth/` and
-`server/providers/`. Browser modules use HTTP rather than importing these files.
-
-Local ChatGPT keeps development-only, loopback, same-origin and session checks;
-API-key mode retains workshop access. The callback continues to use IPv4 loopback
-and relay localhost attempts to their initiating origin. Configuration and
-billing paths are unchanged.
+runtime and duration configuration. `/api/media/image` delegates to the server's
+image adapter. Both use the environment API key and same-origin checks without
+sign-in or an access code. `server/models.ts` validates requested models against
+the offered list, including environment defaults. Browser modules use HTTP and
+never import server credentials or implementation files.
 
 The React player is shared by preview and the play route. Offline exports retain
 the self-contained HTML player. See [AI setup](AI_SETUP.md) for configuration and

@@ -30,7 +30,7 @@ export default function GameBuilder() {
   const [style, setStyle] = useState<VisualStyle>("storybook");
   const [mediaStatus, setMediaStatus] = useState("");
   const controller = useRef<AbortController | null>(null);
-  const canGenerate = connection.aiReady && (connection.provider === "chatgpt" ? connection.local : Boolean(connection.accessCode)) && !connection.checking;
+  const canGenerate = connection.aiReady && !connection.checking;
   useEffect(() => () => { controller.current?.abort(); }, []);
   useEffect(() => {
     const guard = (event: BeforeUnloadEvent) => { if (controller.current) { event.preventDefault(); event.returnValue = ""; } };
@@ -48,8 +48,8 @@ export default function GameBuilder() {
     setGenerating(true); setError(""); setMediaStatus("");
     try {
       const response = await fetch("/api/generate", {
-        method: "POST", headers: { "Content-Type": "application/json", ...(connection.provider !== "chatgpt" ? { "X-Workshop-Code": connection.accessCode } : {}) },
-        body: JSON.stringify({ ...draftState.brief, includeMedia: music || images, ...(connection.provider === "chatgpt" && connection.model ? { model: connection.model } : {}) }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...draftState.brief, includeMedia: music || images, model: connection.model || undefined }),
         signal: AbortSignal.any([request.signal, AbortSignal.timeout(170_000)]),
       });
       const data = await response.json();
@@ -59,7 +59,7 @@ export default function GameBuilder() {
       if (validateStory(story).length) throw new Error("The draft did not pass the story checks. Try again.");
       draftState.setDraft({ story, repaired: data.repaired === true });
       if ((music || images) && story.mediaPlan) {
-        const warnings = await enrichStoryMedia(story, { music, images, style, accessCode: connection.accessCode, signal: request.signal,
+        const warnings = await enrichStoryMedia(story, { music, images, style, imageModel: connection.imageModel || undefined, signal: request.signal,
           onStatus: setMediaStatus,
           onUpdate: (next) => { if (!request.signal.aborted) draftState.setDraft((current) => current?.story.id === story.id ? { ...current, story: next } : current); },
         });
@@ -91,11 +91,11 @@ export default function GameBuilder() {
           <div className="creation-options"><label className="field-label">Mood<select value={draftState.brief.tone} disabled={generating} onChange={(event) => draftState.setBrief({ ...draftState.brief, tone: event.target.value })}>{["Mysterious", "Hopeful", "Adventurous", "Whimsical", "Suspenseful"].map((tone) => <option key={tone}>{tone}</option>)}</select></label><label className="field-label">Language<select value={draftState.brief.language} disabled={generating} onChange={(event) => draftState.setBrief({ ...draftState.brief, language: event.target.value })}><option value="auto">Match my idea</option><option value="en">English</option><option value="zh">简体中文</option></select></label></div>
           <div className="creation-options">
             <label className="field-label">Background music<select disabled={generating} value={music ? "auto" : "off"} onChange={(e) => setMusic(e.target.value === "auto")}><option value="auto">Auto · Free CC0 library</option><option value="off">Off</option></select></label>
-            <label className="field-label">Scene images<select disabled={generating || !connection.imagesReady || !connection.accessCode} value={images ? "on" : "off"} onChange={(e) => setImages(e.target.value === "on")}><option value="off">Off</option><option value="on">Generate · Up to 4 images</option></select></label>
+            <label className="field-label">Scene images<select disabled={generating || !connection.imagesReady} value={images ? "on" : "off"} onChange={(e) => setImages(e.target.value === "on")}><option value="off">Off</option><option value="on">Generate · Up to 4 images</option></select></label>
           </div>
           {images && <label className="field-label">Visual style<select disabled={generating} value={style} onChange={(e) => setStyle(e.target.value as VisualStyle)}><option value="storybook">Storybook</option><option value="cinematic">Cinematic</option></select><small>Images use separately billed OpenAI API usage. Text is playable while images finish.</small></label>}
-          {!connection.imagesReady || !connection.accessCode ? <p className="generation-footnote">Scene images need the image API and workshop code in <Link href="/settings">Settings</Link>. Free music works without an image connection.</p> : null}
-          <div className="builder-connection"><span className={canGenerate ? "status-dot ready" : "status-dot"} /><span>{connection.checking ? "Checking AI connection…" : canGenerate ? "AI is ready" : "Connect AI in Settings to generate"}</span><Link href="/settings" aria-label="AI connection settings"><Settings2 size={14} /> Settings</Link></div>
+          {!connection.imagesReady ? <p className="generation-footnote">Check image availability in <Link href="/settings">Settings</Link>. Free music works without an image connection.</p> : null}
+          <div className="builder-connection"><span className={canGenerate ? "status-dot ready" : "status-dot"} /><span>{connection.checking ? "Checking AI connection…" : canGenerate ? "AI is ready" : "Check AI setup in Settings"}</span><Link href="/settings" aria-label="AI connection settings"><Settings2 size={14} /> Settings</Link></div>
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="generate-actions"><button className="button primary generate-button" type="submit" disabled={!library.ready || !canGenerate || generating}>{generating ? <><LoaderCircle size={17} className="spin" /> Building your game…</> : <><Sparkles size={17} /> Generate game <ArrowRight size={17} /></>}</button>{generating && <button className="button" type="button" onClick={cancel}><X size={15} /> Cancel</button>}</div>
           <p className="generation-footnote" role={generating ? "status" : undefined}>{generating ? "Writing passages and checking every path. You can cancel at any time. Leaving this page stops generation." : "Review the complete draft before adding it to your games."}</p>

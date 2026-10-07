@@ -218,5 +218,4 @@
 .media-batch { padding: 16px; background: #f6f7f0; border: 1px solid #dce2d3; border-radius: 12px; display: grid; gap: 10px; margin-bottom: 20px; }
 .media-batch p { margin: 0; }
 .draft-graph { height: 420px; position: relative; border: 1px solid #dce2d3; border-radius: 12px; overflow: hidden; margin: 20px 0; }
-.image-connection { border-top: 1px solid #dce2d3; margin-top: 24px; padding-top: 24px; }
 @media (max-width: 760px) { .media-generation, .media-catalog { padding: 12px; } .draft-graph { height: 330px; } }

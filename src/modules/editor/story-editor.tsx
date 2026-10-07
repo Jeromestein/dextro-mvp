@@ -128,12 +128,12 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   };
   useEffect(() => () => { mediaJob.current++; batch.current?.abort(); }, []);
   const fillMedia = async (images: boolean) => {
-    if (batch.current || (images && (!connection.imagesReady || !connection.accessCode))) return;
+    if (batch.current || (images && (!connection.imagesReady))) return;
     const request = new AbortController(); batch.current = request;
     const source = historyRef.current.present;
     setBatchBusy(true); setBatchStatus("Preparing media…");
     try {
-      const warnings = await enrichStoryMedia(source, { images, music: !images, style: "storybook", accessCode: connection.accessCode, signal: request.signal,
+      const warnings = await enrichStoryMedia(source, { images, music: !images, style: "storybook", imageModel: connection.imageModel || undefined, signal: request.signal,
         onStatus: setBatchStatus,
         onUpdate: (result) => {
           if (request.signal.aborted) return;
@@ -189,7 +189,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
       {panelOpen && <aside className="workbench-inspector" ref={panelRef} aria-label="Passage editor">
         <div className="inspector-tabs" role="group" aria-label="Passage panel"><button aria-pressed={panel === "edit"} onClick={() => setPanel("edit")}><PenLine size={14} /> Story</button><button aria-pressed={panel === "media"} onClick={() => setPanel("media")}><Images size={14} /> Media</button><button aria-pressed={panel === "preview"} onClick={() => setPanel("preview")}><Play size={14} /> Preview</button></div>
         {panel === "preview" ? <div className="inspector-preview"><div className="inspector-preview-actions"><button onClick={() => setPreview((p) => ({ from: selected, key: p.key + 1 }))}>From selected</button><button onClick={() => setPreview((p) => ({ from: story.startId, key: p.key + 1 }))}>From opening <ArrowUpRight size={12} /></button><button disabled={!playback.current} onClick={() => focus(playback.current)}>Locate playing</button></div><Player key={preview.key} onProgress={setPlayback} story={story} startId={story.passages.some((p) => p.id === preview.from) ? preview.from : selected} compact /></div> : panel === "media" ? <PassageMedia key={passage.id} story={story} passage={passage} busy={mediaBusy} onUpload={uploadMedia}
-          batchControls={story.mediaPlan && <div className="media-batch"><h4>Story media plan</h4><p>Fill empty assignments across this story. Existing media stays in place.</p><div className="media-actions"><button className="button" disabled={batchBusy} onClick={() => void fillMedia(false)}>Match missing music</button><button className="button" disabled={batchBusy || !connection.imagesReady || !connection.accessCode} onClick={() => void fillMedia(true)}>Generate missing images</button>{batchBusy && <button className="button" onClick={() => batch.current?.abort()}>Stop</button>}</div><small>Up to {story.mediaPlan.scenes.length} images · separately billed OpenAI API usage.</small>{batchStatus && <p role="status">{batchStatus}</p>}</div>}
+          batchControls={story.mediaPlan && <div className="media-batch"><h4>Story media plan</h4><p>Fill empty assignments across this story. Existing media stays in place.</p><div className="media-actions"><button className="button" disabled={batchBusy} onClick={() => void fillMedia(false)}>Match missing music</button><button className="button" disabled={batchBusy || !connection.imagesReady} onClick={() => void fillMedia(true)}>Generate missing images</button>{batchBusy && <button className="button" onClick={() => batch.current?.abort()}>Stop</button>}</div><small>Up to {story.mediaPlan.scenes.length} images · separately billed OpenAI API usage.</small>{batchStatus && <p role="status">{batchStatus}</p>}</div>}
           onApply={(asset) => assignedAsset(historyRef.current.present, historyRef.current.present.passages.find((p) => p.id === selected), asset.kind)?.data === asset.data || commit((s) => addAndAssignAsset(s, selected, asset))}
           onAssign={(kind, id) => commit((s) => assignAsset(s, selected, kind, id))}
           onCredit={(id, credit) => commit((s) => ({ ...s, assets: s.assets.map((a) => a.id === id ? { ...a, credit } : a) }), `credit:${id}`)}

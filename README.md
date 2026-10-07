@@ -28,7 +28,7 @@ separate providers for the saved-game library, AI connection, and unsaved draft.
 
 Stories now use version 2 with shared image and audio assets. Version 1 stories
 and backups remain readable; files move into a separate IndexedDB media store
-only after a successful save. Existing routes and authentication are unchanged.
+only after a successful save. Story/editor routes are unchanged.
 OpenAI scene images and a bundled Freesound CC0 music catalog now integrate with
 Graph/Media and story creation. Image calls require separately billed API access;
 configuration and mocked verification do not establish live provider access.
@@ -49,7 +49,7 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 
 - A dedicated Game Builder as the default page, with full-page AI generation/review and a blank-game option.
 - A story library with search, editable imports, and confirmed deletion. Each editor and player has its own URL.
-- A separate Settings page for ChatGPT accounts, model selection, usage links, and workshop access.
+- A simple Settings page for story and image models, with browser-local preferences and a server-side API key.
 - A complete original sample, **The Last Light**, with nine passages and three endings. Playing the sample does not change it; editing creates a personal copy.
 - Passage editing, choice labels, destinations, branch convergence, opening selection, and multiple endings.
 - Synchronized Graph and Outline views: drag passages, pan and zoom, connect individual choices, and arrange branches automatically. Mobile opens in Outline.
@@ -76,7 +76,7 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 | `/builder/[storyId]` | Graph/Outline authoring, passage editing, live preview, validation, and export. |
 | `/library` | Find, import, and manage saved games. |
 | `/play/[storyId]` | Play one game in a focused reading view. |
-| `/settings` | Connect ChatGPT or the configured API provider; select a model and manage access. |
+| `/settings` | Choose story and image models; view API configuration readiness. |
 
 `/` redirects to `/builder`. Games are browser-local, so editor/player URLs are workspace navigation, not public share links. The brief and unsaved generated draft survive internal navigation to Settings; full reloads clear transient state. See [WORKSPACE_ARCHITECTURE.md](doc/WORKSPACE_ARCHITECTURE.md) for responsibility and state boundaries.
 
@@ -84,7 +84,7 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 
 This release is a local workspace, not a cloud account. Drafts are specific to the browser profile and exact origin (including port). They do not sync between devices, browsers, deployments, or tabs. Clearing site data removes drafts. Export editable backups regularly. A playable HTML file is for playing; use the JSON backup to continue editing.
 
-There is no public publishing service, cloud user account system, analytics, payment system, free-form player input, inventory system, or Blender integration. Optional ChatGPT sign-in connects a local AI provider; it does not sync story drafts.
+There is no public publishing service, cloud user account system, analytics, payment system, free-form player input, inventory system, or Blender integration. AI generation uses the server environment API key with no sign-in or access code.
 
 ## Checks
 
@@ -117,8 +117,8 @@ src/
 │   └── connections/           # Browser connection state and settings
 ├── storage/                   # Browser-local story repository
 ├── server/
-│   ├── auth/                  # OAuth, origin/workshop guards, cancellation
-│   ├── providers/             # Server-side provider response handling
+│   ├── auth/                  # Same-origin request checks
+│   ├── models.ts              # API defaults and allowed model selections
 │   └── generation/            # Authorized story-generation orchestration
 └── shared/ui/                 # Generic dialog and original artwork
 
@@ -134,8 +134,8 @@ enforce this boundary. Keep providers and credentials out of client imports.
 
 ## AI and deployment
 
-Follow [AI setup and deployment](doc/AI_SETUP.md) for local ChatGPT plan testing,
-the separate API-key mode, and Vercel configuration. Configuration changes require
+Follow [AI setup and deployment](doc/AI_SETUP.md) for environment API-key setup,
+model selection, and Vercel configuration. Configuration changes require
 a development-server restart. A successful status check alone does not verify a
 provider account or a billable generation request.
 

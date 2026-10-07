@@ -2277,18 +2277,6 @@ svg {
   }
 }
 
-.chatgpt-connection { border: 1px solid var(--border, #d9dfd4); background: #f5f7f1; border-radius: 14px; padding: 20px; margin: 20px 0; }
-.chatgpt-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.chatgpt-heading a { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #355d42; }
-.chatgpt-connection .quiet { margin: 12px 0; }
-.chatgpt-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-.chatgpt-signin { background: #171717; color: white; border-color: #171717; }
-.chatgpt-signin:hover { background: #333; color: white; }
-.chatgpt-account { overflow-wrap: anywhere; font-size: 14px; }
-.chatgpt-welcome { padding: 16px; margin-top: 16px; border-radius: 10px; background: white; font-size: 14px; }
-.chatgpt-model { margin-top: 16px; }
-.chatgpt-model .button { margin-top: 8px; }
-@media (max-width: 520px) { .chatgpt-connection { padding: 14px; } .chatgpt-actions .button { width: 100%; justify-content: center; } }
 
 .sound-controls { margin:12px 0 22px; padding:12px; border:1px solid #e0e6d8; border-radius:8px; background:#f4f7ee; }
 .sound-controls-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
