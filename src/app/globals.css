@@ -1448,9 +1448,6 @@ svg {
   color: #899975;
   margin-left: 5px;
 }
-.player-signature strong > span {
-  color: #c49565;
-}
 .player.compact {
   padding: 17px 21px;
   margin: 0;
@@ -1507,16 +1504,12 @@ svg {
   border-top: 1px solid #e6e8db;
   padding-top: 23px;
 }
-.ending-mark {
-  font-size: 30px;
-  color: var(--orange);
-}
 .ending > p {
   font-family: Georgia, serif;
   font-size: 24px;
   margin: 8px 0;
 }
-.ending > span:not(.ending-mark) {
+.ending > span {
   font-size: 11px;
   color: #9ba58a;
 }

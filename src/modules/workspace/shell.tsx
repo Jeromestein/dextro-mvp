@@ -11,7 +11,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const builder = pathname.startsWith("/builder");
   return <div className="product-shell">
     <header className="product-nav">
-      <Link href="/builder" className="product-brand" aria-label="Dextro game builder">dextro<span>✳</span></Link>
+      <Link href="/builder" className="product-brand" aria-label="Dextro game builder">dextro</Link>
       <nav aria-label="Main navigation">
         <Link href="/builder" className={builder ? "selected" : ""} aria-current={builder ? "page" : undefined}><Boxes size={17} /><span>Game Builder</span></Link>
         <Link href="/library" className={pathname === "/library" ? "selected" : ""} aria-current={pathname === "/library" ? "page" : undefined}><Library size={17} /><span>My Games</span><small>{stories.length}</small></Link>

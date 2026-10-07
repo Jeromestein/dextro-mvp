@@ -8,8 +8,8 @@
 .player[data-story-theme] h2 { color:var(--story-text); }
 .player[data-story-theme] .narrative { color:var(--story-narrative); }
 .player[data-story-theme] :is(.player-top, .player-signature, .media-credits, .quiet, .choice-number),
-.player[data-story-theme] .ending > span:not(.ending-mark) { color:var(--story-muted); }
-.player[data-story-theme] :is(.passage-eyebrow, .ending-mark, .player-signature strong, .player-signature strong > span) { color:var(--story-accent); }
+.player[data-story-theme] .ending > span { color:var(--story-muted); }
+.player[data-story-theme] :is(.passage-eyebrow, .player-signature strong) { color:var(--story-accent); }
 .player[data-story-theme] :is(.player-signature, .ending) { border-color:var(--story-border); }
 .player[data-story-theme] :is(.choice-button, .sound-controls, .sound-controls .button),
 .play-page[data-story-theme] .play-heading .button { background:var(--story-choice); border-color:var(--story-border); color:var(--story-text); }

@@ -95,7 +95,6 @@ export default function Player({
           <div className="player-choices">
             {passage.ending ? (
               <div className="ending">
-                <span className="ending-mark">✳</span>
                 <p>The end.</p>
                 <span>Another choice, another story.</span>
                 <button
@@ -136,9 +135,7 @@ export default function Player({
       {story.assets.some((a) => a.credit) && <details className="media-credits"><summary>Media credits</summary>{story.assets.filter((a) => a.credit).map((a) => <p key={a.id}><strong>{a.name}</strong> — {a.credit}</p>)}</details>}
       <div className="player-signature">
         A story made with{" "}
-        <strong>
-          dextro<span>✳</span>
-        </strong>
+        <strong>dextro</strong>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ export default function StoryCover({ story, variant, onEdit }: {
   const [failedSrc, setFailedSrc] = useState<string>();
   const source = story.coverSrc;
   const showImage = Boolean(source && source !== failedSrc);
+  const symbol = [null, "◇", "◒"][variant];
   return (
     <button className={`written-cover cover-${variant}`} onClick={onEdit} aria-label={`Edit ${story.title}`}>
       {showImage ? (
@@ -18,7 +19,7 @@ export default function StoryCover({ story, variant, onEdit }: {
       ) : (
         <>
           <span className="cover-label">YOUR NEXT ADVENTURE</span>
-          <span className="cover-symbol" aria-hidden="true">{["✳", "◇", "◒"][variant]}</span>
+          {symbol && <span className="cover-symbol" aria-hidden="true">{symbol}</span>}
           <span className="cover-title">{story.title || "Untitled story"}</span>
         </>
       )}

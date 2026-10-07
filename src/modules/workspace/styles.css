@@ -22,7 +22,6 @@
 .product-nav { height:76px; display:flex; align-items:center; gap:46px; padding:0 40px; border-bottom:1px solid var(--line); background:#fff; }
 .product-nav a { text-decoration:none; }
 .product-brand { display:flex; align-items:center; gap:4px; font-family:Manrope,sans-serif; font-size:29px; font-weight:800; letter-spacing:-1.7px; color:var(--ink); }
-.product-brand span { color:var(--orange); font-size:27px; }
 .product-nav nav { display:flex; gap:8px; align-self:stretch; align-items:center; }
 .product-nav nav a,.settings-link { display:flex; align-items:center; justify-content:center; gap:9px; padding:11px 16px; border-radius:7px; font-size:13px; font-weight:550; color:var(--muted); }
 .product-nav a.selected { background:var(--soft); color:var(--ink); }
@@ -158,7 +157,6 @@
 @media (max-width:760px) {
   .product-nav { height:auto; min-height:68px; gap:12px; padding:0 16px; flex-wrap:wrap; }
   .product-brand { font-size:25px; }
-  .product-brand span { font-size:24px; }
   .product-nav nav { gap:2px; margin-left:auto; }
   .product-nav nav a { padding:12px 10px; font-size:11px; gap:6px; }
   .settings-link { padding:10px; margin-left:0; }
@@ -241,7 +239,6 @@
 .media-options-body .creation-options { padding-top:0; margin-bottom:14px; }
 .media-options-body .generation-footnote { text-align:left; }
 .image-billing-note { color:var(--muted); font-size:11px; line-height:1.7; margin:12px 0 0; }
-.blueprint-mark { display:block; font-size:48px; line-height:1; color:var(--orange); margin-bottom:24px; }
 .blueprint-heading { line-height:1.8; }
 .recent-section { padding-top:24px; border-top:1px solid var(--line); }
 .recent-games>a { background:transparent; border-color:var(--line); }
