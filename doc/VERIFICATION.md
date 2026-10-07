@@ -408,3 +408,47 @@ The existing working directory and local secret configuration were preserved.
 - No production build, push or deployment was performed in this change.
   The deployed site needs the updated code before the warning can disappear
   there. No Supabase credentials, records, grants or bucket settings were changed.
+
+
+## Deployed cloud round trip — 2026-10-07
+
+- Tested the live `https://dextro-mvp.vercel.app` deployment in the Codex in-app
+  browser after the user removed deployment protection. The builder and library
+  loaded without the former localhost-only restriction.
+- Created an isolated starter-story copy named **Deployment QA 2026-10-07**
+  (`3462efa9-c45c-4fd0-8216-e127b4fe27fa`), retaining its 9 passages and 3 endings.
+  Renamed it, applied auto layout, uploaded an 887-byte synthetic PNG, and added
+  the bundled CC0 Piano Melody Loop. Reused the uploaded image via **Saved images**
+  and assigned the same music to a second passage. Both show usage in 2 passages.
+- A full page reload and reopening from **My Games** recovered the title, graph,
+  layout, image/music assignments, and credits with **Saved to cloud** displayed.
+  The Outline view showed the expected branches and shared destinations. **Check
+  story** reported **All paths look good**.
+- Read-only checks against the deployed API confirmed revision 10, 9 saved node
+  positions, and exactly 2 asset references in this story document, without
+  embedded base64. Historical revision 1 remained readable. Both asset-content
+  endpoints returned HTTP 200; their SHA-256 hashes matched the downloaded export
+  payloads (image: 887 bytes; audio: 946,302 bytes).
+- The actual **Playable HTML** and **Editable backup** UI actions downloaded
+  `Deployment QA 2026-10-07.html` and `Deployment QA 2026-10-07.dextro.json` to
+  Downloads. The HTML is 1,274,668 bytes and contains all 9 passages and both
+  embedded media payloads, with no external media/script source attributes.
+  The backup retains editor layout; the playable story omits editor layout.
+  Catalog attribution/license metadata remains included intentionally.
+- Online playback rendered the uploaded 320 x 180 image in both assigned passages.
+  Music controls responded to mute, and an unassigned passage displayed Silence.
+  Followed the envelope/boat/tower route to **A light for strangers**, used
+  **Begin again**, and reopened the story from the library successfully. Audible
+  sound output was not independently assessed.
+- Visual evidence: `output/playwright/deployment-cloud-restored.jpg`. Test story
+  and media remain available for inspection. Other stories were not modified.
+- Limitations: direct offline playback of the downloaded HTML and backup reimport
+  were not browser-verified. The browser file-selection operation stalled before
+  eventually completing; upload and subsequent persistence were confirmed, but
+  that automation delay is not an application performance measurement. No paid
+  AI requests, Workflow execution, failure recovery, concurrent-save conflict,
+  cross-user isolation, or mobile deployment checks were exercised in this run.
+  This remains the intentionally shared internal owner workspace.
+- No application code, build, local server startup/restart, deployment, or commit
+  was performed by this verification task. Concurrent theme changes in the working
+  tree were preserved.
