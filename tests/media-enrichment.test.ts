@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 import { bindMediaPlan, imageBrief } from "../src/modules/media/generation/plan";
 import { enrichStoryMedia } from "../src/modules/media/generation/enrich";
 import { mergeMediaResults, addAndAssignAsset } from "../src/modules/media/assets/operations";

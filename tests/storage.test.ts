@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 import { saveStory, loadStory, listLocalStories, loadStories, removeStory } from "../src/storage/story-repository";
 import { addAndAssignAsset, pruneAssets, assignAsset } from "../src/modules/media/assets/operations";
 

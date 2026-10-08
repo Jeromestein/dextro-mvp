@@ -127,7 +127,7 @@ export default function GameBuilder() {
       <aside className="blueprint-card"><div className="blueprint-heading"><span>ONE BEGINNING. MANY POSSIBILITIES.</span></div><h2>Your next story<br />has more than<br />one ending.</h2><p>Every choice takes your reader somewhere new.</p>
         <StoryTree />
         <div className="blueprint-facts"><span><BookOpen size={16} /> 8–12 connected passages</span><span><Flag size={16} /> 2–3 different endings</span><span><PenLine size={16} /> Every word is editable</span></div>
-        <Link href="/play/sample-last-light" className="sample-link">Play a sample game <ArrowUpRight size={16} /></Link>
+        <Link href="/library" className="sample-link">Explore example stories <ArrowUpRight size={16} /></Link>
       </aside>
     </div>}
     <section className="recent-section"><div><h2>Pick up where you left off</h2><Link href="/library">All games <ArrowRight size={14} /></Link></div>{!library.ready ? <p className="quiet">Opening your workspace…</p> : library.stories.length ? <div className="recent-games">{library.stories.slice(0, 3).map((story) => <Link href={`/builder/${encodeURIComponent(story.id)}`} key={story.id}><span className="recent-icon"><GitBranch size={19} /></span><span><strong>{story.title || "Untitled game"}</strong><small>{story.passageCount} passages · {story.endingCount} endings</small></span><ArrowUpRight size={17} /></Link>)}</div> : <div className="recent-empty"><BookOpen size={18} /><span>Your games will appear here. Start with an idea or a blank page.</span></div>}</section>

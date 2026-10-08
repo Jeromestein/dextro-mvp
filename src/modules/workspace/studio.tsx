@@ -18,7 +18,6 @@ import {
   X,
   AlertCircle,
   Play,
-  Copy,
   PenLine,
 } from "lucide-react";
 import {
@@ -29,11 +28,9 @@ import {
 import { IMPORT_BYTE_LIMIT } from "@/modules/media/assets/model";
 import { assignedAsset } from "@/modules/media/assets/operations";
 import { useGameplayAudio } from "@/modules/media/audio/gameplay-provider";
-import { sampleStory } from "@/modules/story/sample";
 import { buildBackup, download, filename } from "@/modules/export/standalone";
 import GenerationHistory from "@/modules/storage/generation-history";
 import Player from "@/modules/player/player";
-import { Lighthouse } from "@/shared/ui/lighthouse";
 import StoryCover from "@/modules/workspace/story-cover";
 import EditorSkeleton from "@/modules/editor/editor-skeleton";
 import { publicationLabel, publicPath } from "@/modules/publishing/model";
@@ -48,7 +45,7 @@ export default function Studio({ view, storyId }: { view: View; storyId?: string
   useEffect(() => {
     if (!ready || !storyId || view === "home") return;
     let cancelled = false;
-    const result = storyId === "sample-last-light" && view === "play" ? Promise.resolve(sampleStory()) : loadStory(storyId);
+    const result = loadStory(storyId);
     void result.then(story => { if (!cancelled) setOpened({id:storyId,story,error:""}); }).catch(error => { if (!cancelled) setOpened({id:storyId,story:null,error:error.message}); });
     return () => { cancelled = true; };
   }, [ready, storyId, view, loadStory]);
@@ -195,45 +192,6 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
                 </div>
               ) : (
                 <div className="story-grid">
-                  {!search && (
-                    <article className="story-card sample-card">
-                      <button
-                        className="card-art"
-                        onClick={() => play(sampleStory())}
-                        aria-label="Play The Last Light sample"
-                      >
-                        <Lighthouse />
-                        <span className="cover-label">A DEXTRO ORIGINAL</span>
-                        <span className="cover-play">
-                          <Play size={20} fill="currentColor" />
-                        </span>
-                      </button>
-                      <div className="card-body">
-                        <div className="card-meta">
-                          <span className="tag">STARTER STORY</span>
-                          <span>5 min read</span>
-                        </div>
-                        <h3>The Last Light</h3>
-                        <p>
-                          A letter with your name. A light across the bay. Some
-                          stories are waiting to find you.
-                        </p>
-                        <div className="card-footer">
-                          <span>
-                            <GitBranch size={14} /> 9 passages · 3 endings
-                          </span>
-                          <button
-                            className="icon-button"
-                            title="Make a copy to edit"
-                            aria-label="Edit a copy of The Last Light"
-                            onClick={() => create(copyStory(sampleStory()))}
-                          >
-                            <Copy size={17} />
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  )}
                   {filtered.map((s, i) => (
                     <article className="story-card" key={s.id}>
                       <StoryCover story={s} variant={i % 3} onEdit={() => edit(s)} />
@@ -327,16 +285,9 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
               <span>{active.title}</span>
               <button
                 className="button subtle"
-                onClick={() =>
-                  active.id === "sample-last-light"
-                    ? create(copyStory(active))
-                    : edit(active)
-                }
+                onClick={() => edit(active)}
               >
-                <PenLine size={15} />
-                {active.id === "sample-last-light"
-                  ? "Make it yours"
-                  : "Edit story"}
+                <PenLine size={15} /> Edit story
               </button>
             </div>
             <Player key={active.id} story={active} />

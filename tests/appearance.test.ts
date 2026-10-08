@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 import { copyStory, newStory, storySchema } from "../src/modules/story/model";
 import { changeSceneGlow, preserveAppearance } from "../src/modules/story/appearance";
 import { checkDraft } from "../src/modules/generation/story-schema";

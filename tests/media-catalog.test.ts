@@ -7,7 +7,7 @@ import { recommendTracks, planMusic, storyMusicTheme } from "../src/modules/medi
 const musicCatalog: CatalogTrack[] = records.map(({record}) => ({...catalogRecordSchema.parse(record), url: `https://test.supabase.co/storage/v1/object/public/music-library/${record.objectPath}`})).filter(t => t.role === "music");
 import { validMediaPlan } from "../src/modules/media/generation/plan";
 import { checkDraft } from "../src/modules/generation/story-schema";
-import { sampleStory as makeSampleStory } from "../src/modules/story/sample";
+import { sampleStory as makeSampleStory } from "./helpers/sample-story";
 import { buildBackup, buildGame } from "../src/modules/export/standalone";
 import { addAndAssignAsset } from "../src/modules/media/assets/operations";
 import type { MediaAsset } from "../src/modules/media/assets/model";

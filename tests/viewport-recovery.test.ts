@@ -2,7 +2,7 @@ import "fake-indexeddb/auto";
 import test, { type TestContext } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 import type { Story } from "../src/modules/story/model";
 import { recoverViewportSaves } from "../src/storage/viewport-recovery";
 import { discardPendingIfUnchanged, pendingSaves, persistPending, type PendingSave } from "../src/storage/cloud-outbox";

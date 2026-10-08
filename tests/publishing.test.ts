@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID, createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 import { contentKey, projectContent, storyContentHash, mediaPath, publicationLabel, type PublicManifest } from "../src/modules/publishing/model";
 import { loadPublicStory } from "../src/modules/publishing/reader-data";
 import { mediaResponse } from "../src/server/publishing/http";

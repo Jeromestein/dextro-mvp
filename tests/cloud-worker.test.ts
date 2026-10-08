@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runGenerationJob } from '../src/server/generation/jobs/worker';
 import { randomUUID } from 'node:crypto';
-import { sampleStory } from '../src/modules/story/sample';
+import { sampleStory } from './helpers/sample-story';
 import type { storageClient } from '../src/server/storage/client';
 type Row=Record<string,unknown>;
 function fixture(failAfterArchive=false){

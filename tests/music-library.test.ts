@@ -8,7 +8,7 @@ import { catalogRecordSchema } from "../src/modules/media/catalog/model";
 import { fetchMusicCatalog, loadCatalogTrack } from "../src/modules/media/catalog/catalog";
 import { GET } from "../src/app/api/media/music/route";
 import { enrichStoryMedia } from "../src/modules/media/generation/enrich";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 const record = catalogRecordSchema.parse(entries[0].record);
 const url = `https://test.supabase.co/storage/v1/object/public/music-library/${record.objectPath}`;
 

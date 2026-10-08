@@ -51,7 +51,7 @@ Open http://localhost:3100. Run the development server from your own terminal fo
 - A story library with search, editable imports, and confirmed deletion. Each editor and player has its own URL.
 - Story cards automatically use the opening passage's image as their cover, following `startId` and falling back to the text cover when no image is available. Library previews load opening images only; full media loads when a story is opened.
 - A simple Settings page for story and image models, with browser-local preferences and a server-side API key.
-- A complete original sample, **The Last Light**, with nine passages and three endings. Playing the sample does not change it; editing creates a personal copy.
+- The shared workspace uses **The Lemonade Sky Festival** and **The Letter from Tomorrow** as example stories, with their existing media and publication state. The builder links to the library; examples are saved workspace stories, not bundled defaults.
 - Passage editing, choice labels, destinations, branch convergence, opening selection, and multiple endings.
 - A single Graph workspace on desktop and mobile: drag passages, pan and zoom, connect individual choices, and automatically arrange new stories.
 - Session undo/redo for content, connections, deletion, and layout; saved node positions and viewport are included in editable backups.

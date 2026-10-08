@@ -12,7 +12,7 @@ and [Graph media design](GRAPH_MEDIA_DESIGN.md) for current media scope and plan
 | `/builder` | AI brief or blank-game creation; full-page draft review. |
 | `/builder/[storyId]` | Graph authoring, text/media editing, preview, validation, export. |
 | `/library` | Find, import, copy, and manage saved games. |
-| `/play/[storyId]` | Focused story playback; `sample-last-light` is the bundled sample. |
+| `/play/[storyId]` | Focused playback of a saved workspace story. The retired `sample-last-light` URL redirects to `/library`. |
 | `/settings` | Story and image model selection. |
 
 Editor and player wait for storage readiness, then load the requested story and

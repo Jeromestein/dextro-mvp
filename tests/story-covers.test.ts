@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { GET } from "../src/app/api/stories/route";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 import { addAndAssignAsset } from "../src/modules/media/assets/operations";
 import { summarize, type StoredStory } from "../src/modules/storage/model";
 

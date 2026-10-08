@@ -5,7 +5,7 @@ import { createHash,randomUUID } from 'node:crypto';
 import { readCloudStory,prepareCloudStory,writePreparedStory,clearUploadCache } from '../src/storage/cloud-repository';
 import { persistPending,pendingSaves,replacePending } from '../src/storage/cloud-outbox';
 import { buildBackup,buildGame } from '../src/modules/export/standalone';
-import { sampleStory } from '../src/modules/story/sample';
+import { sampleStory } from './helpers/sample-story';
 import { bindMediaPlan } from '../src/modules/media/generation/plan';
 import type { StoredStory } from '../src/modules/storage/model';
 class Reader { result='';onload:(()=>void)|null=null;onerror:(()=>void)|null=null;readAsDataURL(blob:Blob){blob.arrayBuffer().then(bytes=>{this.result=`data:${blob.type};base64,${Buffer.from(bytes).toString('base64')}`;this.onload?.();}).catch(()=>this.onerror?.());} }

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { runInNewContext } from "node:vm";
 import { createSceneGlow, sceneGlowCSS } from "../src/modules/player/scene-glow-controller";
 import { buildGame } from "../src/modules/export/standalone";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 
 function harness(reducedMotion = false, canvasAvailable = true) {
   const frames = new Map<number, () => void>();

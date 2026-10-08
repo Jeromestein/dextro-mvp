@@ -5,7 +5,7 @@ import { createStandaloneSound } from "../src/modules/media/audio/standalone-sou
 import { soundPopoverView } from "../src/modules/media/audio/sound-popover-view";
 import { buildGame } from "../src/modules/export/standalone";
 import { addAndAssignAsset } from "../src/modules/media/assets/operations";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 
 test("sound activation remains distinct from a deliberate mute and silent passages", () => {
   assert.equal(soundPopoverView("off", .35, false).activate, true);

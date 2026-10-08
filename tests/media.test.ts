@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { runInNewContext } from "node:vm";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 import { storySchema } from "../src/modules/story/model";
 import { addAndAssignAsset, assignAsset, pruneAssets, storyByteSize } from "../src/modules/media/assets/operations";
 import type { MediaAsset } from "../src/modules/media/assets/model";

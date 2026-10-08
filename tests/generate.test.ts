@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { GET, POST } from "@/app/api/generate/route";
-import { sampleStory } from "../src/modules/story/sample";
+import { sampleStory } from "./helpers/sample-story";
 import { buildGame } from "../src/modules/export/standalone";
 
 const brief = {

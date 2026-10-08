@@ -1,7 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { randomUUID, createHash } from "node:crypto";
-import { sampleStory } from "../../src/modules/story/sample";
+import { sampleStory } from "./sample-story";
 import type { StoredStory } from "../../src/modules/storage/model";
 
 // PostgreSQL-backed Supabase transport for integration tests and isolated UI QA.
