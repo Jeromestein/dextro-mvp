@@ -17,11 +17,12 @@ account access remains future work; the internal adapter uses one shared owner.
 
 ## Architecture and implementation boundary
 
-Publishing design approved 2026-10-07: keep editable stories separate from
-immutable public releases, resolve stable share URLs through an active release
-pointer, and isolate public reads from authoring APIs. This is a documented next
-increment, not current runtime behavior. See [Story publishing](STORY_PUBLISHING_DESIGN.md)
-for the reader projection, media boundary, revision-safe operations, and checks.
+Publishing increment (2026-10-08): editable stories remain separate from the
+frozen public snapshot. Stable share URLs resolve through the active release ID.
+Public routes mount only reader dependencies and expose assigned media. The user
+explicitly deferred accounts and author access gates; existing workspace visitors
+continue sharing the internal owner. The additive migration is supplied but not
+verified on the hosted database. See [Story publishing](STORY_PUBLISHING_DESIGN.md).
 
 Dextro is a modular Next.js application for choice-based text adventures. One
 story model connects authoring, generation, playback, browser persistence, and
@@ -48,6 +49,8 @@ See [Graph media design](GRAPH_MEDIA_DESIGN.md) for the next increment and
 | `editor/session/` | Immutable commands, grouped undo/redo, and a unified commit hook. |
 | `src/modules/media/` | Asset schema, file reading, reference operations, size accounting, and shared audio engine/controls. |
 | `src/modules/generation/` | Builder, shared generation schema, draft provider, and review. |
+| `src/modules/publishing/` | Reader projection/hash, publication panel, public landing and media hydration. |
+| `src/server/publishing/` | Snapshot publication/withdrawal and allowlisted public reads. |
 | `src/modules/player/` | Shared React preview/player and choice progression. |
 | `src/modules/export/` | Download helpers and standalone HTML template. |
 | `src/modules/workspace/` | Saved library, provider composition, shell, route integration. |

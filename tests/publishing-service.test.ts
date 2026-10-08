@@ -1,0 +1,52 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { publishingFixture } from "./helpers/publishing-fixture";
+import { mutatePublication, publicManifest, publicAsset, publicationStatus, libraryPublications } from "../src/server/publishing/service";
+import { readCloudStory, saveCloudStory } from "../src/server/storage/stories";
+import { DELETE as deleteStory } from "../src/app/api/stories/[id]/route";
+
+test("real publication services promote stored revisions and restrict public reads to assigned media", async t => {
+  const fixture = await publishingFixture();
+  t.after(() => fixture.close());
+  for (const [key, value] of Object.entries({ STORAGE_MODE: "supabase", SUPABASE_URL: "https://fixture.supabase.co", SUPABASE_SECRET_KEY: "fixture-secret", INTERNAL_TEST_OWNER_ID: fixture.owner })) {
+    const previous = process.env[key]; process.env[key] = value;
+    t.after(() => { if (previous === undefined) delete process.env[key]; else process.env[key] = previous; });
+  }
+  t.mock.method(globalThis, "fetch", fixture.fetch);
+  const principal = { ownerId: fixture.owner }, id = fixture.storyId;
+  assert.equal((await publicationStatus(principal, id)).publication, null);
+  assert.deepEqual(await publicationStatus(principal, "new-draft-before-autosave"), { available: true, publication: null });
+  const input = { mutationId: randomUUID(), sourceRevision: 1, expectedPublicationRevision: 0 };
+  const published = await mutatePublication(principal, id, "publish", input);
+  const manifest = await publicManifest(published.publicId);
+  assert.equal(manifest.content.title, "Publishing QA — The Last Light");
+  assert.equal(manifest.content.assets.length, 1);
+  for (const privateValue of [fixture.owner, fixture.assetId, "owner_id", "assetId", "object_key", "provenance", "editor", "mediaPlan"]) assert.ok(!JSON.stringify(manifest).includes(privateValue));
+  assert.ok((await publicAsset(published.publicId, published.releaseId, "opening-image")).bytes.length);
+  await assert.rejects(publicAsset(published.publicId, published.releaseId, fixture.assetId), /Media unavailable/);
+  await assert.rejects(publicAsset(published.publicId, randomUUID(), "opening-image"), /updated/);
+  await assert.rejects(publicManifest(randomUUID()), /unavailable/);
+  const draft = await readCloudStory(principal, id);
+  const changed = { title: "A draft edit", description: draft.description, genre: draft.genre, document: draft.document };
+  await saveCloudStory(principal, id, { story: changed, baseRevision: 1, mutationId: randomUUID() });
+  assert.equal((await publicManifest(published.publicId)).content.title, manifest.content.title);
+  assert.equal((await libraryPublications(principal, [{ id, ...changed }])).get(id)?.changed, true);
+  assert.deepEqual(await mutatePublication(principal, id, "publish", input), published, "retry succeeds after the draft advances");
+  await assert.rejects(mutatePublication(principal, id, "publish", { ...input, mutationId: randomUUID(), expectedPublicationRevision: 1 }), /another tab/);
+  const updated = await mutatePublication(principal, id, "publish", { mutationId: randomUUID(), sourceRevision: 2, expectedPublicationRevision: 1 });
+  assert.equal((await publicManifest(updated.publicId)).content.title, "A draft edit");
+  await assert.rejects(publicAsset(published.publicId, published.releaseId, "opening-image"), /updated/);
+  const unpublish = { mutationId: randomUUID(), sourceRevision: 0, expectedPublicationRevision: updated.revision };
+  const withdrawn = await mutatePublication(principal, id, "unpublish", unpublish);
+  await assert.rejects(publicManifest(published.publicId), /unavailable/);
+  await assert.rejects(publicAsset(published.publicId, published.releaseId, "opening-image"), /unavailable/);
+  const again = await mutatePublication(principal, id, "publish", { mutationId: randomUUID(), sourceRevision: 2, expectedPublicationRevision: withdrawn.revision });
+  assert.equal(again.publicId, published.publicId);
+  const request = { mutationId: randomUUID(), expectedPublicationRevision: again.revision };
+  const makeRequest = () => new Request(`http://localhost:3100/api/stories/${id}?revision=2`, { method: "DELETE", headers: { Origin: "http://localhost:3100", "Content-Type": "application/json" }, body: JSON.stringify(request) });
+  const context = { params: Promise.resolve({ id }) };
+  assert.equal((await deleteStory(makeRequest(), context)).status, 200);
+  assert.equal((await deleteStory(makeRequest(), context)).status, 200, "API recovers lost delete response after soft deletion");
+  await assert.rejects(publicManifest(published.publicId), /unavailable/);
+});

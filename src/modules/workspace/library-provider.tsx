@@ -7,6 +7,7 @@ import { recoverViewportSaves } from "@/storage/viewport-recovery";
 import { summarize, type StorageStatus, type StorySummary } from "@/modules/storage/model";
 import { requireStorySize } from "@/modules/media/assets/operations";
 import { copyStory, type Story } from "@/modules/story/model";
+import { storyContentHash, type PublicationStatus } from "@/modules/publishing/model";
 
 function useLibraryState() {
   const [stories, setStories] = useState<StorySummary[]>([]);
@@ -25,6 +26,7 @@ function useLibraryState() {
   const draining = useRef(false);
   const blocked = useRef(false);
   const writes = useRef(0);
+  const deleteRequests = useRef(new Map<string, { mutationId: string; expectedPublicationRevision: number; sourceRevision: number }>());
   const updateRecovery = useCallback(() => {
     setRecovery([...new Map(queue.current.map(entry => [entry.story.id, entry.story])).values()]);
   }, []);
@@ -81,7 +83,12 @@ function useLibraryState() {
             revisions.current.set(result.story.id, result.revision);
             merged.set(result.story.id, summarize(result.story, result.revision, result.status));
           });
-          pending.forEach(entry => { loaded.current.set(entry.story.id, entry.story); merged.set(entry.story.id, summarize(entry.story, entry.baseRevision, entry.status)); });
+          for (const entry of pending) {
+            loaded.current.set(entry.story.id, entry.story);
+            const publication = merged.get(entry.story.id)?.publication;
+            merged.set(entry.story.id, { ...summarize(entry.story, entry.baseRevision, entry.status), publication: publication?.releaseId
+              ? { ...publication, changed: await storyContentHash(entry.story) !== publication.contentHash } : publication });
+          }
           setStories([...merged.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
           updateRecovery();
           void drain();
@@ -119,7 +126,11 @@ function useLibraryState() {
     const merged = new Map(remote.map(item => [item.id, item]));
     // Do not advance an open editor's base revision past a remote edit.
     remote.forEach(item => { if (!loaded.current.has(item.id)) revisions.current.set(item.id, item.revision); });
-    queue.current.forEach(entry => merged.set(entry.story.id, summarize(entry.story, entry.baseRevision, entry.status)));
+    for (const entry of queue.current) {
+      const publication = merged.get(entry.story.id)?.publication;
+      merged.set(entry.story.id, { ...summarize(entry.story, entry.baseRevision, entry.status), publication: publication?.releaseId
+        ? { ...publication, changed: await storyContentHash(entry.story) !== publication.contentHash } : publication });
+    }
     setStories([...merged.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
   }, []);
   const persistStory = useCallback((story: Story, status = "ready") => {
@@ -127,7 +138,12 @@ function useLibraryState() {
     const stamped = { ...story, updatedAt: new Date().toISOString() };
     try { requireStorySize(stamped); } catch (error) { setStorageError((error as Error).message); return false; }
     loaded.current.set(story.id, stamped);
-    setStories(previous => [summarize(stamped, revisions.current.get(story.id), status), ...previous.filter(item => item.id !== stamped.id)]);
+    setStories(previous => [{ ...summarize(stamped, revisions.current.get(story.id), status), publication: previous.find(s => s.id === story.id)?.publication }, ...previous.filter(item => item.id !== stamped.id)]);
+    void storyContentHash(stamped).then(contentHash => {
+      if (loaded.current.get(story.id) !== stamped) return;
+      setStories(previous => previous.map(item => item.id === story.id && item.publication?.releaseId
+        ? { ...item, publication: { ...item.publication, changed: contentHash !== item.publication.contentHash } } : item));
+    }).catch(() => { /* Invalid drafts can still be saved and fixed before publishing. */ });
     writes.current++;
     setSaving(true);
     // Serialize local staging as well as remote writes. Each edit reserves the
@@ -161,11 +177,40 @@ function useLibraryState() {
       await refreshLibrary();
     } catch (error) { setStorageError((error as Error).message); }
   }, [drain, refreshLibrary]);
+  const flushStory = useCallback(async (story: Story) => {
+    if (config.current?.mode !== "supabase" || !config.current.available) throw new Error("Publishing requires a saved cloud story.");
+    const deadline = Date.now() + 60_000;
+    do {
+      await staged.current;
+      if (blocked.current) throw new Error("Resolve the save error before publishing. Your draft is kept.");
+      if (!draining.current) await drain();
+      if (blocked.current) throw new Error("The story could not finish saving. Retry sync before publishing.");
+      if (!writes.current && !draining.current && !queue.current.length) break;
+      if (Date.now() > deadline) throw new Error("The story is still saving. Try publishing again when saving finishes.");
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } while (true);
+    const current = loaded.current.get(story.id);
+    if (!current || await storyContentHash(current) !== await storyContentHash(story))
+      throw new Error("The story changed while saving. Review the current draft and publish again.");
+    const revision = revisions.current.get(story.id);
+    if (!revision) throw new Error("Wait for the story to finish saving before publishing.");
+    return revision;
+  }, [drain]);
   const deleteSavedStory = async (id: string) => {
     await staged.current;
     if (config.current?.mode === "supabase") {
       if (draining.current || queue.current.some(entry => entry.story.id === id)) throw new Error("Finish syncing or download your recovery copy before removing this game.");
-      await requestJSON(`/api/stories/${encodeURIComponent(id)}?revision=${revisions.current.get(id) || 0}`, { method: "DELETE" });
+      let input = deleteRequests.current.get(id);
+      if (!input) {
+        const status: PublicationStatus = await requestJSON(`/api/stories/${encodeURIComponent(id)}/publication`);
+        input = { mutationId: crypto.randomUUID(), expectedPublicationRevision: status.publication?.revision || 0, sourceRevision: revisions.current.get(id) || 0 };
+        deleteRequests.current.set(id, input);
+      }
+      try {
+        await requestJSON(`/api/stories/${encodeURIComponent(id)}?revision=${input.sourceRevision}`, {
+          method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
+        });
+      } catch (error) { if ((error as { status?: number }).status === 409) deleteRequests.current.delete(id); throw error; }
     } else await removeStory(id);
     loaded.current.delete(id);
     setStories(previous => previous.filter(story => story.id !== id));
@@ -192,7 +237,7 @@ function useLibraryState() {
     for (const story of local) if (!persistStory(copyStory(story))) throw new Error("Could not queue a local story.");
     return local.length;
   };
-  return { scope, stories, ready, available, cloud, storageError, saving, recovery, persistStory, deleteSavedStory, loadStory, refreshLibrary, retrySync, migrateLocalStories, saveRecoveryAsCopy };
+  return { scope, stories, ready, available, cloud, storageError, saving, recovery, persistStory, deleteSavedStory, loadStory, refreshLibrary, retrySync, migrateLocalStories, saveRecoveryAsCopy, flushStory };
 }
 const LibraryContext = createContext<ReturnType<typeof useLibraryState> | null>(null);
 export function LibraryProvider({ children }: { children: ReactNode }) {

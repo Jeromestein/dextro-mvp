@@ -36,6 +36,7 @@ import Player from "@/modules/player/player";
 import { Lighthouse } from "@/shared/ui/lighthouse";
 import StoryCover from "@/modules/workspace/story-cover";
 import EditorSkeleton from "@/modules/editor/editor-skeleton";
+import { publicationLabel, publicPath } from "@/modules/publishing/model";
 
 const StoryEditor = dynamic(() => import("@/modules/editor/story-editor"), { ssr: false, loading: () => <EditorSkeleton /> });
 
@@ -162,7 +163,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
               <div className="section-heading">
                 <div>
                   <div className="eyebrow muted">
-                    {cloud ? "PRIVATE CLOUD WORKSPACE" : available ? "SAVED IN THIS BROWSER" : "STORAGE UNAVAILABLE"}
+                    {cloud ? "SHARED CLOUD WORKSPACE" : available ? "SAVED IN THIS BROWSER" : "STORAGE UNAVAILABLE"}
                   </div>
                   <h2>
                     Games <span>{stories.length}</span>
@@ -238,7 +239,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
                       <StoryCover story={s} variant={i % 3} onEdit={() => edit(s)} />
                       <div className="card-body">
                         <div className="card-meta">
-                          <span className="tag draft">DRAFT</span>
+                          <span className={`tag ${s.publication?.releaseId ? "" : "draft"}`}>{publicationLabel(s.publication)}</span>
                           <span>{s.genre}</span>
                         </div>
                         <h3>
@@ -257,6 +258,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
                             {s.endingCount} endings
                           </span>
                           <div>
+                            {s.publication?.releaseId && <a className="icon-button" href={publicPath(s.publication.publicId)} target="_blank" rel="noopener noreferrer" aria-label={`Open public page for ${s.title}`} title="Open public page"><ArrowUpRight size={16} /></a>}
                             <button
                               className="icon-button"
                               title="Play story"
@@ -310,7 +312,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
             <footer className="library-footer">
               <span>Made for the stories only you can tell.</span>
               <span>
-                {cloud ? "Games and media save privately to the cloud. Exports work offline." : "Drafts stay in this browser. Export a backup to keep them safe."}{" "}
+                {cloud ? "Games and media save to this shared cloud workspace. Exports work offline." : "Drafts stay in this browser. Export a backup to keep them safe."}{" "}
                 <ArrowDownIcon />
               </span>
             </footer>
@@ -356,7 +358,7 @@ function StudioContent({ view, initialStory }: { view: View; initialStory: Story
       {modal === "delete-story" && active && (
         <Dialog title="Delete this story?" onClose={closeModal}>
           <p className="modal-description">
-            “{active.title}” {cloud ? "will be removed from My Games. Its saved versions and media remain in private storage." : "will be removed from this browser. Download a backup first if you want to keep it."}
+            “{active.title}” {cloud ? "will be removed from My Games and its public link will stop working. Saved versions and media are retained." : "will be removed from this browser. Download a backup first if you want to keep it."}
           </p>
           <div className="dialog-actions">
             <button className="button" onClick={exportJSON}>

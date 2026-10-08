@@ -19,6 +19,7 @@ test("cloud summaries point to the opening image without downloading story media
   };
   t.mock.method(globalThis, "fetch", async (input: RequestInfo | URL) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
+    if (url.pathname === "/rest/v1/story_publications") return Response.json([]);
     assert.equal(url.pathname, "/rest/v1/stories", "a list request never downloads media or loads individual stories");
     assert.equal(url.searchParams.get("owner_id"), `eq.${env.INTERNAL_TEST_OWNER_ID}`);
     return Response.json([{ id: story.id, title: story.title, description: story.description, genre: story.genre, updated_at: story.updatedAt, passage_count: story.passages.length, ending_count: 3, status: "ready", revision: 1, document }]);

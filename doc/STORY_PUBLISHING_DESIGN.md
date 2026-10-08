@@ -1,13 +1,20 @@
 # Story Publishing
 
-Design approved: 2026-10-07. Status: documented; not implemented or deployed.
+Design approved: 2026-10-07. Simplified scope approved: 2026-10-08.
+Implementation: code and migration added; hosted migration/deployment not verified.
 
-The author approved the product flow below and requested documentation first.
-This document defines the first publishing increment and its proposed technical
-contract. It does not report completed migrations, public routes, access controls,
-or live verification. See [project requirements](PROJECT_REQUIREMENTS.md) for the
-dated decision and [cloud storage design](CLOUD_STORAGE_DESIGN.md) for existing
-persistence and access behavior.
+On 2026-10-08, the author requested the simplest public-sharing implementation
+without a user system or author-password gate. Existing `owner_id` values stay;
+all current visitors still use the shared internal workspace. Public pages offer
+playback only, but that is not enforcement of exclusive editing rights. Future
+verified users may edit their own stories; other users must create an independent
+copy under their own owner ID. That user/copy authorization workflow is deferred.
+
+The implementation includes Publish, explicit updates, withdrawal, stable links,
+a fixed playable snapshot, media hydration, and library status. Apply
+`supabase/migrations/202610080001_story_publishing.sql` after the existing storage
+migration to enable it in a cloud workspace. This document does not claim that
+migration has been applied to the hosted database or that a deployment occurred.
 
 ## 1. Decision and scope
 
@@ -27,13 +34,14 @@ Include:
 - A stable public landing page and the existing choice-based player.
 - Accurate library/editor status, explicit updates, and withdrawal.
 - Fixed content and media for each release, with failure-safe publication.
-- A read-only public boundary that does not expose the authoring workspace.
+- An independent reader page and API exposing only published playable content.
+  Existing shared authoring access remains unchanged; it is not private per user.
 
 Defer discovery, profiles, follows, likes, comments, analytics, payments, reader
 accounts, cross-device progress, custom domains/slugs, scheduled publishing, and
 a release-history/rollback UI. Public play never generates content or invokes AI.
 
-## 2. Current baseline
+## 2. Baseline before this increment
 
 | Source | Current behavior |
 | --- | --- |
@@ -45,8 +53,10 @@ a release-history/rollback UI. Public play never generates content or invokes AI
 | `src/modules/export/standalone.ts` | Playable exports validate content and remove editor metadata, media plans, unused assets, and provider prompts. |
 | `src/server/auth/principal.ts` | Every visitor receives the same configured internal owner, without a verified author session. |
 
-Reuse these foundations without treating workspace status or a saved revision
-as publication. Existing story URLs and offline exports keep their current role.
+The implementation builds on these foundations without treating workspace status
+or a saved revision as publication. Existing story URLs and offline exports keep
+their current role. `src/modules/publishing/` owns projection, sharing controls,
+and reader hydration; `src/server/publishing/` owns publication and public reads.
 
 ## 3. Author workflow
 
@@ -156,21 +166,26 @@ draft details or editor links. Withdrawal denies new manifest/media requests.
 It cannot erase a fully loaded playthrough, downloaded copies, or third-party
 share-preview caches. State this limit accurately in withdrawal help text.
 
-## 6. Proposed persistence and operation contract
+## 6. Persistence and operation contract
 
 Keep `stories.status` and `story_versions` for authoring. Add publication records
 instead of changing ready into public or marking every saved revision as live.
 
-| Record | Suggested fields and constraints |
+| Record | Implemented role |
 | --- | --- |
-| `story_publications` | Internal owner/story key, unique stable public ID, active release ID nullable, monotonic publication revision, first/last published and withdrawn timestamps. One publication per owned story; public IDs are never reassigned. |
-| `story_releases` | Immutable release ID, publication ID, source story revision, release schema version, playable content hash, sanitized reference-only snapshot, creation time. The active pointer must reference a release of that same publication. |
-| `story_release_assets` | Release ID, release-local asset ID, immutable asset reference, byte hash/type/size, and frozen reader-facing credits/license fields. Retain referenced bytes independently of later draft edits. |
-| Publication operation record | Owner/story, unique mutation ID, operation kind, request hash, and durable result for retries of publish/update/withdraw/delete. |
+| `story_publications` | One row per owned story: stable public ID, active release ID, publication revision, source story revision, content hash, frozen reference-only playable snapshot, and publication/withdrawal times. |
+| `publication_operations` | Owner/story/mutation key, request hash, and durable result for retries of publish, update, withdrawal, and deletion. |
+| Existing `story_versions` and `story_asset_refs` | Retain original revisions and their immutable media; a publication has a same-owner/story foreign key to its source version. |
 
-These are proposed contracts, not applied SQL. Enforce ownership and same-story
-relationships at both service and database boundaries. Do not expose direct
-anonymous reads of authoring tables or grant clients the publication mutation RPC.
+The simplest implementation replaces the active frozen snapshot atomically when
+publishing an update. It does not add a second complete release-history system;
+source versions remain in the existing history. Readers already holding a loaded
+package finish that package. Old release URLs cannot fetch media after a switch.
+
+The additive migration grants access only to the server role. Ownership filters
+and same-owner foreign keys preserve the future account boundary, but the current
+principal still resolves everyone to the same internal owner. No story becomes
+public merely because the migration runs.
 
 Build a dedicated allowlisted reader payload. Include only playable content,
 assigned media, appearance, and necessary credits/license attribution. Strip
@@ -184,19 +199,20 @@ projection logic without importing the standalone HTML template into the player.
 1. Capture the reviewed content and finish its cloud save/upload work. Obtain
    the server-confirmed source revision; a queued local save is insufficient.
 2. Send sourceRevision, expectedPublicationRevision, and a mutationId. Resolve
-   author authority on the server; never trust an owner ID from the browser.
+   the existing internal owner on the server; never accept a browser-supplied
+   owner ID. This is workspace scoping, not verification of the visitor identity.
 3. Load that revision, validate its playable projection and referenced bytes,
    and compute the content hash. Do not accept arbitrary client snapshots as
    evidence of a valid published story.
 4. In one database transaction, verify the source/publication revisions still
-   match, insert the immutable release and asset references, switch the active
-   pointer, increment the publication revision, and record the operation result.
+   match, replace the frozen snapshot and active release ID, retain its source
+   revision reference, increment the publication revision, and record the result.
 5. Return the confirmed public URL and release identity. Edits made after the
    reviewed version remain draft changes rather than joining this operation.
 
 Media bytes must be ready before the transaction; a database transaction cannot
 make an object-storage upload atomic. Reuse existing immutable files and pin
-them through release references. Future cleanup must honor those references.
+them through release references. Future cleanup must honor the retained source-version asset references.
 
 Revision mismatches return a conflict with an action to reload publication state
 and review again. Never overwrite another tab's publish or withdrawal silently.
@@ -213,9 +229,9 @@ public callers cannot enumerate drafts, revisions, or superseded releases.
 
 | Route | Responsibility |
 | --- | --- |
-| `GET /api/stories/[id]/publication` | Authorized author status, public URL, released content hash, and publication revision. |
-| `POST /api/stories/[id]/publication` | Authorized publish/update using the captured revision and mutation ID. |
-| `DELETE /api/stories/[id]/publication` | Authorized withdrawal with expected revision and mutation ID. |
+| `GET /api/stories/[id]/publication` | Shared-workspace status, public URL, released content hash, and publication revision. |
+| `POST /api/stories/[id]/publication` | Shared-workspace publish/update using the captured revision and mutation ID. |
+| `DELETE /api/stories/[id]/publication` | Shared-workspace withdrawal with expected revision and mutation ID. |
 | `GET /s/[publicId]` | Public landing page and released share metadata. |
 | `GET /api/public/stories/[publicId]` | Sanitized active release manifest; no workspace lookup by visitor identity. |
 | `GET /api/public/stories/[publicId]/releases/[releaseId]/assets/[assetId]` | Only an asset referenced by that publication's currently active release. |
@@ -228,44 +244,45 @@ avoid static generation, image optimization, or a CDN path that bypasses withdra
 checks. The hydration client retains bytes only for its current playthrough.
 Do not make the existing user-media or generation-output buckets public.
 
-## 7. Public access boundary
+## 7. Current ownership and future users
 
-The current shared-owner principal is not an author authorization check.
-Same-origin checks, hidden editor navigation, private buckets, and unguessable
-story IDs do not prevent an anonymous visitor from using the current workspace
-APIs. The agreed public increment therefore requires a real boundary before launch.
+Keep the existing no-sign-in internal workspace. Do not introduce an author
+password, account screens, new credentials, or deployment access protection in
+this increment. This supersedes the original public-launch authentication
+requirement after the author's explicit simplification on 2026-10-08.
 
-Prefer a separately protected author workspace and a public reader surface that
-exposes only published reads. If both run in one deployment, enforce equivalent
-verified author access on every workspace page and API. Protect draft/revision
-reads, raw assets and uploads, publication mutations, deletion, storage/settings,
-generation submission/status, and any job recovery endpoint that can dispatch
-work. A separate public hostname alone does not protect an open author origin.
+Each story and publication remains associated with `owner_id`. When accounts are
+introduced, replace the shared principal with a verified session. Permit original
+story changes only when that user owns it; copying another user's public story
+must create a new ID and owner binding, with no inherited publication authority.
+Browser-provided user IDs cannot establish that identity.
 
-Reader requests must never use the existing shared-owner wrapper as authorization.
-Resolve only the requested active publication and its exact asset allowlist.
-Server credentials stay server-side; public play has no paid-provider path.
+For now, the `/s/[publicId]` page has no editing controls and public endpoints
+return only the active playable snapshot and its assigned assets. Public readers
+do not mount the workspace providers or call AI. However, existing workspace
+URLs and APIs are still accessible under the shared internal identity. Do not
+claim that stories are protected from other visitors or label this setup as
+per-person private storage. Same-origin checks remain in place for writes.
 
-The existing no-sign-in shared workspace remains the documented internal-testing
-behavior today. This approved publishing design adds a public-launch requirement;
-it does not claim protection already exists or change current settings. The exact
-hosting/access mechanism must be selected during implementation. A full consumer
-account/profile system is not required for the first author boundary.
+Private media buckets remain private. Public media requests resolve through an
+active publication and its exact assigned-asset list; no arbitrary storage paths,
+provider prompts, unused assets, or authoring records are included in the public
+payload. This narrows the sharing interface without pretending to add user auth.
 
-## 8. Implementation sequence and acceptance
+## 8. Implementation and acceptance
 
 1. Define the playable projection/hash, release schema, and additive migration.
    Keep existing stories unpublished; migrate no data into public access by default.
 2. Implement revision-safe, idempotent publication operations and private asset
-   retention. Add the author access boundary before exposing these operations.
+   retention using the current shared-workspace principal.
 3. Build the independent public landing page, manifest/media reads, bounded
    hydration, player integration, metadata, and unavailable state.
 4. Add the editor panel and real My Games badges, including pending-save, conflict,
    uncertain-result, local-only, and withdrawal behavior.
-5. Verify locally, then verify the actual hosted reader and author boundaries
-   separately. Code presence and a local pass do not establish deployment safety.
+5. Verify locally, then apply the migration and verify the actual hosted reader
+   separately. Local fixture results do not establish hosted behavior.
 
-Required checks for the future implementation:
+Acceptance checks:
 
 - Publish a text-only story and a media story; play branches to endings and restart
   in a fresh anonymous browser, on desktop and at a 390px mobile width.
@@ -282,11 +299,14 @@ Required checks for the future implementation:
   required cloud copy without discarding the original.
 - Inspect public payloads for prompts, unused media, private identifiers, and
   authoring metadata; attempt unrelated asset and historical-release access.
-- From an anonymous client, verify draft/asset/job reads, editing, uploads,
-  publishing, deletion, and AI/recovery APIs cannot use the shared internal owner.
+- Verify public reads never return draft-only content or unassigned media, and
+  that write endpoints still reject cross-origin requests. Document that existing
+  workspace APIs continue using the shared owner; user authorization is deferred.
 - Use the Codex in-app browser for final author/reader interactions, keyboard
   access, mobile layout, sharing controls, and audio fallback. Run typecheck, lint,
   and relevant automated tests; do not run `pnpm build`.
 
-Verification status for this document: design only. No publishing implementation,
-database migration, access-setting change, paid request, or deployment is included.
+Verification is recorded in [VERIFICATION.md](VERIFICATION.md). No hosted schema
+change, account/access configuration, paid generation, or deployment is included.
+For absolute cover-preview metadata, set `NEXT_PUBLIC_SITE_URL` to the canonical
+app origin and restart/redeploy when that environment value changes.

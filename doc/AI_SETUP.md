@@ -130,3 +130,24 @@ production. It has no hostname, loopback, sign-in or access-code gate. Same-orig
 mutation checks, private buckets and server-side owner filters remain. These do
 not create separate identities for visitors. Actual hosted execution still needs
 verification after redeployment.
+
+## Public story sharing
+
+After the cloud-storage migration, apply
+`supabase/migrations/202610080001_story_publishing.sql` once to the same Supabase
+project. It adds publication snapshots and retry records; existing drafts stay
+unpublished. No additional credentials or user system are needed. The existing
+shared internal owner continues to own every workspace story.
+
+Set `NEXT_PUBLIC_SITE_URL` to the deployed app origin if social previews should
+include the story's opening image. Restart the local server or redeploy after
+changing environment values. Publication is unavailable until the migration is
+applied; normal draft saving and local exports remain available.
+
+Verify with a disposable cloud story: Publish → Make public, open the returned
+`/s/[publicId]` link in a fresh browser, play to an ending, edit the draft, publish
+updates, then unpublish. Draft edits must not appear on the public page before
+an explicit update. Republishing must reuse the link. See
+[Story Publishing](STORY_PUBLISHING_DESIGN.md) for the current shared-workspace
+boundary and [Verification](VERIFICATION.md) for local evidence. Hosted migration
+and publication have not yet been verified.

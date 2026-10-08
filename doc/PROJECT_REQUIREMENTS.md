@@ -1,5 +1,23 @@
 # Project Requirements and Decisions
 
+## Simplified public sharing — 2026-10-08
+
+Implement public sharing without adding a user system or author-password gate.
+Keep the existing owner ID on each story and publication. Future verified users
+may edit only their own projects; another user must copy a project to a new ID
+under their own ownership before editing. That enforcement is deferred while all
+visitors share the current internal owner.
+
+For this increment, provide Make public, a stable read-only player link, explicit
+Publish updates, and Unpublish. Keep a fixed published snapshot so autosaved draft
+edits do not immediately change reader content. Public pages omit editing controls;
+this does not restrict access to the existing shared workspace APIs. This decision
+supersedes the author-access prerequisite in the earlier publishing proposal.
+
+The implementation uses an additive publication migration, existing revision/media
+retention, and no new login or credentials. See [Story publishing](STORY_PUBLISHING_DESIGN.md).
+Hosted migration and deployment require separate verification.
+
 ## Story publishing decision — 2026-10-07
 
 The author approved the publishing design and requested documentation first.

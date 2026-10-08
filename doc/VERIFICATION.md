@@ -1,5 +1,42 @@
 # Verification Record
 
+## 2026-10-08 — Public story sharing with a shared workspace
+
+- Implemented Make public, stable reader URLs, explicit Publish updates,
+  Unpublish/Publish again, and publication badges. The current shared internal
+  owner remains; no sign-in or per-user edit authorization was introduced.
+- TypeScript, ESLint, `git diff --check`, and all 107 automated tests passed.
+  No production build ran. New coverage uses the real SQL migrations in PGlite
+  and the actual publication services with a local Supabase transport fixture:
+  source revisions, retry recovery, conflicts, frozen content, asset membership,
+  private-field removal, reader integrity/race handling, byte ranges, withdrawal,
+  republishing, and atomic deletion including a lost-response retry.
+- Codex in-app browser checked the editor review panel, publication/update flow,
+  unchanged public content before explicit update, library badges, public landing
+  page, branches to an ending, and restart. Final library and public-page states
+  were inspected again after the changes. A first-save race found during browser
+  testing was fixed: new drafts now return an empty publication status while
+  waiting for autosave instead of a 404.
+- Supplemental Playwright CLI checks verified that an already loaded reader
+  finishes the original release after an update, fresh readers see the update,
+  withdrawal blocks new visits, loaded readers continue, and republishing reuses
+  the URL. At 390 × 844, the publication panel and reader landing had no horizontal
+  overflow; landing, player, and unavailable screenshots were visually inspected.
+  In-app viewport overrides did not change the measured viewport in this run,
+  so mobile evidence comes from Playwright. Development CSS preload warnings
+  were present; the two initial publication 404s preceded the first-save fix.
+- All mutations used disposable fixtures in an isolated app at localhost:3101
+  with a PGlite-backed transport at 127.0.0.1:3102. The existing localhost:3100
+  server was used read-only. User stories and hosted storage were not changed.
+  Temporary browser and server processes were stopped after verification.
+- Local evidence under `output/playwright/` (ignored):
+  `publishing-panel-desktop.png`, `publishing-panel-mobile.png`,
+  `publishing-public-desktop.png`, `publishing-public-mobile.png`,
+  `publishing-player-mobile.png`, and `publishing-unavailable-mobile.png`.
+- Hosted migration, deployment, production caching, and social-preview crawlers
+  remain unverified. Apply `202610080001_story_publishing.sql` to enable sharing
+  in the configured cloud workspace. No paid generation was exercised.
+
 ## Scene glow prototype — 2026-10-07
 
 - `pnpm typecheck`, `pnpm lint`, and `git diff --check`: passed.

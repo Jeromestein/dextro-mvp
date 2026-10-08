@@ -3,7 +3,7 @@ import { assetSchema,type MediaAsset } from '@/modules/media/assets/model';
 import type { AssetInfo,StoredStory,StorageStatus,StorySummary } from '@/modules/storage/model';
 import { requireStorySize } from '@/modules/media/assets/operations';
 export async function requestJSON(url:string,init?:RequestInit) {
- const response=await fetch(url,{cache:'no-store',...init});const data=await response.json().catch(()=>({error:'The server is unavailable. Your local work is preserved.'}));if(!response.ok)throw new Error(data.error||'The cloud request failed. Your local work is preserved.');return data;
+ const response=await fetch(url,{cache:'no-store',...init});const data=await response.json().catch(()=>({error:'The server is unavailable. Your local work is preserved.'}));if(!response.ok)throw Object.assign(new Error(data.error||'The cloud request failed. Your local work is preserved.'),{status:response.status});return data;
 }
 export const storageStatus=async():Promise<StorageStatus>=>requestJSON('/api/storage');
 export async function listCloudStories():Promise<StorySummary[]> {const rows:StorySummary[]=[];let offset:number|null=0;do{const page=await requestJSON(`/api/stories?offset=${offset}`);rows.push(...page.stories);offset=page.nextOffset;}while(offset!==null);return rows;}

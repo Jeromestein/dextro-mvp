@@ -1,0 +1,50 @@
+.publication-preview { overflow:hidden; border:1px solid var(--line); border-radius:10px; margin:12px 0 18px; }
+.publication-preview>img { width:100%; height:150px; object-fit:cover; }
+.publication-preview>div { padding:18px; }
+.publication-preview h3 { font:600 23px/1.35 Manrope,sans-serif; margin:12px 0 6px; overflow-wrap:anywhere; }
+.publication-preview p,.publication-help,.publication-withdraw p { color:var(--muted); font-size:13px; line-height:1.7; overflow-wrap:anywhere; }
+.publication-badge { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:11px; background:var(--soft); padding:5px 8px; border-radius:5px; }
+.publication-badge.is-public { background:#edf4ed; color:#396243; }
+.publication-help { margin:14px 0; }
+.publication-share { padding:16px; background:var(--surface-subtle); border:1px solid var(--line); border-radius:8px; margin:16px 0; }
+.publication-share label { display:block; font-size:12px; font-weight:600; }
+.publication-share input { width:100%; padding:10px; border:1px solid var(--line); border-radius:5px; background:white; font-size:12px; margin:8px 0 12px; }
+.publication-share small { display:block; color:var(--muted); margin-top:12px; font-size:11px; }
+.publication-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.publication-checks { border-top:1px solid var(--line); padding:18px 0 12px; font-size:13px; }
+.publication-checks>p { display:flex; align-items:center; gap:7px; color:var(--success); margin-top:8px; }
+.publication-checks .issues-list { max-height:180px; overflow:auto; }
+.publication-preview-link { display:inline-flex; align-items:center; gap:6px; font-size:12px; margin:0 0 22px; }
+.publication-withdraw { margin:16px 0; padding:16px; background:#fff6f1; border-radius:8px; border:1px solid #ebc5b7; }
+.publication-withdraw p { margin-bottom:12px; }
+.publication-notice { color:var(--success); font-size:13px; line-height:1.6; margin-top:14px; }
+.public-story { min-height:100dvh; padding:0 28px 50px; }
+.public-brand { max-width:980px; margin:auto; padding:25px 0; display:flex; justify-content:space-between; align-items:center; gap:20px; }
+.public-brand .product-brand>span { color:var(--orange); }
+.public-brand>span:last-child { font-size:12px; color:var(--muted); }
+.public-landing { max-width:760px; margin:24px auto 0; background:white; border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+.public-cover { width:100%; height:320px; object-fit:cover; }
+.public-cover-fallback { height:220px; background:linear-gradient(125deg,#eee9dd,#e7ece5); display:flex; flex-direction:column; justify-content:center; align-items:center; gap:22px; color:#676b5d; }
+.public-cover-fallback>span { font-size:10px; letter-spacing:2px; }
+.public-intro { padding:36px 42px; }
+.public-intro h1 { font:600 clamp(27px,4vw,40px)/1.25 Manrope,sans-serif; letter-spacing:-1px; overflow-wrap:anywhere; }
+.public-description { font-size:16px; color:var(--muted); line-height:1.8; margin-top:16px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.public-count { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:12px; margin:23px 0; }
+.public-story .public-start { min-height:48px; min-width:180px; font-size:14px; }
+.public-note { margin-top:16px; color:var(--muted); font-size:12px; }
+.public-play-heading { max-width:760px; margin:20px auto; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.public-play-heading h1 { font-size:18px; overflow-wrap:anywhere; }
+.public-play-heading h1:focus { outline:none; }
+.public-play-heading span { font-size:12px; color:var(--muted); }
+.public-story>.player { margin-inline:auto; }
+@media(max-width:600px) {
+  .public-story { padding:0 14px 30px; }
+  .public-brand { padding:20px 4px; }
+  .public-brand>span:last-child { max-width:130px; line-height:1.5; text-align:right; }
+  .public-landing { margin-top:10px; border-radius:12px; }
+  .public-cover { height:210px; }
+  .public-cover-fallback { height:180px; }
+  .public-intro { padding:25px 22px; }
+  .public-story .public-start { width:100%; }
+  .publication-actions>.button { flex:1; }
+}

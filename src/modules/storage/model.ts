@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { appearanceSchema } from '@/modules/story/appearance';
 import { passageSchema, editorLayoutSchema, type Story } from '@/modules/story/model';
 import { mediaPlanSchema } from '@/modules/media/generation/plan';
+import type { Publication } from '@/modules/publishing/model';
 export const cloudDocumentSchema = z.object({
   startId: z.string().max(100), passages: z.array(passageSchema).min(1).max(150),
   assets: z.array(z.object({id:z.string().min(1).max(100),assetId:z.uuid(),name:z.string().min(1).max(200),credit:z.string().max(1000)})).max(300),
@@ -9,7 +10,7 @@ export const cloudDocumentSchema = z.object({
 });
 export const storedStorySchema = z.object({title:z.string().max(200),description:z.string().max(1000),genre:z.string().max(50),document:cloudDocumentSchema});
 export type StoredStory = z.infer<typeof storedStorySchema>;
-export type StorySummary = {id:string;title:string;description:string;genre:string;updatedAt:string;passageCount:number;endingCount:number;revision:number;status:string;coverSrc?:string};
+export type StorySummary = {id:string;title:string;description:string;genre:string;updatedAt:string;passageCount:number;endingCount:number;revision:number;status:string;coverSrc?:string;publication?:Publication|null};
 export function openingImageId(story:Pick<Story,'startId'|'passages'>) {
   return story.passages.find(p=>p.id===story.startId)?.media.imageId || '';
 }

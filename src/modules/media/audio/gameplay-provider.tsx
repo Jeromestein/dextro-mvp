@@ -5,13 +5,13 @@ import { createGameplayAudio } from "./gameplay";
 
 const GameplayAudioContext = createContext<ReturnType<typeof createGameplayAudio> | null>(null);
 
-export function GameplayAudioProvider({ children }: { children: ReactNode }) {
+export function GameplayAudioProvider({ children, playbackPath }: { children: ReactNode; playbackPath?: string }) {
   const [audio] = useState(createGameplayAudio);
   const pathname = usePathname();
   useEffect(() => {
     const { storyId } = audio.getSnapshot();
-    if (storyId && pathname !== `/play/${encodeURIComponent(storyId)}`) audio.stop();
-  }, [audio, pathname]);
+    if (storyId && pathname !== (playbackPath || `/play/${encodeURIComponent(storyId)}`)) audio.stop();
+  }, [audio, pathname, playbackPath]);
   useEffect(() => () => audio.stop(), [audio]);
   return <GameplayAudioContext.Provider value={audio}>{children}</GameplayAudioContext.Provider>;
 }

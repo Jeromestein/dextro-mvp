@@ -29,6 +29,7 @@ import { useGameplayAudio } from "@/modules/media/audio/gameplay-provider";
 import type { MediaKind } from "@/modules/media/assets/model";
 import type { PlaybackProgress } from "@/modules/player/player";
 import { useEditorSession } from "./session/use-editor-session";
+import PublishControl from "@/modules/publishing/publish-control";
 
 const StoryGraph = dynamic(() => import("@/modules/editor/graph/story-graph"), {
   ssr: false, loading: () => <GraphSkeleton />,
@@ -172,7 +173,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   }}>
     <header className="workbench-header">
       <div className="workbench-identity"><Link href="/library" className="icon-button" aria-label="Back to My Games"><ArrowLeft size={19} /></Link><div><span className="kicker">STORY WORKSPACE</span><input aria-label="Story title" maxLength={200} value={story.title} onChange={(e) => commit((s) => ({ ...s, title: e.target.value }), "story-title")} /><span className={`workbench-save ${storageError ? "failed" : ""}`} role="status">{storageError ? <><AlertCircle size={12} /> Not saved</> : saving ? <><LoaderCircle size={12} className="spin" /> Saving…</> : <><Check size={12} /> {cloud ? "Saved to cloud" : "Saved in this browser"}</>}</span></div></div>
-      <div className="workbench-actions"><Link href={`/play/${encodeURIComponent(story.id)}`} className="button" onNavigate={() => gameplayAudio.start(story.id, assignedAsset(story, story.passages.find((p) => p.id === story.startId), "audio")?.data || "")}><Play size={15} /> Play</Link><details className="export-menu"><summary className="button primary"><Download size={15} /> Export <ChevronDown size={13} /></summary><div><button onClick={exportHTML}>Playable HTML <ArrowUpRight size={14} /></button><button onClick={exportJSON}>Editable backup <Download size={14} /></button></div></details></div>
+      <div className="workbench-actions"><Link href={`/play/${encodeURIComponent(story.id)}`} className="button" onNavigate={() => gameplayAudio.start(story.id, assignedAsset(story, story.passages.find((p) => p.id === story.startId), "audio")?.data || "")}><Play size={15} /> Play</Link><details className="export-menu"><summary className="button"><Download size={15} /> Export <ChevronDown size={13} /></summary><div><button onClick={exportHTML}>Playable HTML <ArrowUpRight size={14} /></button><button onClick={exportJSON}>Editable backup <Download size={14} /></button></div></details><PublishControl story={story} onIssue={id => { if (id) { focus(id); setPanel("edit"); } else setNotice("Add a story title above, then publish again."); }} /></div>
     </header>
     {storageError && <div className="storage-warning" role="alert"><AlertCircle size={17} />{storageError}<button onClick={() => void retrySync()}>Retry sync</button><button onClick={exportJSON}>Download backup</button>{cloud && recovery.some(item=>item.id===story.id) && <button onClick={()=>void saveRecoveryAsCopy(story.id).then(id=>{ router.push(`/builder/${encodeURIComponent(id)}`); }).catch(error=>setNotice(error.message))}>Save as new game</button>}</div>}
     <div className="workbench-toolbar">
