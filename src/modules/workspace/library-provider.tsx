@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef, ty
 import { listLocalStories, loadStory as readLocalStory, loadStories, saveStory, removeStory } from "@/storage/story-repository";
 import { clearUploadCache, listCloudStories, prepareCloudStory, readCloudStory, requestJSON, storageStatus, writePreparedStory } from "@/storage/cloud-repository";
 import { pendingSaves, persistPending, replacePending, type PendingSave } from "@/storage/cloud-outbox";
+import { recoverViewportSaves } from "@/storage/viewport-recovery";
 import { summarize, type StorageStatus, type StorySummary } from "@/modules/storage/model";
 import { requireStorySize } from "@/modules/media/assets/operations";
 import { copyStory, type Story } from "@/modules/story/model";
@@ -69,11 +70,17 @@ function useLibraryState() {
           if (cancelled) return;
           setStories(local);
         } else {
-          const [remote, pending] = await Promise.all([status.available ? listCloudStories() : Promise.resolve([]), pendingSaves(status.scope)]);
+          const [remote, savedPending] = await Promise.all([status.available ? listCloudStories() : Promise.resolve([]), pendingSaves(status.scope)]);
+          const { pending, recovered } = status.available ? await recoverViewportSaves(status.scope, savedPending) : { pending: savedPending, recovered: [] };
           if (cancelled) return;
           remote.forEach(item => revisions.current.set(item.id, item.revision));
           queue.current = pending;
           const merged = new Map(remote.map(item => [item.id, item]));
+          recovered.forEach(result => {
+            loaded.current.set(result.story.id, result.story);
+            revisions.current.set(result.story.id, result.revision);
+            merged.set(result.story.id, summarize(result.story, result.revision, result.status));
+          });
           pending.forEach(entry => { loaded.current.set(entry.story.id, entry.story); merged.set(entry.story.id, summarize(entry.story, entry.baseRevision, entry.status)); });
           setStories([...merged.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
           updateRecovery();

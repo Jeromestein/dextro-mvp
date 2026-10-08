@@ -42,7 +42,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const batch = useRef<AbortController | null>(null);
   const [batchStatus, setBatchStatus] = useState("");
   const [batchBusy, setBatchBusy] = useState(false);
-  const { history, historyRef, send, commit } = useEditorSession(initialStory, persistStory);
+  const { history, historyRef, send, commit } = useEditorSession(initialStory, persistStory, scope);
   const initialRef = useRef(initialStory);
   const [selection, setSelection] = useState(initialStory.startId);
   const [graphToolbar, setGraphToolbar] = useState<HTMLDivElement | null>(null);
@@ -106,10 +106,10 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
       if (signature !== layoutSignature(historyRef.current.present)) {
         setNotice("The story changed while arranging. Your current passage positions are kept."); return;
       }
-      commit((s) => setPositions(s, positions));
+      send({ type: "initialize-layout", positions });
       setFocusToken((n) => n + 1);
     } catch { if (job === layoutJob.current) setNotice("Automatic layout is unavailable. You can still arrange passages by dragging them."); }
-  }, [commit, historyRef]);
+  }, [send, historyRef]);
   const cancelLayouts = useCallback(() => { layoutJob.current++; }, []);
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -1,12 +1,13 @@
 import { GRAPH_COORDINATE_LIMIT, type Story } from "@/modules/story/model";
 
-import { positionsFor, coordinate } from "../graph/layout";
-import type { Viewport } from "./types";
+import { positionsFor, coordinate, setPositions } from "../graph/layout";
+import type { Positions, Viewport } from "./types";
 
 export type History = { present: Story; past: Story[]; future: Story[]; group?: string; time: number };
 export type HistoryAction =
   | { type: "commit"; story: Story; group?: string; time: number }
   | { type: "undo" | "redo" | "break-group" }
+  | { type: "initialize-layout"; positions: Positions }
   | { type: "viewport"; viewport: Viewport };
 export const createHistory = (story: Story): History => ({ present: story, past: [], future: [], time: 0 });
 function retainViewport(story: Story, current: Story): Story {
@@ -15,6 +16,8 @@ function retainViewport(story: Story, current: Story): Story {
 }
 export function editorReducer(state: History, action: HistoryAction): History {
   if (action.type === "break-group") return { ...state, group: undefined };
+  // Initial arrangement is display setup; the first actual edit saves it.
+  if (action.type === "initialize-layout") return { ...state, present: setPositions(state.present, action.positions) };
   if (action.type === "viewport") {
     const viewport = { x: coordinate(action.viewport.x, GRAPH_COORDINATE_LIMIT * 10),
       y: coordinate(action.viewport.y, GRAPH_COORDINATE_LIMIT * 10),
