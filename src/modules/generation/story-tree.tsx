@@ -1,51 +1,88 @@
-function Leaf({ x, y, angle = 0, growth }: { x: number; y: number; angle?: number; growth?: "lower" | "middle" | "upper" }) {
-  return <path className={`story-tree-leaf${growth ? " accent" : ""}`} data-growth={growth} transform={`translate(${x} ${y}) rotate(${angle})`} d="M0 0C-2-9 2-18 11-23C14-12 10-3 0 0Z" />;
+type Point = readonly [number, number];
+type Branch = readonly [Point, Point, Point, Point];
+type Growth = "lower" | "middle" | "upper";
+
+function pointOn(branch: Branch, t: number): Point {
+  const u = 1 - t;
+  const coordinate = (axis: 0 | 1) =>
+    u ** 3 * branch[0][axis] + 3 * u ** 2 * t * branch[1][axis]
+    + 3 * u * t ** 2 * branch[2][axis] + t ** 3 * branch[3][axis];
+  // Keep SVG attributes identical across server and browser math implementations.
+  return [Number(coordinate(0).toFixed(3)), Number(coordinate(1).toFixed(3))];
+}
+
+function curve(branch: Branch) {
+  return `C${branch[1]} ${branch[2]} ${branch[3]}`;
+}
+
+function branchPath(branch: Branch) {
+  return `M${branch[0]}${curve(branch)}`;
+}
+
+const trunk: Branch = [[160, 232], [165, 212], [166, 190], [155, 170]];
+const left: Branch = [trunk[3], [123, 148], [73, 127], [53, 80]];
+const middleLower: Branch = [trunk[3], [143, 146], [157, 126], [148, 102]];
+const middleUpper: Branch = [middleLower[3], [142, 77], [154, 54], [163, 35]];
+const right: Branch = [pointOn(trunk, 0.82), [185, 154], [253, 135], [265, 80]];
+const roots = "M132 243Q151 240 160 232Q168 240 184 243M160 232Q161 240 160 246";
+const route = `M160 246Q161 240 160 232${curve(trunk)}${curve(middleLower)}${curve(middleUpper)}`;
+
+function Leaf({ branch, at, angle, length = 22, stem = 5, growth }: {
+  branch: Branch;
+  at: number;
+  angle: number;
+  length?: number;
+  stem?: number;
+  growth?: Growth;
+}) {
+  const anchor = pointOn(branch, at);
+  const width = length * 0.27;
+  const tip = -stem - length;
+
+  return <g className={`story-tree-sprig${growth ? " accent" : ""}`} data-growth={growth} transform={`translate(${anchor}) rotate(${angle})`}>
+    <path className="story-tree-petiole" d={`M0 0Q-1 ${-stem / 2} 0 ${-stem}`} />
+    <path className="story-tree-leaf" d={`M0 ${-stem}C${-width} ${-stem - length * 0.3} ${-width * 0.8} ${tip + length * 0.22} 1.5 ${tip}C${width * 1.2} ${tip + length * 0.32} ${width} ${-stem - length * 0.24} 0 ${-stem}Z`} />
+    <path className="story-tree-vein" d={`M0 ${-stem}Q1 ${-stem - length * 0.45} 1.5 ${tip + 3}`} />
+  </g>;
 }
 
 export default function StoryTree() {
   return <figure className="story-tree">
     <svg viewBox="0 0 320 270" role="img" aria-label="A story grows like a tree: one beginning at the roots, choices along the branches, and three possible endings at the tips.">
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path className="story-tree-ground" d="M114 238Q159 231 207 239" />
+        <path className="story-tree-ground" d="M114 242Q159 235 207 243" />
         <g className="story-tree-wood">
-          <path strokeWidth="1.5" d="M160 224Q149 236 132 239M162 224Q170 237 188 240M161 227L158 241" />
-          <path strokeWidth="4.5" d="M161 228C164 207 164 190 155 171C148 155 148 140 152 127" />
-          <path strokeWidth="3" d="M155 171C143 155 120 148 103 131C85 113 62 104 53 80M158 178C174 156 202 151 220 133C236 117 258 101 263 79" />
-          <path strokeWidth="2.3" d="M152 127C155 108 143 95 145 78C146 62 157 51 160 37" />
-          <path strokeWidth="1.5" d="M104 132C106 117 103 103 94 91L88 75M77 109C60 109 50 113 39 103" />
-          <path strokeWidth="1.5" d="M147 98C132 86 118 81 116 64M150 65C163 61 177 51 181 39M220 133C211 117 211 102 218 85M243 112C258 116 272 110 279 99" />
-          <path strokeWidth="1.2" d="M94 92Q77 90 73 77M123 83Q122 96 127 102M217 94Q234 84 236 70M257 96Q248 87 247 76" />
+          <path strokeWidth="1.3" d={roots} />
+          <path strokeWidth="3.8" d={branchPath(trunk)} />
+          <path strokeWidth="2.2" d={`${branchPath(left)}${branchPath(right)}`} />
+          <path strokeWidth="1.8" d={`${branchPath(middleLower)}${curve(middleUpper)}`} />
         </g>
-        <path className="story-tree-route" pathLength={1} strokeWidth="2.2" d="M158 241L161 228C164 207 164 190 155 171C148 155 148 140 152 127C155 108 143 95 145 78C146 62 157 51 160 37" />
-        <path className="story-tree-route story-tree-route-branch" pathLength={1} strokeWidth="1.5" d="M150 65C163 61 177 51 181 39" />
+        <path className="story-tree-route" pathLength={1} strokeWidth="1.8" d={route} />
       </g>
       <g>
-        <Leaf x={46} y={106} angle={-85} />
-        <Leaf x={62} y={97} angle={-73} />
-        <Leaf x={78} y={108} angle={55} />
-        <Leaf x={88} y={77} angle={-38} />
-        <Leaf x={101} y={110} angle={28} />
-        <Leaf x={117} y={68} angle={-53} />
-        <Leaf x={124} y={94} angle={-100} />
-        <Leaf x={143} y={84} angle={-44} growth="middle" />
-        <Leaf x={150} y={64} angle={-53} growth="upper" />
-        <Leaf x={172} y={53} angle={15} growth="upper" />
-        <Leaf x={151} y={113} angle={42} growth="lower" />
-        <Leaf x={213} y={116} angle={-48} />
-        <Leaf x={220} y={89} angle={-22} />
-        <Leaf x={237} y={73} angle={8} />
-        <Leaf x={254} y={103} angle={39} />
-        <Leaf x={271} y={108} angle={65} />
-        <Leaf x={235} y={121} angle={74} />
+        <Leaf branch={left} at={0.24} angle={-95} length={24} />
+        <Leaf branch={left} at={0.43} angle={8} length={25} stem={6} />
+        <Leaf branch={left} at={0.59} angle={-82} />
+        <Leaf branch={left} at={0.72} angle={-5} />
+        <Leaf branch={left} at={0.9} angle={-68} length={19} stem={4} />
+        <Leaf branch={middleLower} at={0.65} angle={65} length={23} stem={6} growth="lower" />
+        <Leaf branch={middleUpper} at={0.15} angle={-32} length={21} growth="middle" />
+        <Leaf branch={middleUpper} at={0.5} angle={-28} length={20} growth="upper" />
+        <Leaf branch={middleUpper} at={0.7} angle={52} length={21} growth="upper" />
+        <Leaf branch={right} at={0.28} angle={105} stem={6} />
+        <Leaf branch={right} at={0.45} angle={-18} />
+        <Leaf branch={right} at={0.6} angle={80} />
+        <Leaf branch={right} at={0.74} angle={0} />
+        <Leaf branch={right} at={0.88} angle={72} length={20} />
       </g>
       <g className="story-tree-tips">
-        <circle cx="53" cy="80" r="3" />
-        <circle className="accent" cx="160" cy="37" r="3.5" />
-        <circle cx="263" cy="79" r="3" />
+        <circle cx={left[3][0]} cy={left[3][1]} r="2.7" />
+        <circle className="accent" cx={middleUpper[3][0]} cy={middleUpper[3][1]} r="3" />
+        <circle cx={right[3][0]} cy={right[3][1]} r="2.7" />
       </g>
       <g className="story-tree-labels">
         <text x="51" y="44">Ending A</text>
-        <text className="accent" x="160" y="18">Ending B</text>
+        <text className="accent" x="163" y="18">Ending B</text>
         <text x="266" y="43">Ending C</text>
         <text className="story-tree-origin" x="160" y="264">The beginning</text>
       </g>

@@ -85,8 +85,10 @@
 .story-tree-ground { stroke:var(--line); stroke-width:1; }
 .story-tree-wood { stroke:var(--line-strong); }
 .story-tree-route { stroke:var(--orange); }
-.story-tree-leaf { fill:var(--soft); stroke:var(--line-strong); stroke-width:1; stroke-linejoin:round; }
-.story-tree-leaf.accent { fill:var(--accent-soft); stroke:var(--orange); }
+.story-tree-sprig { fill:var(--soft); stroke:var(--line-strong); stroke-width:.9; stroke-linecap:round; stroke-linejoin:round; }
+.story-tree-sprig.accent { fill:var(--accent-soft); stroke:var(--orange); }
+.story-tree-petiole { fill:none; stroke-width:.8; }
+.story-tree-vein { fill:none; stroke-width:.6; opacity:.4; }
 .story-tree-tips { fill:var(--line-strong); }
 .story-tree-tips .accent { fill:var(--orange); }
 .story-tree-labels { fill:var(--muted); font:14px Manrope,sans-serif; text-anchor:middle; }
@@ -95,21 +97,15 @@
 @media (prefers-reduced-motion: no-preference) {
   .story-tree { --tree-cycle:7.2s; }
   .story-tree-route { stroke-dasharray:1; animation:story-tree-grow var(--tree-cycle) linear infinite; }
-  .story-tree-route-branch { animation-name:story-tree-branch-grow; }
-  .story-tree-leaf.accent { animation:story-tree-leaf-middle var(--tree-cycle) ease-in-out infinite; }
-  .story-tree-leaf[data-growth="lower"] { animation-name:story-tree-leaf-lower; }
-  .story-tree-leaf[data-growth="upper"] { animation-name:story-tree-leaf-upper; }
+  .story-tree-sprig.accent { animation:story-tree-leaf-middle var(--tree-cycle) ease-in-out infinite; }
+  .story-tree-sprig[data-growth="lower"] { animation-name:story-tree-leaf-lower; }
+  .story-tree-sprig[data-growth="upper"] { animation-name:story-tree-leaf-upper; }
   .story-tree-tips .accent { animation:story-tree-ending var(--tree-cycle) ease-in-out infinite; }
   .story-tree-labels .accent { animation:story-tree-ending-label var(--tree-cycle) ease-in-out infinite; }
 }
 @keyframes story-tree-grow {
   0%,6% { stroke-dashoffset:1; opacity:1; }
   64%,82% { stroke-dashoffset:0; opacity:1; }
-  94%,100% { stroke-dashoffset:0; opacity:0; }
-}
-@keyframes story-tree-branch-grow {
-  0%,54% { stroke-dashoffset:1; opacity:1; }
-  66%,82% { stroke-dashoffset:0; opacity:1; }
   94%,100% { stroke-dashoffset:0; opacity:0; }
 }
 @keyframes story-tree-leaf-lower {
