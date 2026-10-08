@@ -11,7 +11,7 @@ The root [README](../README.md) covers running the app and the current module ma
 | [Story atmosphere themes](STORY_THEMES_DESIGN.md) | Four story palettes, automatic recommendation, author overrides, and consistent export. | Implemented; desktop, mobile, persistence, and export verified 2026-10-07 |
 | [Graph media design](GRAPH_MEDIA_DESIGN.md) | Graph-integrated images, music, generation, and acceptance criteria. | Initial provider/catalog integration implemented; live image access unverified |
 | [Cloud storage design](CLOUD_STORAGE_DESIGN.md) | Private assets, story/outline persistence, ownership, revisions, recovery, and prioritized next work. | Internal adapter implemented; live connection/read checks passed; write/upload, provider jobs and hosted access unverified |
-| [Story publishing](STORY_PUBLISHING_DESIGN.md) | Public links, frozen snapshots, explicit updates, withdrawal, and future owner-only editing. | Implemented with shared workspace identity; hosted migration/deployment pending |
+| [Story publishing](STORY_PUBLISHING_DESIGN.md) | Public links, frozen snapshots, explicit updates, withdrawal, and future owner-only editing. | Implemented with shared workspace identity; hosted migration and production publishing verified 2026-10-08 |
 | [AI setup and deployment](AI_SETUP.md) | Environment API key, model selection, deployment configuration. | Setup guide; live eligibility requires verification |
 | [Verification record](VERIFICATION.md) | Dated checks and their limits. | Historical evidence, not a claim about every current environment |
 

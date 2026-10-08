@@ -21,8 +21,8 @@ Publishing increment (2026-10-08): editable stories remain separate from the
 frozen public snapshot. Stable share URLs resolve through the active release ID.
 Public routes mount only reader dependencies and expose assigned media. The user
 explicitly deferred accounts and author access gates; existing workspace visitors
-continue sharing the internal owner. The additive migration is supplied but not
-verified on the hosted database. See [Story publishing](STORY_PUBLISHING_DESIGN.md).
+continue sharing the internal owner. The additive migration and deployed publishing
+flow were verified on 2026-10-08. See [Story publishing](STORY_PUBLISHING_DESIGN.md).
 
 Dextro is a modular Next.js application for choice-based text adventures. One
 story model connects authoring, generation, playback, browser persistence, and

@@ -149,5 +149,5 @@ Verify with a disposable cloud story: Publish → Make public, open the returned
 updates, then unpublish. Draft edits must not appear on the public page before
 an explicit update. Republishing must reuse the link. See
 [Story Publishing](STORY_PUBLISHING_DESIGN.md) for the current shared-workspace
-boundary and [Verification](VERIFICATION.md) for local evidence. Hosted migration
-and publication have not yet been verified.
+boundary and [Verification](VERIFICATION.md) for dated evidence. The configured
+Supabase migration and production publishing flow passed verification on 2026-10-08.

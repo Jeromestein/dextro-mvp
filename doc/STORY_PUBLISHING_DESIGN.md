@@ -1,7 +1,7 @@
 # Story Publishing
 
 Design approved: 2026-10-07. Simplified scope approved: 2026-10-08.
-Implementation: code and migration added; hosted migration/deployment not verified.
+Implementation: hosted migration applied and production publishing verified 2026-10-08.
 
 On 2026-10-08, the author requested the simplest public-sharing implementation
 without a user system or author-password gate. Existing `owner_id` values stay;
@@ -13,8 +13,8 @@ copy under their own owner ID. That user/copy authorization workflow is deferred
 The implementation includes Publish, explicit updates, withdrawal, stable links,
 a fixed playable snapshot, media hydration, and library status. Apply
 `supabase/migrations/202610080001_story_publishing.sql` after the existing storage
-migration to enable it in a cloud workspace. This document does not claim that
-migration has been applied to the hosted database or that a deployment occurred.
+migration to enable it in a new cloud workspace. The configured Supabase project
+and user-deployed Vercel site passed publishing QA on 2026-10-08.
 
 ## 1. Decision and scope
 
@@ -306,7 +306,8 @@ Acceptance checks:
   access, mobile layout, sharing controls, and audio fallback. Run typecheck, lint,
   and relevant automated tests; do not run `pnpm build`.
 
-Verification is recorded in [VERIFICATION.md](VERIFICATION.md). No hosted schema
-change, account/access configuration, paid generation, or deployment is included.
+Verification is recorded in [VERIFICATION.md](VERIFICATION.md), including the
+hosted migration and production publishing checks. Account/access configuration
+and paid generation were not changed during that QA run.
 For absolute cover-preview metadata, set `NEXT_PUBLIC_SITE_URL` to the canonical
 app origin and restart/redeploy when that environment value changes.

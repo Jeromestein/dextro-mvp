@@ -11,7 +11,8 @@ Publishing increment (2026-10-08): [Story publishing](STORY_PUBLISHING_DESIGN.md
 adds an active frozen snapshot, stable public links, and explicit updates and
 withdrawal. The user deferred the previously proposed author gate and user system;
 the shared-owner access configuration stays unchanged. The additive migration
-`202610080001_story_publishing.sql` is supplied; hosted application is unverified.
+`202610080001_story_publishing.sql` was applied on 2026-10-08. Production publishing,
+draft saving, and image/audio upload passed the scoped [verification run](VERIFICATION.md).
 
 ## Implementation status
 

@@ -1,5 +1,45 @@
 # Verification Record
 
+## 2026-10-08 — Hosted publishing migration and production QA
+
+- Applied `202610080001_story_publishing.sql` through the Supabase SQL Editor
+  to Everlove Foundation / `dextro-mvp` (`sbsmnewkilhkcaylpmue`). SQL returned
+  success. Both publication tables have RLS enabled and service-role access;
+  `anon` and `authenticated` have no table access or publish-function execution.
+- Tested the user-deployed `https://dextro-mvp.vercel.app` in the Codex in-app
+  browser, with an additional fresh Playwright browser for anonymous access and
+  saved screenshots. All mutations used a new sample copy, **Publishing QA —
+  2026-10-08 — Updated**, story `c6a547da-f69a-4456-964a-6317c784c7c9`.
+  The two pre-existing user stories were not edited.
+- Cloud saving, Make public, Copy link, explicit Publish updates, Unpublish, and
+  Publish again passed. Public ID `16c54b38-af88-4c4f-b633-79fbc08fa4b0`
+  stayed constant. Draft title edits did not reach readers before publication;
+  fresh readers received the update while an already loaded reader finished the
+  prior release. Branch navigation to an ending and Begin again passed.
+- Uploaded the repository's one-pixel placeholder PNG and `warm-music-box.wav`
+  through the editor, saved to cloud, and republished. The blank image region in
+  screenshots is the fixture itself; the browser decoded it successfully. Sound
+  controls showed the track and supported Mute/Unmute. Physical listening and
+  recovery after a confirmed autoplay rejection were not independently verified.
+- Public manifest contained only playable fields. Image/audio reads matched their
+  declared byte lengths and SHA-256 hashes, used correct MIME types, `no-store`
+  and `nosniff`, returned 206 for valid ranges and 416 for invalid ranges. An
+  unrelated asset ID returned 404. After final withdrawal, the landing page,
+  manifest and both prior media URLs returned 404 with no-store caching.
+- Desktop and 390 × 844 mobile landing/player layouts were inspected; mobile
+  document width was 390px with no horizontal overflow. The mobile publication
+  panel was also inspected in-app. No runtime errors appeared during successful
+  playback; supplemental Chrome reported a non-blocking Canvas readback warning.
+  The expected 404 after withdrawal appeared in the browser log.
+- Final state: the QA story is withdrawn and retained as a saved draft with its
+  two test assets. No paid generation, app-code change, build, server restart,
+  deployment, commit or push was performed during this production QA run.
+- Evidence under ignored `output/playwright/`: `publishing-live-desktop.png`,
+  `publishing-live-mobile.png`, `publishing-live-player-mobile.png`,
+  `publishing-live-withdrawn-mobile.png`, and `publishing-live-api.json`.
+  Social-network preview crawlers, every browser, and production fault injection
+  were not exercised; existing local regression coverage remains separate.
+
 ## 2026-10-08 — Public story sharing with a shared workspace
 
 - Implemented Make public, stable reader URLs, explicit Publish updates,

@@ -90,7 +90,7 @@ See [Cloud Storage implementation status and design](doc/CLOUD_STORAGE_DESIGN.md
 
 Cloud saves preserve passages and choices, layout, shared assets and media plans. Conflicts keep a recovery copy instead of overwriting another revision. The media library keeps generated images even if a preview is dismissed. HTML exports embed media bytes and work independently of signed URLs; editable backups remain embedded version 2. Use editable backups to continue authoring.
 
-Public sharing is implemented with Make public, stable `/s/[publicId]` reader links, explicit updates, and withdrawal. Apply `supabase/migrations/202610080001_story_publishing.sql` to enable it; hosted migration/deployment is not yet verified. Draft edits stay separate from the public snapshot. There is no user account system or owner-only edit enforcement yet: the workspace still uses one shared internal owner. Analytics, payments, free-form player input, inventory, and Blender remain out of scope. AI generation uses the server environment API key with no sign-in or access code.
+Public sharing is implemented with Make public, stable `/s/[publicId]` reader links, explicit updates, and withdrawal. Apply `supabase/migrations/202610080001_story_publishing.sql` to enable it in a new environment. The migration and deployed publishing flow were verified on 2026-10-08; see [Verification](doc/VERIFICATION.md). Draft edits stay separate from the public snapshot. There is no user account system or owner-only edit enforcement yet: the workspace still uses one shared internal owner. Analytics, payments, free-form player input, inventory, and Blender remain out of scope. AI generation uses the server environment API key with no sign-in or access code.
 
 ## Checks
 
