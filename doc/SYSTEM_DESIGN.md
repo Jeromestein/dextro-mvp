@@ -17,6 +17,12 @@ account access remains future work; the internal adapter uses one shared owner.
 
 ## Architecture and implementation boundary
 
+Publishing design approved 2026-10-07: keep editable stories separate from
+immutable public releases, resolve stable share URLs through an active release
+pointer, and isolate public reads from authoring APIs. This is a documented next
+increment, not current runtime behavior. See [Story publishing](STORY_PUBLISHING_DESIGN.md)
+for the reader projection, media boundary, revision-safe operations, and checks.
+
 Dextro is a modular Next.js application for choice-based text adventures. One
 story model connects authoring, generation, playback, browser persistence, and
 offline export. The Graph workspace renders passages and choices.

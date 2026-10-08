@@ -7,6 +7,12 @@ See [the current authoring decision](PROJECT_REQUIREMENTS.md#single-graph-worksp
 
 Design date: 2026-10-06. Implementation update: 2026-10-07.
 
+Publishing follow-up (2026-10-07): [Story publishing](STORY_PUBLISHING_DESIGN.md)
+is approved for documentation, with immutable releases, stable public links,
+explicit updates/withdrawal, and an author access boundary before public launch.
+It extends the storage-only scope below. Publishing remains unimplemented; this
+documentation does not change the current shared-owner access configuration.
+
 ## Implementation status
 
 The first private cloud adapter is implemented. The migration was

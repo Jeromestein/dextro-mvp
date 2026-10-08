@@ -1,5 +1,32 @@
 # Project Requirements and Decisions
 
+## Story publishing decision — 2026-10-07
+
+The author approved the publishing design and requested documentation first.
+Keep an editable draft separate from an immutable public release. Publish creates
+a stable link that anyone can open without signing in; later edits stay in the
+draft until Publish updates. Include a validation/review panel, opening-image
+cover or text fallback, share metadata, and withdrawal that retains the draft
+and saved versions. Keep the same URL across updates and republication.
+
+My Games and the editor distinguish Draft, Public, Public with unpublished
+changes, and Unpublished. Autosave is not publication; graph layout and viewport
+changes do not mark reader content as changed. A loaded playthrough stays on its
+release while new readers receive the latest published version. Failed updates
+preserve the previous public release. Hosted publication requires durable cloud
+storage; browser-local stories must first be explicitly copied and saved there.
+
+Public readers may access only released content and its assigned media. A real
+author access boundary is required before public launch because the current
+shared-owner workspace has no sign-in check. The present internal-testing setup
+is unchanged by this documentation task. Discovery/social features, analytics,
+payments, and a full user-account product remain deferred.
+
+See [Story publishing](STORY_PUBLISHING_DESIGN.md) for the proposed data/API
+contracts, failure handling, implementation sequence, and acceptance checks.
+This decision supersedes the historical exclusion of hosted publishing for the
+next increment; it does not claim implementation or authorize deployment now.
+
 ## Single Graph workspace — 2026-10-07
 
 Remove Outline and the Graph / Outline mode switch from the editor. Desktop and
