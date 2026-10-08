@@ -10,10 +10,13 @@ function harness(reducedMotion = false, canvasAvailable = true) {
   const timers = new Map<number, () => void>();
   let serial = 0;
   const images: FakeImage[] = [];
+  const pixels = new Uint8ClampedArray([220, 110, 44, 255, 40, 30, 20, 255]);
   class FakeImage {
     src = "";
     naturalWidth = 1536;
     naturalHeight = 1024;
+    scene = pixels;
+    edge = pixels;
     onload: (() => void) | null = null;
     onerror: (() => void) | null = null;
     constructor() { images.push(this); }
@@ -22,17 +25,20 @@ function harness(reducedMotion = false, canvasAvailable = true) {
   const host = { append: (layer: typeof layers[number]) => layers.push(layer), replaceChildren: () => layers.splice(0) };
   const surface = { dataset: {} as Record<string, string> };
   const samples: number[][] = [];
-  const pixels = new Uint8ClampedArray([220, 110, 44, 255, 40, 30, 20, 255]);
+  const rendered: Uint8ClampedArray[] = [];
   // Exercise the stringified function used by offline exports as well as React.
   const create = runInNewContext(`(${createSceneGlow.toString()})`, {
     document: { createElement: (tag: string) => {
-      if (tag === "canvas") return {
+      if (tag === "canvas") {
+        let sampled = pixels;
+        return {
         getContext: () => canvasAvailable ? {
-          drawImage: (_image: FakeImage, ...bounds: number[]) => samples.push(bounds),
-          getImageData: () => ({ data: pixels }), putImageData() {},
+          drawImage: (image: FakeImage, ...bounds: number[]) => { samples.push(bounds); sampled = bounds.length === 4 ? image.scene : image.edge; },
+          getImageData: () => ({ data: new Uint8ClampedArray(sampled) }),
+          putImageData: (image: { data: Uint8ClampedArray }) => rendered.push(image.data),
         } : null,
         toDataURL: () => "data:image/png;base64,edge",
-      };
+      }; }
       const style: Record<string, string> = {};
       return { style: Object.assign(style, {
         removeProperty: (key: string) => { delete style[key]; },
@@ -49,7 +55,7 @@ function harness(reducedMotion = false, canvasAvailable = true) {
   const flush = (queue: Map<number, () => void>) => {
     const pending = [...queue.values()]; queue.clear(); pending.forEach(fn => fn());
   };
-  return { controller, images, layers, surface, frames, timers, samples, pixels,
+  return { controller, images, layers, surface, frames, timers, samples, rendered,
     paint: () => { flush(frames); flush(frames); }, settle: () => flush(timers) };
 }
 
@@ -76,31 +82,113 @@ test("scene glow preloads images, crossfades, and keeps a reused image steady", 
 test("immersive continuation samples the bottom edge, preserves dark colors and tolerates blocked canvas", () => {
   const h = harness();
   h.controller.setSource("scene"); h.images[0].onload!(); h.paint();
-  const [x, y, width, height] = h.samples[0];
+  const [x, y, width, height] = h.samples.at(-1)!;
   assert.equal(x, 0); assert.equal(width, h.images[0].naturalWidth);
   assert.equal(y + height, h.images[0].naturalHeight);
   assert.ok(height < h.images[0].naturalHeight / 5, "only the bottom strip supplies the continuation");
-  assert.ok(Math.max(...h.pixels.slice(0, 3)) <= 110, "bright edges cannot overwhelm narrative text");
-  assert.equal(h.pixels[0] / h.pixels[1], 2, "tone mapping preserves the source hue");
-  assert.deepEqual([...h.pixels.slice(4)], [40, 30, 20, 255], "dark source colors stay intact");
+  const pixels = h.rendered[0];
+  assert.ok(Math.max(...pixels.slice(0, 3)) <= 90, "bright edges cannot overwhelm narrative text");
+  assert.equal(pixels[0] / pixels[1], 2, "tone mapping preserves the source hue");
+  assert.deepEqual([...pixels.slice(4)], [40, 30, 20, 255], "dark source colors stay intact");
+  assert.equal(h.surface.dataset.sceneTone, "dark");
   assert.ok(h.layers[0].style["--scene-edge"]);
   h.controller.setSource(""); h.settle();
   assert.ok(h.layers.every(layer => !layer.style["--scene-edge"]));
+  assert.equal(h.surface.dataset.sceneTone, undefined);
   h.controller.dispose();
   const blocked = harness(false, false);
   blocked.controller.setSource("scene"); blocked.images[0].onload!(); blocked.paint();
   assert.equal(blocked.surface.dataset.sceneGlow, "on");
   assert.equal(blocked.layers[0].style["--scene-edge"], undefined);
+  assert.equal(blocked.surface.dataset.sceneTone, undefined, "unreadable images leave the default light backdrop in control");
   blocked.controller.dispose();
+});
+
+const gray = (...values: number[]) => new Uint8ClampedArray(values.flatMap(value => [value, value, value, 255]));
+
+function contrast(first: number[], second: number[]) {
+  const luminance = (rgb: number[]) => rgb.map(value => {
+    const channel = value / 255;
+    return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+  }).reduce((sum, channel, index) => sum + channel * [.2126, .7152, .0722][index], 0);
+  const [high, low] = [luminance(first), luminance(second)].sort((a, b) => b - a);
+  return (high + .05) / (low + .05);
+}
+
+test("scene tone weighs the whole image, ignores isolated highlights, and holds neutral scenes steady", () => {
+  const h = harness();
+  const load = (name: string, scene: Uint8ClampedArray, edge = scene) => {
+    h.controller.setSource(name);
+    Object.assign(h.images.at(-1)!, { scene, edge });
+    h.images.at(-1)!.onload!(); h.paint(); h.settle();
+  };
+  load("sunny with foreground shadow", gray(220, 205, 200, 215), gray(45, 70, 85));
+  assert.equal(h.surface.dataset.sceneTone, "light", "a foreground shadow must not darken a sunny scene");
+  for (let i = 0; i < h.rendered.at(-1)!.length; i += 4) {
+    assert.ok(contrast([66, 81, 71], [...h.rendered.at(-1)!.slice(i, i + 3)]) >= 4.5);
+  }
+  load("neutral after daylight", gray(128));
+  assert.equal(h.surface.dataset.sceneTone, "light");
+  load("night with a lamp", gray(25, 30, 25, 35, 20, 25, 30, 25, 20, 255), gray(180, 210));
+  assert.equal(h.surface.dataset.sceneTone, "dark", "bright lamps must not turn a night scene light");
+  assert.ok(h.layers.every(layer => layer.style.transition === "none"), "opposite palettes switch together without illegible intermediate frames");
+  for (let i = 0; i < h.rendered.at(-1)!.length; i += 4) {
+    assert.ok(contrast([221, 216, 206], [...h.rendered.at(-1)!.slice(i, i + 3)]) >= 4.5);
+  }
+  load("neutral after night", gray(128));
+  assert.equal(h.surface.dataset.sceneTone, "dark");
+  h.controller.dispose();
+});
+
+test("an initial neutral scene uses light and removing a dark scene resets that default", () => {
+  const h = harness(true);
+  h.controller.setSource("neutral");
+  h.images[0].scene = h.images[0].edge = gray(128);
+  h.images[0].onload!();
+  assert.equal(h.surface.dataset.sceneTone, "light");
+  h.controller.setSource("night");
+  h.images[1].onload!();
+  assert.equal(h.surface.dataset.sceneTone, "dark");
+  h.controller.setSource("");
+  assert.equal(h.surface.dataset.sceneTone, undefined);
+  h.controller.setSource("neutral again");
+  h.images[2].scene = h.images[2].edge = gray(128);
+  h.images[2].onload!();
+  assert.equal(h.surface.dataset.sceneTone, "light");
+  h.controller.dispose();
+});
+
+test("adaptive text works with glow disabled, and a fully transparent image uses the default light backdrop", () => {
+  const h = harness(true);
+  h.controller.setSource("sunny", false);
+  h.images[0].scene = h.images[0].edge = gray(225);
+  h.images[0].onload!();
+  assert.equal(h.surface.dataset.sceneTone, "light");
+  assert.equal(h.surface.dataset.sceneGlow, undefined);
+  h.controller.setSource("sunny", true);
+  assert.equal(h.surface.dataset.sceneGlow, "on");
+  assert.equal(h.images.length, 1, "toggling glow does not reload or reanalyze the image");
+  h.controller.setSource("sunny", false);
+  assert.equal(h.surface.dataset.sceneGlow, undefined);
+  assert.equal(h.surface.dataset.sceneTone, "light");
+  h.controller.setSource("transparent");
+  h.images[1].scene = h.images[1].edge = new Uint8ClampedArray([255, 255, 255, 0]);
+  h.images[1].onload!();
+  assert.equal(h.surface.dataset.sceneTone, undefined, "transparent images leave the default light backdrop in control");
+  h.controller.setSource("");
+  assert.equal(h.surface.dataset.sceneTone, undefined, "missing images revert to the default light backdrop");
+  h.controller.dispose();
 });
 
 test("scene glow ignores stale loads, falls back without an image, and cleans up", () => {
   const h = harness();
   h.controller.setSource("slow");
+  h.images[0].scene = h.images[0].edge = gray(230);
   const stale = h.images[0].onload!;
   h.controller.setSource("latest");
   h.images[1].onload!(); h.paint(); stale(); h.paint();
   assert.equal(h.layers[0].style.backgroundImage, 'url("latest")');
+  assert.equal(h.surface.dataset.sceneTone, "dark", "stale image analysis cannot change the current palette");
   h.controller.setSource(""); h.settle();
   assert.equal(h.surface.dataset.sceneGlow, undefined);
   assert.ok(h.layers.every(layer => layer.style.opacity === "0" && layer.style.backgroundImage === ""));

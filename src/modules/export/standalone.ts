@@ -53,14 +53,15 @@ details{margin-top:30px;font-size:12px;color:var(--story-muted);overflow-wrap:an
 @media(max-width:600px){header{padding:0 20px;margin:20px auto}main{margin:20px 12px 40px;padding:24px 22px}#text{font-size:17px}button{font-size:14px}}
 ${sceneGlowCSS}
 ${immersiveCSS}
-.standalone-story:has([data-presentation="immersive"]) { background:#0b1419; }
+.standalone-story:has([data-presentation="immersive"]) { background:var(--scene-base); }
 .standalone-story .player[data-presentation="immersive"] { padding-top:30px; }
 .standalone-story .player[data-presentation="immersive"] .scene-glow { position:absolute; }
 .standalone-story .player-top { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:28px; font-size:12px; }
 .standalone-story .player-top button { width:auto; margin:0; flex-shrink:0; }
-.standalone-story .player[data-presentation="immersive"] #restart { background:#14212be8; color:#f5f0e7; border-color:#ecdfc454; }
+.standalone-story .player[data-presentation="immersive"] #restart { background:var(--scene-control); color:var(--scene-ink); border-color:var(--scene-border); }
 .standalone-story .player[data-presentation="immersive"] h1 { color:var(--scene-ink); font:400 clamp(34px,4vw,52px)/1.08 Georgia,serif; letter-spacing:-1px; margin:0 0 23px; text-wrap:balance; }
 .standalone-story .player[data-presentation="immersive"] #text { color:var(--scene-soft); font:18px/1.8 Georgia,serif; }
+.standalone-story .player[data-presentation="immersive"] .end { color:var(--scene-gold); border-color:var(--scene-rule); }
 @media(max-width:600px){.standalone-story .player-top{align-items:flex-start;gap:10px}.standalone-story .player[data-presentation="immersive"] #text{font-size:17px;line-height:1.85}}
 </style><body class="standalone-story"><main class="player scene-reading-surface" data-presentation="immersive" data-story-theme="${theme.id}"><div id="scene-glow" class="scene-glow" aria-hidden="true"></div><div class="player-top"><span id="story-title"></span><div class="player-top-actions"><div id="sound-controls" class="player-sound" hidden>
 <button type="button" class="player-sound-trigger" data-activate="true" aria-label="Enable sound" aria-expanded="false" aria-controls="sound-panel">${soundOnIcon}<span>Enable sound</span></button>
@@ -70,7 +71,7 @@ const createAudioController=${createAudioController.toString()};
 const createSceneGlow=${createSceneGlow.toString()};
 const sceneGlow=createSceneGlow(document.getElementById('scene-glow'),document.querySelector('main'));
 const player=document.querySelector('main');
-function present(p,image){player.dataset.hasScene=String(Boolean(image));document.getElementById('choices-prompt').hidden=p.ending||!p.choices.length;sceneGlow.setSource(story.appearance?.sceneGlow===false?'':image?image.data:'');}
+function present(p,image){player.dataset.hasScene=String(Boolean(image));document.getElementById('choices-prompt').hidden=p.ending||!p.choices.length;sceneGlow.setSource(image?image.data:'',story.appearance?.sceneGlow!==false);}
 window.addEventListener('pagehide',()=>sceneGlow.dispose(),{once:true});
 const soundPopoverView=${soundPopoverView.toString()};
 const createStandaloneSound=${createStandaloneSound.toString()};

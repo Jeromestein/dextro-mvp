@@ -44,7 +44,7 @@ export default function Player({
   return (
     <div ref={player} className={`player scene-reading-surface ${compact ? "compact" : ""}`} data-presentation="immersive" data-has-scene={Boolean(image)} data-story-theme={theme.id} style={themeVariables(theme)}>
       <style>{immersiveCSS}</style>
-      <SceneGlow source={story.appearance?.sceneGlow === false ? "" : image?.data || ""} />
+      <SceneGlow source={image?.data || ""} enabled={story.appearance?.sceneGlow !== false} />
       <div className="player-top">
         <span>{compact ? "READER VIEW" : story.genre.toUpperCase()}</span>
         <div className="player-top-actions">
