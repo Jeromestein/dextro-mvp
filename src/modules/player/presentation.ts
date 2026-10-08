@@ -1,11 +1,16 @@
+import { soundPopoverCSS } from "@/modules/media/audio/sound-popover-view";
+
 // Shared by the live player and self-contained HTML games.
 export const immersiveCSS = `
-.player-audio { margin:0 0 20px; max-width:380px; color:var(--story-muted); font:12px/1.6 system-ui,sans-serif; }
-.player-audio summary { cursor:pointer; width:fit-content; padding:8px 0; }
 .player[data-story-theme][data-presentation="immersive"] {
   --scene-base:color-mix(in srgb,var(--story-backdrop) 8%,#0b1419);
   --scene-ink:#f5f0e7;
   --scene-soft:#ddd8ce;
+  --scene-control:#14212be8;
+  --scene-hover:#2d3b43f5;
+  --scene-border:#ecdfc454;
+  --scene-panel:#14212bf5;
+  --scene-panel-button:#293944;
   --scene-gold:color-mix(in srgb,var(--story-accent) 25%,#ecd6ab);
   --scene-inset:clamp(24px,6vw,100px);
   position:relative; isolation:isolate; color-scheme:dark; overflow:hidden;
@@ -32,15 +37,10 @@ export const immersiveCSS = `
 .player[data-story-theme][data-presentation="immersive"] .choice-button:hover { background:#2d3b43f5; border-color:var(--scene-gold); }
 .player[data-story-theme][data-presentation="immersive"] .choice-number { color:var(--scene-gold); font-size:11px; }
 .player[data-story-theme][data-presentation="immersive"] :is(.ending,.player-signature) { border-color:#ecdfc42e; }
-.player[data-story-theme][data-presentation="immersive"] :is(.ending > span,.quiet,.media-credits,.player-signature,.player-audio) { color:var(--scene-soft); }
+.player[data-story-theme][data-presentation="immersive"] :is(.ending > span,.quiet,.media-credits,.player-signature) { color:var(--scene-soft); }
 .player[data-story-theme][data-presentation="immersive"] .player-signature { max-width:660px; margin:0 auto; text-align:left; font-size:10px; padding-top:18px; }
 .player[data-story-theme][data-presentation="immersive"] .player-signature strong { color:var(--scene-gold); }
 .player[data-story-theme][data-presentation="immersive"] .media-credits { max-width:660px; margin:0 auto 18px; font-size:11px; }
-.player[data-story-theme][data-presentation="immersive"] .player-audio { position:relative; margin:8px 0 -42px; }
-.player[data-story-theme][data-presentation="immersive"] .player-audio[open] { margin-bottom:0; }
-.player[data-story-theme][data-presentation="immersive"] .sound-controls { background:#14212bf5; border-color:#ecdfc454; color:var(--scene-ink); }
-.player[data-story-theme][data-presentation="immersive"] .sound-controls :is(p,label) { color:var(--scene-soft); }
-.player[data-story-theme][data-presentation="immersive"] .sound-controls .button { background:#293944; border-color:#ecdfc454; color:var(--scene-ink); }
 .player[data-story-theme][data-presentation="immersive"] :is(button,input,summary):focus-visible { outline:2px solid var(--scene-gold); outline-offset:4px; }
 .product-shell:has(.play-page .player[data-story-theme][data-presentation="immersive"]) .product-nav { display:none; }
 .studio-main .play-page:has(.player[data-story-theme][data-presentation="immersive"]) { padding:0; min-height:100svh; background:#0b1419; }
@@ -67,4 +67,5 @@ export const immersiveCSS = `
   .play-page:has(.player[data-story-theme][data-presentation="immersive"]) .play-heading > span { display:none; }
 }
 @media(prefers-reduced-motion:reduce) { .player[data-story-theme][data-presentation="immersive"] .choice-button { transition:none; } }
+${soundPopoverCSS}
 `;

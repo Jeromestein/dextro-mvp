@@ -3,22 +3,23 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { createAudioController, type AudioStatus } from "./controller";
 import { useGameplayAudio } from "./gameplay-provider";
+import SoundPopover from "./sound-popover";
 
-type SoundProps = { data: string; title: string; audition?: boolean; gameId?: string };
+type SoundProps = { data: string; title: string; audition?: boolean; gameId?: string; popover?: boolean };
 
 export default function SoundControls(props: SoundProps) {
   return props.gameId ? <GameplaySoundControls {...props} gameId={props.gameId} /> : <LocalSoundControls {...props} />;
 }
 
-function GameplaySoundControls({ data, title, gameId }: SoundProps & { gameId: string }) {
+function GameplaySoundControls({ data, title, gameId, popover }: SoundProps & { gameId: string }) {
   const audio = useGameplayAudio();
   const state = useSyncExternalStore(audio.subscribe, audio.getSnapshot, audio.getSnapshot);
   useEffect(() => { audio.enter(gameId, data); }, [audio, gameId, data]);
-  return <Controls data={data} title={title} status={state.storyId === gameId ? state.status : "off"}
+  return <Controls data={data} title={title} popover={popover} status={state.storyId === gameId ? state.status : "off"}
     volume={state.volume} onEnable={audio.enable} onMute={audio.mute} onVolume={audio.setVolume} />;
 }
 
-function LocalSoundControls({ data, title, audition = false }: SoundProps) {
+function LocalSoundControls({ data, title, audition = false, popover }: SoundProps) {
   const controller = useRef<ReturnType<typeof createAudioController> | null>(null);
   const [status, setStatus] = useState<AudioStatus>("off");
   const [volume, setVolume] = useState(.35);
@@ -28,14 +29,16 @@ function LocalSoundControls({ data, title, audition = false }: SoundProps) {
     return () => { audio.dispose(); controller.current = null; };
   }, []);
   useEffect(() => { controller.current?.setTrack(data); }, [data]);
-  return <Controls data={data} title={title} audition={audition} status={status} volume={volume}
+  return <Controls data={data} title={title} audition={audition} popover={popover} status={status} volume={volume}
     onEnable={() => controller.current?.enable()} onMute={() => controller.current?.mute()}
     onVolume={(value) => { setVolume(value); controller.current?.setVolume(value); }} />;
 }
 
-function Controls({ data, title, audition = false, status, volume, onEnable, onMute, onVolume }: SoundProps & {
+function Controls({ data, title, audition = false, popover, status, volume, onEnable, onMute, onVolume }: SoundProps & {
   status: AudioStatus; volume: number; onEnable: () => void; onMute: () => void; onVolume: (value: number) => void;
 }) {
+  if (popover) return <SoundPopover data={data} title={title} status={status} volume={volume}
+    onEnable={onEnable} onMute={onMute} onVolume={onVolume} />;
   const enabled = status === "playing" || status === "silent";
   return <div className="sound-controls" aria-label={audition ? "Music audition" : "Story sound"}>
     <div className="sound-controls-row"><button type="button" className="button" aria-pressed={enabled} onClick={() => {

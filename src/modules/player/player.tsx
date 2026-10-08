@@ -47,16 +47,18 @@ export default function Player({
       <SceneGlow source={story.appearance?.sceneGlow === false ? "" : image?.data || ""} />
       <div className="player-top">
         <span>{compact ? "READER VIEW" : story.genre.toUpperCase()}</span>
-        <button
-          className="icon-button"
-          title="Restart story"
-          aria-label="Restart story"
-          onClick={() => go(startId || story.startId)}
-        >
-          <RotateCcw size={15} />
-        </button>
+        <div className="player-top-actions">
+          {story.assets.some((a) => a.kind === "audio") && <SoundControls popover gameId={compact ? undefined : story.id} data={music?.data || ""} title={music?.name || ""} />}
+          <button
+            className="icon-button"
+            title="Restart story"
+            aria-label="Restart story"
+            onClick={() => go(startId || story.startId)}
+          >
+            <RotateCcw size={15} />
+          </button>
+        </div>
       </div>
-      {story.assets.some((a) => a.kind === "audio") && <details className="player-audio"><summary>Sound</summary><SoundControls gameId={compact ? undefined : story.id} data={music?.data || ""} title={music?.name || ""} /></details>}
       {!passage ? (
         <div className="empty-passage">
           <h2>Passage unavailable</h2>
