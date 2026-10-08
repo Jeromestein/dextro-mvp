@@ -14,8 +14,8 @@ import { buildGame, buildBackup, download, filename } from "@/modules/export/sta
 import { useLibrary } from "@/modules/workspace/library-provider";
 import Dialog from "@/shared/ui/dialog";
 import Player from "@/modules/player/player";
-import ThemePicker from "@/modules/player/theme-picker";
-import { changeSceneGlow, changeTheme, resolveTheme, themeVariables } from "@/modules/story/themes";
+import SceneGlowToggle from "@/modules/player/scene-glow-toggle";
+import { changeSceneGlow } from "@/modules/story/appearance";
 
 import PassageForm from "./text/passage-form";
 import InspectorDrawer from "./inspector-drawer";
@@ -61,7 +61,6 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
   const layoutJob = useRef(0);
   const initialized = useRef(false);
   const story = history.present;
-  const theme = resolveTheme(story);
   const passage = story.passages.find((p) => p.id === selection) || story.passages.find((p) => p.id === story.startId) || story.passages[0];
   const selected = passage.id;
   const issues = useMemo(() => validateStory(story), [story]);
@@ -196,7 +195,7 @@ export default function StoryEditor({ initialStory }: { initialStory: Story }) {
       <InspectorDrawer open={panelOpen} title={passage.title} onClose={closePanel}>
         <div className="inspector-tabs" role="group" aria-label="Passage panel"><button aria-pressed={panel === "edit"} onClick={() => setPanel("edit")}><PenLine size={14} /> Story</button><button aria-pressed={panel === "media"} onClick={() => setPanel("media")}><Images size={14} /> Media</button><button aria-pressed={panel === "preview"} onClick={() => setPanel("preview")}><Play size={14} /> Preview</button></div>
         <div className="inspector-content" ref={contentRef} key={passage.id}>
-        {panel === "preview" && panelOpen && <div className="inspector-preview"><div className="inspector-preview-actions"><button onClick={() => setPreview((p) => ({ from: selected, key: p.key + 1 }))}>From selected</button><button onClick={() => setPreview((p) => ({ from: story.startId, key: p.key + 1 }))}>From opening <ArrowUpRight size={12} /></button><button disabled={!playback.current} onClick={() => focus(playback.current)}>Locate playing</button></div><ThemePicker story={story} onChange={(value) => commit((s) => changeTheme(s, value))} onSceneGlowChange={(enabled) => commit((s) => changeSceneGlow(s, enabled))} /><div className="story-preview-stage" data-story-theme={theme.id} style={themeVariables(theme)}><Player key={preview.key} onProgress={setPlayback} story={story} startId={story.passages.some((p) => p.id === preview.from) ? preview.from : selected} compact /></div></div>}
+        {panel === "preview" && panelOpen && <div className="inspector-preview"><div className="inspector-preview-actions"><button onClick={() => setPreview((p) => ({ from: selected, key: p.key + 1 }))}>From selected</button><button onClick={() => setPreview((p) => ({ from: story.startId, key: p.key + 1 }))}>From opening <ArrowUpRight size={12} /></button><button disabled={!playback.current} onClick={() => focus(playback.current)}>Locate playing</button></div><SceneGlowToggle enabled={story.appearance?.sceneGlow !== false} onChange={(enabled) => commit((s) => changeSceneGlow(s, enabled))} /><div className="story-preview-stage"><Player key={preview.key} onProgress={setPlayback} story={story} startId={story.passages.some((p) => p.id === preview.from) ? preview.from : selected} compact /></div></div>}
         <div hidden={panel !== "media"}><PassageMedia active={panelOpen && panel === "media"} kind={mediaKind} onKindChange={setMediaKind} story={story} passage={passage} busy={mediaBusy} onUpload={uploadMedia}
           batchControls={story.mediaPlan && <div className="media-batch"><h4>Story media plan</h4><p>Fill empty assignments across this story. Existing media stays in place.</p><div className="media-actions"><button className="button" disabled={batchBusy} onClick={() => void fillMedia(false)}>Match missing music</button><button className="button" disabled={batchBusy || !connection.imagesReady} onClick={() => void fillMedia(true)}>Generate missing images</button>{batchBusy && <button className="button" onClick={() => batch.current?.abort()}>Stop</button>}</div><small>Up to {story.mediaPlan.scenes.length} images · separately billed OpenAI API usage.</small>{batchStatus && <p role="status">{batchStatus}</p>}</div>}
           onApply={(asset) => assignedAsset(historyRef.current.present, historyRef.current.present.passages.find((p) => p.id === selected), asset.kind)?.data === asset.data || commit((s) => addAndAssignAsset(s, selected, asset))}

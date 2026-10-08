@@ -7,7 +7,7 @@ import { copyStory, newStory, storySchema, validateStory, type Story } from "@/m
 import AIDraftReview from "./draft-review";
 import StoryTree from "./story-tree";
 import SelectField from "@/shared/ui/select-field";
-import { changeSceneGlow, changeTheme, preserveAppearance } from "@/modules/story/themes";
+import { changeSceneGlow, preserveAppearance } from "@/modules/story/appearance";
 import { useLibrary } from "@/modules/workspace/library-provider";
 import { useConnection } from "@/modules/connections/provider";
 import { useGenerationDraft } from "./draft-provider";
@@ -91,7 +91,7 @@ export default function GameBuilder() {
     <div className={`page-heading builder-heading ${draftState.draft ? "review-heading" : ""}`}><div><span className="kicker">{draftState.draft ? "YOUR STORY TAKES SHAPE" : "THE STORY STARTS HERE"}</span><h1>{draftState.draft ? "Review your story" : <>Small idea.<br />A world of possibilities</>}<span className="title-dot">.</span></h1></div>
       <p className="builder-heading-note">Create a story.<br />Let every choice count.</p></div>
     {draftState.draft && <ol className="builder-steps" aria-label="Creation steps"><li className="complete"><span><Check size={13} /></span> Shape your idea</li><li className="current"><span>02</span> Explore the draft</li><li><span>03</span> Edit & export</li></ol>}
-    {draftState.draft ? <section className="builder-review">{(mediaStatus || generating || error) && <div className="media-batch" role="status"><p>{mediaStatus || "Story ready"}</p>{error && <p className="form-error">{error}</p>}{generating && <button className="button" onClick={cancel}>Stop remaining media</button>}<small>Keep & edit stops pending media and keeps everything ready so far.</small></div>}<AIDraftReview story={draftState.draft.story} repaired={draftState.draft.repaired} onThemeChange={(theme) => updateAppearance(story => changeTheme(story, theme))} onSceneGlowChange={(enabled) => updateAppearance(story => changeSceneGlow(story, enabled))} onDiscard={() => { controller.current?.abort(); controller.current = null; setGenerating(false); setMediaStatus(""); setError(""); draftState.setDraft(null); }} onKeep={() => openEditor(library.cloud ? draftState.draft!.story : copyStory(draftState.draft!.story))} /></section> :
+    {draftState.draft ? <section className="builder-review">{(mediaStatus || generating || error) && <div className="media-batch" role="status"><p>{mediaStatus || "Story ready"}</p>{error && <p className="form-error">{error}</p>}{generating && <button className="button" onClick={cancel}>Stop remaining media</button>}<small>Keep & edit stops pending media and keeps everything ready so far.</small></div>}<AIDraftReview story={draftState.draft.story} repaired={draftState.draft.repaired} onSceneGlowChange={(enabled) => updateAppearance(story => changeSceneGlow(story, enabled))} onDiscard={() => { controller.current?.abort(); controller.current = null; setGenerating(false); setMediaStatus(""); setError(""); draftState.setDraft(null); }} onKeep={() => openEditor(library.cloud ? draftState.draft!.story : copyStory(draftState.draft!.story))} /></section> :
     <div className="builder-layout">
       <section className="creation-card">
         <div className="creation-tabs" aria-label="Creation method">

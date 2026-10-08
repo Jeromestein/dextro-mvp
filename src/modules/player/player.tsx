@@ -5,7 +5,6 @@ import { ArrowUpRight, RotateCcw, Flag, ArrowRight } from "lucide-react";
 import SoundControls from "@/modules/media/audio/sound-controls";
 import { assignedAsset } from "@/modules/media/assets/operations";
 import { passageById, type Story } from "@/modules/story/model";
-import { resolveTheme, themeVariables } from "@/modules/story/themes";
 import SceneGlow from "./scene-glow";
 import { immersiveCSS } from "./presentation";
 export type PlaybackProgress = { current: string; path: { passageId: string; choiceId: string; target: string }[] };
@@ -20,7 +19,6 @@ export default function Player({
   compact?: boolean;
   onProgress?: (progress: PlaybackProgress) => void;
 }) {
-  const theme = resolveTheme(story);
   const [current, setCurrent] = useState(startId || story.startId);
   const [path, setPath] = useState<PlaybackProgress["path"]>([]);
   const [steps, setSteps] = useState(0);
@@ -42,7 +40,7 @@ export default function Player({
     setSteps((s) => s + 1);
   };
   return (
-    <div ref={player} className={`player scene-reading-surface ${compact ? "compact" : ""}`} data-presentation="immersive" data-has-scene={Boolean(image)} data-story-theme={theme.id} style={themeVariables(theme)}>
+    <div ref={player} className={`player scene-reading-surface ${compact ? "compact" : ""}`} data-presentation="immersive" data-has-scene={Boolean(image)}>
       <style>{immersiveCSS}</style>
       <SceneGlow source={image?.data || ""} enabled={story.appearance?.sceneGlow !== false} />
       <div className="player-top">

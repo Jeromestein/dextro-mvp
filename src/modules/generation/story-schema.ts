@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { recommendTheme } from "@/modules/story/themes";
 import { bindMediaPlan, mediaPlanSchema, validMediaPlan } from "@/modules/media/generation/plan";
 import { storySchema, validateStory, type Story } from "@/modules/story/model";
 
@@ -51,7 +50,7 @@ export const generationMediaJSONSchema = z.toJSONSchema(draftSchema.extend({ med
 export type DraftCheck =
   | { story: Story; errors: [] }
   | { story: null; errors: string[] };
-export function checkDraft(raw: unknown, brief: { premise?: string; tone?: string } = {}): DraftCheck {
+export function checkDraft(raw: unknown): DraftCheck {
   const parsed = draftSchema.safeParse(raw);
   if (!parsed.success)
     return {
@@ -63,7 +62,6 @@ export function checkDraft(raw: unknown, brief: { premise?: string; tone?: strin
   const result = storySchema.safeParse({
     ...parsed.data,
     version: 2,
-    appearance: { theme: "auto", recommendation: recommendTheme(parsed.data, brief) },
     assets: [],
     mediaPlan: validMediaPlan((raw as { mediaPlan?: unknown })?.mediaPlan, parsed.data.passages.map((p) => p.id)),
     id: crypto.randomUUID(),

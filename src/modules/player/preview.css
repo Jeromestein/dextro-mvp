@@ -1,0 +1,9 @@
+.story-preview-stage { border-radius:10px; overflow:hidden; }
+.scene-glow-toggle { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 16px; padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+.scene-glow-toggle strong { display:block; font-size:12px; font-weight:600; }
+.scene-glow-toggle small { display:block; font-size:11px; line-height:1.6; color:var(--muted); margin-top:4px; }
+.scene-glow-toggle input { appearance:none; flex-shrink:0; width:34px; height:20px; border:1px solid var(--line-strong); border-radius:20px; background:var(--soft); margin:0; cursor:pointer; }
+.scene-glow-toggle input::before { content:""; display:block; width:14px; height:14px; margin:2px; border-radius:50%; background:var(--ink); }
+.scene-glow-toggle input:checked { background:var(--ink); border-color:var(--line-strong); }
+.scene-glow-toggle input:checked::before { background:white; transform:translateX(14px); }
+.scene-glow-toggle input:focus-visible { outline:2px solid var(--line-strong); outline-offset:3px; }

@@ -48,12 +48,12 @@ test('a lost provider connection is recorded as uncertain and never silently reg
  await runGenerationJob(f.owner,f.id,f.db);assert.equal(calls,1);assert.equal(f.tables.generation_attempts.length,1);assert.equal(f.objects.size,0);
 });
 
-test('cloud story generation saves a stable recommendation from the creation brief',async t=>{
+test('cloud story generation no longer adds theme recommendations',async t=>{
  const f=fixture();f.job.kind='story';f.job.input={model:'test-story-model',premise:'A haunted town survives one final night.',tone:'Hopeful',language:'en'};
  const old=process.env.OPENAI_API_KEY;process.env.OPENAI_API_KEY='unit-test-only';t.after(()=>{if(old===undefined)delete process.env.OPENAI_API_KEY;else process.env.OPENAI_API_KEY=old;});
  t.mock.method(globalThis,'fetch',async()=>Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(sampleStory())}]}]}));
  await runGenerationJob(f.owner,f.id,f.db);
  assert.equal(f.job.status,'succeeded');
  const saved=f.job.savedStory as {document:{appearance:unknown}};
- assert.deepEqual(saved.document.appearance,{theme:'auto',recommendation:'midnight'});
+ assert.equal(saved.document.appearance,undefined);
 });

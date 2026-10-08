@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { appearanceSchema } from '@/modules/story/themes';
+import { appearanceSchema } from '@/modules/story/appearance';
 import { passageSchema, editorLayoutSchema, type Story } from '@/modules/story/model';
 import { mediaPlanSchema } from '@/modules/media/generation/plan';
 export const cloudDocumentSchema = z.object({

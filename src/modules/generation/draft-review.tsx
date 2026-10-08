@@ -4,8 +4,7 @@ import { useState } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import type { Story } from "@/modules/story/model";
 import Player from "@/modules/player/player";
-import ThemePicker from "@/modules/player/theme-picker";
-import { resolveTheme, themeVariables, type Appearance } from "@/modules/story/themes";
+import SceneGlowToggle from "@/modules/player/scene-glow-toggle";
 
 const StoryGraph = dynamic(() => import("@/modules/editor/graph/story-graph"), { ssr: false });
 const noop = () => {};
@@ -15,17 +14,14 @@ export default function AIDraftReview({
   repaired,
   onKeep,
   onDiscard,
-  onThemeChange,
   onSceneGlowChange,
 }: {
   story: Story;
   repaired: boolean;
   onKeep: () => void;
   onDiscard: () => void;
-  onThemeChange: (theme: Appearance["theme"]) => void;
   onSceneGlowChange: (enabled: boolean) => void;
 }) {
-  const theme = resolveTheme(story);
   const [start, setStart] = useState(story.startId);
   const [run, setRun] = useState(0);
   const preview = (id: string) => {
@@ -74,8 +70,8 @@ export default function AIDraftReview({
       <p className="quiet">
         Follow the choices, or jump to any passage to review every ending.
       </p>
-      <ThemePicker story={story} onChange={onThemeChange} onSceneGlowChange={onSceneGlowChange} />
-      <div className="draft-player story-preview-stage" data-story-theme={theme.id} style={themeVariables(theme)}>
+      <SceneGlowToggle enabled={story.appearance?.sceneGlow !== false} onChange={onSceneGlowChange} />
+      <div className="draft-player story-preview-stage">
         <Player key={run} story={story} startId={start} compact />
       </div>
       <div className="draft-review-footer">

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { appearanceSchema } from "./themes";
+import { appearanceSchema } from "./appearance";
 import { imageSchema } from "@/modules/media/images/schema";
 import { mediaPlanSchema } from "@/modules/media/generation/plan";
 import { assetSchema, emptyMedia, passageMediaSchema, type MediaAsset } from "@/modules/media/assets/model";
